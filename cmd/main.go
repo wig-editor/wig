@@ -7,5 +7,5 @@ import (
 func main() {
 	editor := mcwig.NewEditor()
 	mcwig.ThemeInit()
-	editor.Start()
+	editor.StartLoop()
 }

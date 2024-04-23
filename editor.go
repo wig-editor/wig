@@ -14,7 +14,7 @@ func NewEditor() *Editor {
 	return &Editor{}
 }
 
-func (e *Editor) Start() {
+func (e *Editor) StartLoop() {
 	tscreen, err := tcell.NewScreen()
 	if err != nil {
 		panic(err)
@@ -32,6 +32,8 @@ func (e *Editor) Start() {
 		screen: tscreen,
 	}
 
+	keyHandler := NewKeyHandler(editor, DefaultKeyMap())
+
 	for {
 		switch ev := tscreen.PollEvent().(type) {
 		case *tcell.EventResize:
@@ -41,9 +43,12 @@ func (e *Editor) Start() {
 			// fmt.Println(w, h)
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyCtrlC {
+				tscreen.Clear()
+				tscreen.Sync()
+				tscreen.Fini()
 				return
 			}
-			// handleKey(ev)
+			keyHandler.handleKey(ev)
 			tscreen.Sync()
 			editor.render()
 		case *tcell.EventError:
