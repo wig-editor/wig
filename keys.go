@@ -8,9 +8,11 @@ type ModeKeyMap map[Mode]KeyMap
 type KeyMap map[string]interface{}
 
 type KeyHandler struct {
-	editor          *Editor
-	keymap          ModeKeyMap
-	waitingForInput interface{} // KeyMap or func(*Editor) or func(*Editor, string)
+	editor *Editor
+	keymap ModeKeyMap
+
+	// KeyMap or func(*Editor) or func(*Editor, string)
+	waitingForInput interface{}
 }
 
 func NewKeyHandler(editor *Editor, keymap ModeKeyMap) *KeyHandler {
@@ -24,7 +26,10 @@ func NewKeyHandler(editor *Editor, keymap ModeKeyMap) *KeyHandler {
 func DefaultKeyMap() ModeKeyMap {
 	return ModeKeyMap{
 		MODE_NORMAL: map[string]interface{}{
-			// "f": move_forward,
+			"Ctrl+C": func(e *Editor) {
+				// sends exit signal to the main loop
+				e.screen.PostEvent(tcell.NewEventInterrupt(nil))
+			},
 			// "d": KeyMap{
 			// 	"t": del_to,
 			// 	"f": del_forward,
@@ -39,35 +44,38 @@ func DefaultKeyMap() ModeKeyMap {
 func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 	key := k.normalizeKeyName(ev.Name())
 
+	msg = "Key: " + key
+
 	// mode := k.editor.ActiveBuffer.Mode()
 	mode := MODE_NORMAL
 	var keySet KeyMap
-	if k.waitingForInput != nil {
-		switch v := k.waitingForInput.(type) {
-		case KeyMap:
-			keySet = v
-		case func(e *Editor, ch string):
-			v(k.editor, key)
-			k.waitingForInput = nil
-			return
-		}
-	} else {
+	switch v := k.waitingForInput.(type) {
+	case KeyMap:
+		keySet = v
+	case func(e *Editor, ch string):
+		v(k.editor, key)
+		k.waitingForInput = nil
+		return
+	default:
 		keySet = k.keymap[mode]
 	}
 
 	if action, ok := keySet[key]; ok {
 		switch action := action.(type) {
-		case func(*Editor):
-			action(k.editor)
 		case KeyMap:
 			k.waitingForInput = action
 		case func(e *Editor, ch string):
 			k.waitingForInput = action
+		case func(*Editor):
+			action(k.editor)
 		}
 	}
 }
 
 func (k *KeyHandler) normalizeKeyName(val string) string {
+	if len(val) < 5 {
+		return val
+	}
 	if val[:5] == "Rune[" {
 		val = val[5 : len(val)-1]
 	}

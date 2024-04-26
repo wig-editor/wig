@@ -1,12 +1,14 @@
 package mcwig
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 	_ "github.com/gdamore/tcell/v2/encoding"
 	"github.com/mattn/go-runewidth"
 )
 
-var msg = "Press Ctrl-C to exit"
+var msg string
 
 func setContent(s tcell.Screen, x, y int, str string, st tcell.Style) int {
 	xx := x
@@ -28,6 +30,6 @@ func setContent(s tcell.Screen, x, y int, str string, st tcell.Style) int {
 func (e *Editor) render() {
 	e.screen.Clear()
 	e.screen.Fill(0, color("bg"))
-	setContent(e.screen, 0, 0, msg, color("text"))
+	setContent(e.screen, 0, 0, fmt.Sprintf("%s", msg), color("text"))
 	e.screen.Show()
 }

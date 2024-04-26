@@ -26,9 +26,6 @@ func TestKeyHandler(t *testing.T) {
 						capturedChar = ch
 					},
 				},
-				// "Ctrl+c": keyAction{
-				// 	"Ctrl+c": connection_run_query,
-				// },
 			},
 		}
 	}
