@@ -1,6 +1,9 @@
 package mcwig
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -26,7 +29,7 @@ func NewKeyHandler(editor *Editor, keymap ModeKeyMap) *KeyHandler {
 func DefaultKeyMap() ModeKeyMap {
 	return ModeKeyMap{
 		MODE_NORMAL: map[string]interface{}{
-			"Ctrl+C": func(e *Editor) {
+			"ctrl+c": func(e *Editor) {
 				// sends exit signal to the main loop
 				e.screen.PostEvent(tcell.NewEventInterrupt(nil))
 			},
@@ -42,7 +45,7 @@ func DefaultKeyMap() ModeKeyMap {
 }
 
 func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
-	key := k.normalizeKeyName(ev.Name())
+	key := k.normalizeKeyName(ev)
 
 	msg = "Key: " + key
 
@@ -72,12 +75,35 @@ func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 	}
 }
 
-func (k *KeyHandler) normalizeKeyName(val string) string {
-	if len(val) < 5 {
-		return val
+func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {
+	m := []string{}
+	if ev.Modifiers()&tcell.ModShift != 0 {
+		m = append(m, "shift")
 	}
-	if val[:5] == "Rune[" {
-		val = val[5 : len(val)-1]
+	if ev.Modifiers()&tcell.ModAlt != 0 {
+		m = append(m, "alt")
 	}
-	return val
+	if ev.Modifiers()&tcell.ModMeta != 0 {
+		m = append(m, "meta")
+	}
+	if ev.Modifiers()&tcell.ModCtrl != 0 {
+		m = append(m, "ctrl")
+	}
+
+	s := ""
+	ok := false
+	if s, ok = tcell.KeyNames[ev.Key()]; !ok {
+		if ev.Key() == tcell.KeyRune {
+			s = string(ev.Rune())
+		} else {
+			s = fmt.Sprintf("Key[%d,%d]", ev.Key(), int(ev.Rune()))
+		}
+	}
+	if len(m) != 0 {
+		if ev.Modifiers()&tcell.ModCtrl != 0 && strings.HasPrefix(s, "Ctrl-") {
+			s = strings.ToLower(s[5:])
+		}
+		return fmt.Sprintf("%s+%s", strings.Join(m, "+"), s)
+	}
+	return s
 }
