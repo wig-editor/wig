@@ -30,6 +30,7 @@ func DefaultKeyMap() ModeKeyMap {
 	return ModeKeyMap{
 		MODE_NORMAL: map[string]interface{}{
 			"ctrl+e": CmdScrollDown,
+			"ctrl+y": CmdScrollUp,
 			// "d": KeyMap{
 			// 	"t": del_to,
 			// 	"f": del_forward,
