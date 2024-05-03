@@ -40,7 +40,7 @@ func (e *Editor) StartLoop() {
 		activeBuffer: nil,
 	}
 
-	buf, err := BufferReadFile("/home/andrew/Downloads/license.txt")
+	buf, err := BufferReadFile("/home/andrew/code/mcwig/license.txt")
 	if err != nil {
 		panic(err)
 	}
