@@ -102,8 +102,7 @@ func (ll *LineList) String() string {
 
 type Buffer struct {
 	ScrollOffset int
-	CursorRow    int
-	CursorCol    int
+	CurrentLine  *Line
 	Lines        *LineList
 }
 
@@ -119,10 +118,16 @@ func BufferReadFile(path string) (*Buffer, error) {
 		return nil, err
 	}
 	lines := &LineList{}
-	for _, line := range bytes.Split(data, []byte("\n")) {
-		lines.Append([]rune(string(line)))
-	}
-	return &Buffer{
+	buf := &Buffer{
 		Lines: lines,
-	}, nil
+	}
+	for i, line := range bytes.Split(data, []byte("\n")) {
+		lines.Append([]rune(string(line)))
+
+		if i == 0 {
+			buf.CurrentLine = lines.Head
+		}
+	}
+
+	return buf, nil
 }

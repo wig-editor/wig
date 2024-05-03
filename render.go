@@ -38,7 +38,13 @@ func (e *Editor) render() {
 	for current != nil {
 		if i >= offset {
 			setContent(e.screen, 0, y, fmt.Sprintf(" %d ", i+1), color("text"))
-			setContent(e.screen, 4, y, string(current.Data), color("text"))
+
+			if e.activeBuffer.CurrentLine == current {
+				setContent(e.screen, 4, y, string(current.Data), color("text"))
+			} else {
+				setContent(e.screen, 4, y, string(current.Data), color("statusline.normal"))
+			}
+
 			y++
 		}
 
