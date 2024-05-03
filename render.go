@@ -34,7 +34,7 @@ func (e *Editor) render() {
 	current := e.activeBuffer.Lines.Head
 	i := 0
 	y := 0
-	offset := 50
+	offset := e.activeBuffer.ScrollOffset
 	for current != nil {
 		if i >= offset {
 			setContent(e.screen, 0, y, fmt.Sprintf(" %d ", i+1), color("text"))

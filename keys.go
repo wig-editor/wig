@@ -29,18 +29,17 @@ func NewKeyHandler(editor *Editor, keymap ModeKeyMap) *KeyHandler {
 func DefaultKeyMap() ModeKeyMap {
 	return ModeKeyMap{
 		MODE_NORMAL: map[string]interface{}{
-			// "j": MoveCursorDown,
-			"ctrl+c": func(e *Editor) {
-				// sends exit signal to the main loop
-				e.screen.PostEvent(tcell.NewEventInterrupt(nil))
-			},
+			"ctrl+e": CmdScrollDown,
 			// "d": KeyMap{
 			// 	"t": del_to,
 			// 	"f": del_forward,
 			// },
-			// "Ctrl+c": keyAction{
-			// 	"Ctrl+c": connection_run_query,
-			// },
+			"ctrl+c": KeyMap{
+				"ctrl+x": func(e *Editor) {
+					// sends exit signal to the main loop
+					e.screen.PostEvent(tcell.NewEventInterrupt(nil))
+				},
+			},
 		},
 	}
 }

@@ -101,8 +101,10 @@ func (ll *LineList) String() string {
 }
 
 type Buffer struct {
-	OffsetY int
-	Lines   *LineList
+	ScrollOffset int
+	CursorRow    int
+	CursorCol    int
+	Lines        *LineList
 }
 
 func NewBuffer() *Buffer {
