@@ -29,6 +29,7 @@ func NewKeyHandler(editor *Editor, keymap ModeKeyMap) *KeyHandler {
 func DefaultKeyMap() ModeKeyMap {
 	return ModeKeyMap{
 		MODE_NORMAL: map[string]interface{}{
+			// "j": MoveCursorDown,
 			"ctrl+c": func(e *Editor) {
 				// sends exit signal to the main loop
 				e.screen.PostEvent(tcell.NewEventInterrupt(nil))
@@ -47,8 +48,6 @@ func DefaultKeyMap() ModeKeyMap {
 func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 	key := k.normalizeKeyName(ev)
 
-	msg = "Key: " + key
-
 	// mode := k.editor.ActiveBuffer.Mode()
 	mode := MODE_NORMAL
 	var keySet KeyMap
@@ -56,8 +55,8 @@ func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 	case KeyMap:
 		keySet = v
 	case func(e *Editor, ch string):
-		v(k.editor, key)
 		k.waitingForInput = nil
+		v(k.editor, key)
 		return
 	default:
 		keySet = k.keymap[mode]
@@ -70,6 +69,7 @@ func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 		case func(e *Editor, ch string):
 			k.waitingForInput = action
 		case func(*Editor):
+			k.waitingForInput = nil
 			action(k.editor)
 		}
 	}

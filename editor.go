@@ -6,8 +6,15 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+type Mode int
+
+const MODE_NORMAL Mode = 0
+const MODE_INSERT Mode = 1
+
 type Editor struct {
-	screen tcell.Screen
+	screen       tcell.Screen
+	buffers      []*Buffer
+	activeBuffer *Buffer
 }
 
 func NewEditor() *Editor {
@@ -28,8 +35,17 @@ func (e *Editor) StartLoop() {
 	tscreen.Sync()
 
 	editor := &Editor{
-		screen: tscreen,
+		screen:       tscreen,
+		buffers:      []*Buffer{},
+		activeBuffer: nil,
 	}
+
+	buf, err := BufferReadFile("/home/andrew/Downloads/license.txt")
+	if err != nil {
+		panic(err)
+	}
+	editor.buffers = append(editor.buffers, buf)
+	editor.activeBuffer = buf
 
 	keyHandler := NewKeyHandler(editor, DefaultKeyMap())
 

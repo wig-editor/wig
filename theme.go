@@ -19,7 +19,7 @@ var (
 var theme = map[string]termColor{
 	"bg":                {bg: bg},
 	"fg":                {fg: fg},
-	"text":              {bg: bg, fg: fg},
+	"text":              {fg: fg},
 	"sepatator":         {fg: sep},
 	"cursor":            {bg: fg, fg: bg},
 	"statusline.active": {bg: fg, fg: bg},
@@ -27,20 +27,19 @@ var theme = map[string]termColor{
 	"statusline.insert": {bg: fg, fg: bg},
 }
 
-var styles = map[string]tcell.Style{}
+var stylesCache = map[string]tcell.Style{}
 var defaultStyle tcell.Style
 
 func ThemeInit() {
 	defaultStyle = tcell.StyleDefault.Foreground(tcell.NewHexColor(int32(fg))).Background(tcell.NewHexColor(int32(bg)))
 }
 
+// TODO: user variables instead of free text colors
 func color(name string) tcell.Style {
-	val, ok := styles[name]
+	val, ok := stylesCache[name]
 	if ok {
 		return val
 	}
-
-	val = defaultStyle
 
 	c := theme[name]
 	if c.fg > 0 {
@@ -50,6 +49,6 @@ func color(name string) tcell.Style {
 		val = val.Background(tcell.NewHexColor(int32(c.bg)))
 	}
 
-	styles[name] = val
+	stylesCache[name] = val
 	return val
 }
