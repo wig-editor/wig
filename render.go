@@ -31,25 +31,26 @@ func (e *Editor) render() {
 	e.screen.Clear()
 	// e.screen.Fill(0, color("bg"))
 
-	current := e.activeBuffer.Lines.Head
-	i := 0
+	currentLine := e.activeBuffer.Lines.Head
+	lineNum := 0
 	y := 0
 	offset := e.activeBuffer.ScrollOffset
-	for current != nil {
-		if i >= offset {
-			setContent(e.screen, 0, y, fmt.Sprintf(" %d ", i+1), color("text"))
+	for currentLine != nil {
+		if lineNum >= offset {
+			setContent(e.screen, 0, y, fmt.Sprintf(" %d ", lineNum), color("text"))
 
-			if e.activeBuffer.CurrentLine == current {
-				setContent(e.screen, 4, y, string(current.Data), color("text"))
+			if lineNum == e.activeBuffer.Cursor.Line {
+				setContent(e.screen, 4, y, string(currentLine.Data), color("text"))
+				setContent(e.screen, 4+e.activeBuffer.Cursor.Char, y, string(currentLine.Data[e.activeBuffer.Cursor.Char]), color("cursor"))
 			} else {
-				setContent(e.screen, 4, y, string(current.Data), color("statusline.normal"))
+				setContent(e.screen, 4, y, string(currentLine.Data), color("text"))
 			}
 
 			y++
 		}
 
-		current = current.Next
-		i++
+		currentLine = currentLine.Next
+		lineNum++
 	}
 
 	e.screen.Show()

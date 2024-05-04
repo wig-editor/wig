@@ -31,6 +31,10 @@ func DefaultKeyMap() ModeKeyMap {
 		MODE_NORMAL: map[string]interface{}{
 			"ctrl+e": CmdScrollDown,
 			"ctrl+y": CmdScrollUp,
+			"h":      CmdCursorLeft,
+			"l":      CmdCursorRight,
+			"j":      CmdCursorLineDown,
+			"k":      CmdCursorLineUp,
 			// "d": KeyMap{
 			// 	"t": del_to,
 			// 	"f": del_forward,

@@ -21,7 +21,7 @@ type LineList struct {
 	Size int
 }
 
-func (ll *LineList) Append(data []rune) {
+func (ll *LineList) Append(data []rune) *Line {
 	line := &Line{Data: data}
 	if ll.Head == nil {
 		ll.Head = line
@@ -32,11 +32,12 @@ func (ll *LineList) Append(data []rune) {
 		ll.Tail = line
 	}
 	ll.Size++
+	return line
 }
 
-func (ll *LineList) Insert(data []rune, index int) {
+func (ll *LineList) Insert(data []rune, index int) *Line {
 	if index < 0 || index > ll.Size {
-		return
+		return nil
 	}
 
 	line := &Line{Data: data}
@@ -62,6 +63,7 @@ func (ll *LineList) Insert(data []rune, index int) {
 		current.Next = line
 	}
 	ll.Size++
+	return line
 }
 
 func (ll *LineList) Delete(index int) {
@@ -100,10 +102,16 @@ func (ll *LineList) String() string {
 	return buf.String()
 }
 
+type Cursor struct {
+	Line                 int
+	Char                 int
+	PreserveCharPosition int
+}
+
 type Buffer struct {
 	ScrollOffset int
-	CurrentLine  *Line
 	Lines        *LineList
+	Cursor       Cursor
 }
 
 func NewBuffer() *Buffer {
@@ -119,14 +127,11 @@ func BufferReadFile(path string) (*Buffer, error) {
 	}
 	lines := &LineList{}
 	buf := &Buffer{
-		Lines: lines,
+		Lines:  lines,
+		Cursor: Cursor{3, 3, 3},
 	}
-	for i, line := range bytes.Split(data, []byte("\n")) {
+	for _, line := range bytes.Split(data, []byte("\n")) {
 		lines.Append([]rune(string(line)))
-
-		if i == 0 {
-			buf.CurrentLine = lines.Head
-		}
 	}
 
 	return buf, nil
