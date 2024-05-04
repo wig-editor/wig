@@ -41,7 +41,9 @@ func (e *Editor) render() {
 
 			if lineNum == e.activeBuffer.Cursor.Line {
 				setContent(e.screen, 4, y, string(currentLine.Data), color("text"))
-				setContent(e.screen, 4+e.activeBuffer.Cursor.Char, y, string(currentLine.Data[e.activeBuffer.Cursor.Char]), color("cursor"))
+				if len(currentLine.Data) > 0 {
+					setContent(e.screen, 4+e.activeBuffer.Cursor.Char, y, string(currentLine.Data[e.activeBuffer.Cursor.Char]), color("cursor"))
+				}
 			} else {
 				setContent(e.screen, 4, y, string(currentLine.Data), color("text"))
 			}
