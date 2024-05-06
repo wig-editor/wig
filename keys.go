@@ -35,10 +35,9 @@ func DefaultKeyMap() ModeKeyMap {
 			"l":      CmdCursorRight,
 			"j":      CmdCursorLineDown,
 			"k":      CmdCursorLineUp,
-			// "d": KeyMap{
-			// 	"t": del_to,
-			// 	"f": del_forward,
-			// },
+			"g": KeyMap{
+				"g": CmdGotoLine0,
+			},
 			"ctrl+c": KeyMap{
 				"ctrl+x": func(e *Editor) {
 					// sends exit signal to the main loop

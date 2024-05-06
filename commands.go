@@ -26,12 +26,21 @@ func preserveCharPosition(buf *Buffer) {
 func CmdScrollUp(e *Editor) {
 	if e.activeBuffer.ScrollOffset > 0 {
 		e.activeBuffer.ScrollOffset--
+
+		_, h := e.screen.Size()
+		if e.activeBuffer.Cursor.Line > e.activeBuffer.ScrollOffset+h-3 {
+			CmdCursorLineUp(e)
+		}
 	}
 }
 
 func CmdScrollDown(e *Editor) {
 	if e.activeBuffer.ScrollOffset < e.activeBuffer.Lines.Size-3 {
 		e.activeBuffer.ScrollOffset++
+
+		if e.activeBuffer.Cursor.Line <= e.activeBuffer.ScrollOffset+3 {
+			CmdCursorLineDown(e)
+		}
 	}
 }
 
@@ -54,12 +63,27 @@ func CmdCursorLineUp(e *Editor) {
 	if e.activeBuffer.Cursor.Line > 0 {
 		e.activeBuffer.Cursor.Line--
 		preserveCharPosition(e.activeBuffer)
+
+		if e.activeBuffer.Cursor.Line < e.activeBuffer.ScrollOffset+3 {
+			CmdScrollUp(e)
+		}
 	}
 }
 
 func CmdCursorLineDown(e *Editor) {
-	if e.activeBuffer.Cursor.Line < e.activeBuffer.Lines.Size {
+	if e.activeBuffer.Cursor.Line < e.activeBuffer.Lines.Size-1 {
 		e.activeBuffer.Cursor.Line++
 		preserveCharPosition(e.activeBuffer)
+
+		_, h := e.screen.Size()
+		if e.activeBuffer.Cursor.Line-e.activeBuffer.ScrollOffset > h-3 {
+			CmdScrollDown(e)
+		}
 	}
+}
+
+func CmdGotoLine0(e *Editor) {
+	e.activeBuffer.Cursor.Line = 0
+	e.activeBuffer.ScrollOffset = 0
+	preserveCharPosition(e.activeBuffer)
 }

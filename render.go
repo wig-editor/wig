@@ -8,8 +8,6 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-var msg string
-
 func setContent(s tcell.Screen, x, y int, str string, st tcell.Style) int {
 	xx := x
 	for _, ch := range str {
