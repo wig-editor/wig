@@ -5,6 +5,11 @@ import (
 	"os"
 )
 
+type Mode int
+
+const MODE_NORMAL Mode = 0
+const MODE_INSERT Mode = 1
+
 type Line struct {
 	Data []rune
 	Next *Line
@@ -109,6 +114,7 @@ type Cursor struct {
 }
 
 type Buffer struct {
+	Mode         Mode
 	ScrollOffset int
 	Lines        *LineList
 	Cursor       Cursor

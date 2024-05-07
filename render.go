@@ -42,6 +42,7 @@ func (e *Editor) render() {
 				if len(currentLine.Data) > 0 {
 					setContent(e.screen, 4+e.activeBuffer.Cursor.Char, y, string(currentLine.Data[e.activeBuffer.Cursor.Char]), color("cursor"))
 				} else {
+					// render cursor on empty line
 					setContent(e.screen, 4, y, " ", color("cursor"))
 				}
 			} else {

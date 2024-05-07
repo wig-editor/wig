@@ -2,14 +2,10 @@ package mcwig
 
 import (
 	"fmt"
+	"runtime/debug"
 
 	"github.com/gdamore/tcell/v2"
 )
-
-type Mode int
-
-const MODE_NORMAL Mode = 0
-const MODE_INSERT Mode = 1
 
 type Editor struct {
 	screen       tcell.Screen
@@ -33,6 +29,16 @@ func (e *Editor) StartLoop() {
 	}
 
 	tscreen.Sync()
+
+	// catch panic
+	defer func() {
+		if r := recover(); r != nil {
+			tscreen.Clear()
+			tscreen.Fini()
+			fmt.Println("Recovered from panic:", r)
+			debug.PrintStack()
+		}
+	}()
 
 	editor := &Editor{
 		screen:       tscreen,

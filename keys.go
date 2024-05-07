@@ -35,6 +35,9 @@ func DefaultKeyMap() ModeKeyMap {
 			"l":      CmdCursorRight,
 			"j":      CmdCursorLineDown,
 			"k":      CmdCursorLineUp,
+			"i":      CmdInsertMode,
+			"w":      CmdForwardWord,
+			"b":      CmdBackwardWord,
 			"g": KeyMap{
 				"g": CmdGotoLine0,
 			},
@@ -51,8 +54,14 @@ func DefaultKeyMap() ModeKeyMap {
 func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 	key := k.normalizeKeyName(ev)
 
-	// mode := k.editor.ActiveBuffer.Mode()
-	mode := MODE_NORMAL
+	mode := k.editor.activeBuffer.Mode
+	if mode == MODE_INSERT {
+		if key == "Esc" {
+			CmdNormalMode(k.editor)
+			return
+		}
+	}
+
 	var keySet KeyMap
 	switch v := k.waitingForInput.(type) {
 	case KeyMap:

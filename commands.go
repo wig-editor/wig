@@ -16,11 +16,21 @@ func cursorToLine(buf *Buffer) *Line {
 
 func preserveCharPosition(buf *Buffer) {
 	line := cursorToLine(buf)
-	if buf.Cursor.PreserveCharPosition > len(line.Data) {
+	if buf.Cursor.PreserveCharPosition >= len(line.Data) {
 		buf.Cursor.Char = len(line.Data) - 1
 	} else {
 		buf.Cursor.Char = buf.Cursor.PreserveCharPosition
 	}
+}
+
+func isSpecialChar(c rune) bool {
+	specialChars := []rune(" ,.()[]{}<>:;+*/-=~!@#$%^&|?`\"")
+	for _, char := range specialChars {
+		if c == char {
+			return true
+		}
+	}
+	return false
 }
 
 func CmdScrollUp(e *Editor) {
@@ -70,6 +80,14 @@ func CmdCursorLineUp(e *Editor) {
 	}
 }
 
+func CmdInsertMode(e *Editor) {
+	e.activeBuffer.Mode = MODE_INSERT
+}
+
+func CmdNormalMode(e *Editor) {
+	e.activeBuffer.Mode = MODE_NORMAL
+}
+
 func CmdCursorLineDown(e *Editor) {
 	if e.activeBuffer.Cursor.Line < e.activeBuffer.Lines.Size-1 {
 		e.activeBuffer.Cursor.Line++
@@ -86,4 +104,41 @@ func CmdGotoLine0(e *Editor) {
 	e.activeBuffer.Cursor.Line = 0
 	e.activeBuffer.ScrollOffset = 0
 	preserveCharPosition(e.activeBuffer)
+}
+
+func CmdGotoLineBegin(e *Editor) {
+	e.activeBuffer.Cursor.Char = 0
+}
+
+func CmdGotoLineEnd(e *Editor) {
+	line := cursorToLine(e.activeBuffer)
+	e.activeBuffer.Cursor.Char = len(line.Data) - 1
+}
+
+func CmdForwardWord(e *Editor) {
+	line := cursorToLine(e.activeBuffer)
+	if e.activeBuffer.Cursor.Char < len(line.Data)-1 {
+		e.activeBuffer.Cursor.Char++
+		for e.activeBuffer.Cursor.Char < len(line.Data)-1 && !isSpecialChar(line.Data[e.activeBuffer.Cursor.Char]) {
+			e.activeBuffer.Cursor.Char++
+			e.activeBuffer.Cursor.PreserveCharPosition = e.activeBuffer.Cursor.Char
+		}
+	} else {
+		CmdCursorLineDown(e)
+		CmdGotoLineBegin(e)
+	}
+}
+
+func CmdBackwardWord(e *Editor) {
+	line := cursorToLine(e.activeBuffer)
+	if e.activeBuffer.Cursor.Char > 0 {
+		e.activeBuffer.Cursor.Char--
+		for e.activeBuffer.Cursor.Char < len(line.Data)-1 && !isSpecialChar(line.Data[e.activeBuffer.Cursor.Char]) {
+			e.activeBuffer.Cursor.Char--
+			e.activeBuffer.Cursor.PreserveCharPosition = e.activeBuffer.Cursor.Char
+		}
+	} else {
+		CmdCursorLineUp(e)
+		CmdGotoLineEnd(e)
+	}
 }
