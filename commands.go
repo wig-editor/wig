@@ -115,6 +115,7 @@ func CmdGotoLineEnd(e *Editor) {
 	e.activeBuffer.Cursor.Char = len(line.Data) - 1
 }
 
+// TODO: movement commands must be more advanced.
 func CmdForwardWord(e *Editor) {
 	line := cursorToLine(e.activeBuffer)
 	if e.activeBuffer.Cursor.Char < len(line.Data)-1 {
