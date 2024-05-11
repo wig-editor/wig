@@ -143,3 +143,19 @@ func CmdBackwardWord(e *Editor) {
 		CmdGotoLineEnd(e)
 	}
 }
+
+func CmdDeleteCharForward(e *Editor) {
+	buf := e.activeBuffer
+	line := cursorToLine(buf)
+	if buf.Cursor.Char > 0 {
+		line.Data = append(line.Data[:buf.Cursor.Char], line.Data[buf.Cursor.Char+1:]...)
+	}
+}
+
+func CmdDeleteCharBackward(e *Editor) {
+	buf := e.activeBuffer
+	line := cursorToLine(buf)
+	if buf.Cursor.Char > 0 {
+		line.Data = append(line.Data[:buf.Cursor.Char], line.Data[buf.Cursor.Char+1:]...)
+	}
+}

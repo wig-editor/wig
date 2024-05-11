@@ -38,6 +38,8 @@ func DefaultKeyMap() ModeKeyMap {
 			"i":      CmdInsertMode,
 			"w":      CmdForwardWord,
 			"b":      CmdBackwardWord,
+			"x":      CmdDeleteCharForward,
+			"X":      CmdDeleteCharBackward,
 			"g": KeyMap{
 				"g": CmdGotoLine0,
 			},
@@ -54,12 +56,16 @@ func DefaultKeyMap() ModeKeyMap {
 func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 	key := k.normalizeKeyName(ev)
 
-	mode := k.editor.activeBuffer.Mode
+	buf := k.editor.activeBuffer
+	mode := buf.Mode
 	if mode == MODE_INSERT {
 		if key == "Esc" {
 			CmdNormalMode(k.editor)
 			return
 		}
+
+		HandleInsertKey(k.editor, ev)
+		return
 	}
 
 	var keySet KeyMap
