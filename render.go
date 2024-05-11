@@ -42,7 +42,7 @@ func (e *Editor) render() {
 					// render cursor
 					ch := '•'
 					curPos := e.activeBuffer.Cursor.Char
-					if curPos <= len(currentLine.Data)-1 {
+					if curPos < len(currentLine.Data) {
 						ch = currentLine.Data[curPos]
 					}
 					setContent(e.screen, e.activeBuffer.Cursor.Char, y, string(ch), color("cursor"))

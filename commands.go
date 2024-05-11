@@ -14,7 +14,7 @@ func cursorToLine(buf *Buffer) *Line {
 	return currentLine
 }
 
-func preserveCharPosition(buf *Buffer) {
+func restoreCharPosition(buf *Buffer) {
 	line := cursorToLine(buf)
 
 	if len(line.Data) == 0 {
@@ -64,7 +64,7 @@ func CmdCursorLeft(e *Editor) {
 	buf := e.activeBuffer
 	if buf.Cursor.Char > 0 {
 		buf.Cursor.Char--
-		buf.Cursor.PreserveCharPosition--
+		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
 	}
 }
 
@@ -73,14 +73,14 @@ func CmdCursorRight(e *Editor) {
 	line := cursorToLine(buf)
 	if buf.Cursor.Char < len(line.Data)-1 {
 		buf.Cursor.Char++
-		buf.Cursor.PreserveCharPosition++
+		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
 	}
 }
 
 func CmdCursorLineUp(e *Editor) {
 	if e.activeBuffer.Cursor.Line > 0 {
 		e.activeBuffer.Cursor.Line--
-		preserveCharPosition(e.activeBuffer)
+		restoreCharPosition(e.activeBuffer)
 
 		if e.activeBuffer.Cursor.Line < e.activeBuffer.ScrollOffset+3 {
 			CmdScrollUp(e)
@@ -91,7 +91,7 @@ func CmdCursorLineUp(e *Editor) {
 func CmdCursorLineDown(e *Editor) {
 	if e.activeBuffer.Cursor.Line < e.activeBuffer.Lines.Size-1 {
 		e.activeBuffer.Cursor.Line++
-		preserveCharPosition(e.activeBuffer)
+		restoreCharPosition(e.activeBuffer)
 
 		_, h := e.screen.Size()
 		if e.activeBuffer.Cursor.Line-e.activeBuffer.ScrollOffset > h-3 {
@@ -111,7 +111,7 @@ func CmdNormalMode(e *Editor) {
 func CmdGotoLine0(e *Editor) {
 	e.activeBuffer.Cursor.Line = 0
 	e.activeBuffer.ScrollOffset = 0
-	preserveCharPosition(e.activeBuffer)
+	restoreCharPosition(e.activeBuffer)
 }
 
 func CmdGotoLineBegin(e *Editor) {
@@ -142,7 +142,7 @@ func CmdBackwardWord(e *Editor) {
 	line := cursorToLine(buf)
 	if buf.Cursor.Char > 0 {
 		CmdCursorLeft(e)
-		for buf.Cursor.Char < len(line.Data)-1 && !isSpecialChar(line.Data[buf.Cursor.Char]) {
+		for buf.Cursor.Char < len(line.Data) && !isSpecialChar(line.Data[buf.Cursor.Char]) {
 			CmdCursorLeft(e)
 		}
 	} else {
