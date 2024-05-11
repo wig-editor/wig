@@ -1,12 +1,15 @@
 package mcwig
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"github.com/gdamore/tcell/v2"
+)
 
 func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 	buf := e.activeBuffer
 	ch := ev.Rune()
 
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
+		CmdDeleteCharBackward(e)
 		return
 	}
 	if ev.Key() == tcell.KeyEnter {
@@ -17,11 +20,16 @@ func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 	for i := 0; i < buf.Cursor.Line; i++ {
 		line = line.Next
 	}
-	line.Data = append(line.Data, ' ')
-	for i := len(line.Data) - 1; i > buf.Cursor.Char; i-- {
-		line.Data[i] = line.Data[i-1]
+
+	if len(line.Data) == 0 {
+		line.Data = append(line.Data, ch)
+		CmdCursorRight(e)
+		return
 	}
-	line.Data[buf.Cursor.Char] = ch
+
+	tmp := []rune{ch}
+	tmp = append(tmp, line.Data[buf.Cursor.Char:]...)
+	line.Data = append(line.Data[:buf.Cursor.Char], tmp...)
 
 	CmdCursorRight(e)
 }

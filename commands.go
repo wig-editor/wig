@@ -16,6 +16,12 @@ func cursorToLine(buf *Buffer) *Line {
 
 func preserveCharPosition(buf *Buffer) {
 	line := cursorToLine(buf)
+
+	if len(line.Data) == 0 {
+		buf.Cursor.Char = 0
+		return
+	}
+
 	if buf.Cursor.PreserveCharPosition >= len(line.Data) {
 		buf.Cursor.Char = len(line.Data) - 1
 	} else {
@@ -55,17 +61,19 @@ func CmdScrollDown(e *Editor) {
 }
 
 func CmdCursorLeft(e *Editor) {
-	if e.activeBuffer.Cursor.Char > 0 {
-		e.activeBuffer.Cursor.Char--
-		e.activeBuffer.Cursor.PreserveCharPosition = e.activeBuffer.Cursor.Char
+	buf := e.activeBuffer
+	if buf.Cursor.Char > 0 {
+		buf.Cursor.Char--
+		buf.Cursor.PreserveCharPosition--
 	}
 }
 
 func CmdCursorRight(e *Editor) {
-	line := cursorToLine(e.activeBuffer)
-	if e.activeBuffer.Cursor.Char < len(line.Data)-1 {
-		e.activeBuffer.Cursor.Char++
-		e.activeBuffer.Cursor.PreserveCharPosition = e.activeBuffer.Cursor.Char
+	buf := e.activeBuffer
+	line := cursorToLine(buf)
+	if buf.Cursor.Char < len(line.Data)-1 {
+		buf.Cursor.Char++
+		buf.Cursor.PreserveCharPosition++
 	}
 }
 
@@ -80,14 +88,6 @@ func CmdCursorLineUp(e *Editor) {
 	}
 }
 
-func CmdInsertMode(e *Editor) {
-	e.activeBuffer.Mode = MODE_INSERT
-}
-
-func CmdNormalMode(e *Editor) {
-	e.activeBuffer.Mode = MODE_NORMAL
-}
-
 func CmdCursorLineDown(e *Editor) {
 	if e.activeBuffer.Cursor.Line < e.activeBuffer.Lines.Size-1 {
 		e.activeBuffer.Cursor.Line++
@@ -98,6 +98,14 @@ func CmdCursorLineDown(e *Editor) {
 			CmdScrollDown(e)
 		}
 	}
+}
+
+func CmdInsertMode(e *Editor) {
+	e.activeBuffer.Mode = MODE_INSERT
+}
+
+func CmdNormalMode(e *Editor) {
+	e.activeBuffer.Mode = MODE_NORMAL
 }
 
 func CmdGotoLine0(e *Editor) {
@@ -115,14 +123,13 @@ func CmdGotoLineEnd(e *Editor) {
 	e.activeBuffer.Cursor.Char = len(line.Data) - 1
 }
 
-// TODO: movement commands must be more advanced.
 func CmdForwardWord(e *Editor) {
-	line := cursorToLine(e.activeBuffer)
+	buf := e.activeBuffer
+	line := cursorToLine(buf)
 	if e.activeBuffer.Cursor.Char < len(line.Data)-1 {
-		e.activeBuffer.Cursor.Char++
+		CmdCursorRight(e)
 		for e.activeBuffer.Cursor.Char < len(line.Data)-1 && !isSpecialChar(line.Data[e.activeBuffer.Cursor.Char]) {
-			e.activeBuffer.Cursor.Char++
-			e.activeBuffer.Cursor.PreserveCharPosition = e.activeBuffer.Cursor.Char
+			CmdCursorRight(e)
 		}
 	} else {
 		CmdCursorLineDown(e)
@@ -131,12 +138,12 @@ func CmdForwardWord(e *Editor) {
 }
 
 func CmdBackwardWord(e *Editor) {
-	line := cursorToLine(e.activeBuffer)
-	if e.activeBuffer.Cursor.Char > 0 {
-		e.activeBuffer.Cursor.Char--
-		for e.activeBuffer.Cursor.Char < len(line.Data)-1 && !isSpecialChar(line.Data[e.activeBuffer.Cursor.Char]) {
-			e.activeBuffer.Cursor.Char--
-			e.activeBuffer.Cursor.PreserveCharPosition = e.activeBuffer.Cursor.Char
+	buf := e.activeBuffer
+	line := cursorToLine(buf)
+	if buf.Cursor.Char > 0 {
+		CmdCursorLeft(e)
+		for buf.Cursor.Char < len(line.Data)-1 && !isSpecialChar(line.Data[buf.Cursor.Char]) {
+			CmdCursorLeft(e)
 		}
 	} else {
 		CmdCursorLineUp(e)
@@ -147,15 +154,16 @@ func CmdBackwardWord(e *Editor) {
 func CmdDeleteCharForward(e *Editor) {
 	buf := e.activeBuffer
 	line := cursorToLine(buf)
-	if buf.Cursor.Char > 0 {
-		line.Data = append(line.Data[:buf.Cursor.Char], line.Data[buf.Cursor.Char+1:]...)
+	if len(line.Data) == 0 {
+		return
+	}
+	line.Data = append(line.Data[:buf.Cursor.Char], line.Data[buf.Cursor.Char+1:]...)
+	if buf.Cursor.Char >= len(line.Data) {
+		CmdCursorLeft(e)
 	}
 }
 
 func CmdDeleteCharBackward(e *Editor) {
-	buf := e.activeBuffer
-	line := cursorToLine(buf)
-	if buf.Cursor.Char > 0 {
-		line.Data = append(line.Data[:buf.Cursor.Char], line.Data[buf.Cursor.Char+1:]...)
-	}
+	CmdCursorLeft(e)
+	CmdDeleteCharForward(e)
 }

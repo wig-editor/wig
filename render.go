@@ -1,8 +1,6 @@
 package mcwig
 
 import (
-	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 	_ "github.com/gdamore/tcell/v2/encoding"
 	"github.com/mattn/go-runewidth"
@@ -35,18 +33,26 @@ func (e *Editor) render() {
 	offset := e.activeBuffer.ScrollOffset
 	for currentLine != nil {
 		if lineNum >= offset {
-			setContent(e.screen, 0, y, fmt.Sprintf(" %d ", lineNum), color("text"))
+			// setContent(e.screen, 0, y, fmt.Sprintf(" %d|", lineNum), color("text"))
 
 			if lineNum == e.activeBuffer.Cursor.Line {
-				setContent(e.screen, 4, y, string(currentLine.Data), color("text"))
+				// render text
+				setContent(e.screen, 0, y, string(currentLine.Data), color("text"))
 				if len(currentLine.Data) > 0 {
-					setContent(e.screen, 4+e.activeBuffer.Cursor.Char, y, string(currentLine.Data[e.activeBuffer.Cursor.Char]), color("cursor"))
+					// render cursor
+					ch := '•'
+					curPos := e.activeBuffer.Cursor.Char
+					if curPos <= len(currentLine.Data)-1 {
+						ch = currentLine.Data[curPos]
+					}
+					setContent(e.screen, e.activeBuffer.Cursor.Char, y, string(ch), color("cursor"))
 				} else {
 					// render cursor on empty line
-					setContent(e.screen, 4, y, " ", color("cursor"))
+					setContent(e.screen, 0, y, " ", color("cursor"))
 				}
 			} else {
-				setContent(e.screen, 4, y, string(currentLine.Data), color("text"))
+				// render text
+				setContent(e.screen, 0, y, string(currentLine.Data), color("text"))
 			}
 
 			y++
