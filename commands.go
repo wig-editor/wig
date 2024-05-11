@@ -88,6 +88,11 @@ func CmdCursorLineUp(e *Editor) {
 	}
 }
 
+func CmdCursorBeginningOfTheLine(e *Editor) {
+	e.activeBuffer.Cursor.Char = 0
+	e.activeBuffer.Cursor.PreserveCharPosition = 0
+}
+
 func CmdCursorLineDown(e *Editor) {
 	if e.activeBuffer.Cursor.Line < e.activeBuffer.Lines.Size-1 {
 		e.activeBuffer.Cursor.Line++
@@ -126,10 +131,19 @@ func CmdGotoLineEnd(e *Editor) {
 func CmdForwardWord(e *Editor) {
 	buf := e.activeBuffer
 	line := cursorToLine(buf)
-	if e.activeBuffer.Cursor.Char < len(line.Data)-1 {
-		CmdCursorRight(e)
-		for e.activeBuffer.Cursor.Char < len(line.Data)-1 && !isSpecialChar(line.Data[e.activeBuffer.Cursor.Char]) {
+	if e.activeBuffer.Cursor.Char < len(line.Data) {
+		for {
+			if e.activeBuffer.Cursor.Char >= len(line.Data)-1 {
+				CmdCursorLineDown(e)
+				CmdCursorBeginningOfTheLine(e)
+				break
+			}
+
 			CmdCursorRight(e)
+
+			if isSpecialChar(line.Data[e.activeBuffer.Cursor.Char]) {
+				break
+			}
 		}
 	} else {
 		CmdCursorLineDown(e)
