@@ -173,7 +173,7 @@ func CmdForwardChar(e *Editor, ch string) {
 		return
 	}
 
-	for i := 0; i < len(line.Data); i++ {
+	for i := buf.Cursor.Char + 1; i < len(line.Data); i++ {
 		if string(line.Data[i]) == ch {
 			buf.Cursor.Char = i
 			buf.Cursor.PreserveCharPosition = i
