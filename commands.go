@@ -1,5 +1,7 @@
 package mcwig
 
+import "unicode"
+
 // TODO: check performance on big files. cache pointer?
 func cursorToLine(buf *Buffer) *Line {
 	num := 0
@@ -93,6 +95,22 @@ func CmdCursorBeginningOfTheLine(e *Editor) {
 	e.activeBuffer.Cursor.PreserveCharPosition = 0
 }
 
+func CmdCursorFirstNonBlank(e *Editor) {
+	CmdCursorBeginningOfTheLine(e)
+	buf := e.activeBuffer
+	line := cursorToLine(buf)
+	if len(line.Data) == 0 {
+		return
+	}
+	for _, c := range line.Data {
+		if unicode.IsSpace(c) {
+			CmdCursorRight(e)
+		} else {
+			break
+		}
+	}
+}
+
 func CmdCursorLineDown(e *Editor) {
 	if e.activeBuffer.Cursor.Line < e.activeBuffer.Lines.Size-1 {
 		e.activeBuffer.Cursor.Line++
@@ -132,6 +150,7 @@ func CmdForwardWord(e *Editor) {
 			if e.activeBuffer.Cursor.Char >= len(line.Data)-1 {
 				CmdCursorLineDown(e)
 				CmdCursorBeginningOfTheLine(e)
+				CmdCursorFirstNonBlank(e)
 				break
 			}
 

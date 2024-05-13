@@ -40,6 +40,8 @@ func DefaultKeyMap() ModeKeyMap {
 			"b":      CmdBackwardWord,
 			"x":      CmdDeleteCharForward,
 			"X":      CmdDeleteCharBackward,
+			"^":      CmdCursorFirstNonBlank,
+			"0":      CmdCursorBeginningOfTheLine,
 			"g": KeyMap{
 				"g": CmdGotoLine0,
 			},

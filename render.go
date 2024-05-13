@@ -26,16 +26,17 @@ func setContent(s tcell.Screen, x, y int, str string, st tcell.Style) int {
 func (e *Editor) render() {
 	e.screen.Clear()
 
-	currentLine := e.activeBuffer.Lines.Head
+	buf := e.activeBuffer
+	currentLine := buf.Lines.Head
 	lineNum := 0
 	y := 0
-	offset := e.activeBuffer.ScrollOffset
+	offset := buf.ScrollOffset
 	for currentLine != nil {
 		if lineNum >= offset {
 			// render each character in the line separately
 			x := 0
 
-			if len(currentLine.Data) == 0 && lineNum == e.activeBuffer.Cursor.Line {
+			if len(currentLine.Data) == 0 && lineNum == buf.Cursor.Line {
 				setContent(e.screen, x, y, " ", color("cursor"))
 			}
 
@@ -44,7 +45,7 @@ func (e *Editor) render() {
 				setContent(e.screen, x, y, string(ch), color("text"))
 
 				// render cursor
-				if lineNum == e.activeBuffer.Cursor.Line && i == e.activeBuffer.Cursor.Char {
+				if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {
 					setContent(e.screen, x, y, string(ch[0]), color("cursor"))
 				}
 
