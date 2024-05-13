@@ -6,7 +6,7 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-func setContent(s tcell.Screen, x, y int, str string, st tcell.Style) int {
+func SetContent(s tcell.Screen, x, y int, str string, st tcell.Style) int {
 	xx := x
 	for _, ch := range str {
 		var comb []rune
@@ -24,9 +24,9 @@ func setContent(s tcell.Screen, x, y int, str string, st tcell.Style) int {
 }
 
 func (e *Editor) render() {
-	e.screen.Clear()
+	e.Screen.Clear()
 
-	buf := e.activeBuffer
+	buf := e.ActiveBuffer
 	currentLine := buf.Lines.Head
 	lineNum := 0
 	y := 0
@@ -37,16 +37,16 @@ func (e *Editor) render() {
 			x := 0
 
 			if len(currentLine.Data) == 0 && lineNum == buf.Cursor.Line {
-				setContent(e.screen, x, y, " ", color("cursor"))
+				SetContent(e.Screen, x, y, " ", Color("cursor"))
 			}
 
 			for i := 0; i < len(currentLine.Data); i++ {
 				ch := getRenderChar(currentLine.Data[i])
-				setContent(e.screen, x, y, string(ch), color("text"))
+				SetContent(e.Screen, x, y, string(ch), Color("text"))
 
 				// render cursor
 				if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {
-					setContent(e.screen, x, y, string(ch[0]), color("cursor"))
+					SetContent(e.Screen, x, y, string(ch[0]), Color("cursor"))
 				}
 
 				x += len(ch)
@@ -59,7 +59,12 @@ func (e *Editor) render() {
 		lineNum++
 	}
 
-	e.screen.Show()
+	// render widgets
+	for _, w := range e.widgets {
+		w.Render()
+	}
+
+	e.Screen.Show()
 }
 
 func getRenderChar(ch rune) string {

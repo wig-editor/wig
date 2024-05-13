@@ -35,7 +35,7 @@ func ThemeInit() {
 }
 
 // TODO: user variables instead of free text colors
-func color(name string) tcell.Style {
+func Color(name string) tcell.Style {
 	val, ok := stylesCache[name]
 	if ok {
 		return val

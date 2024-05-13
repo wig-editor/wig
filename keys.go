@@ -51,7 +51,7 @@ func DefaultKeyMap() ModeKeyMap {
 			"ctrl+c": KeyMap{
 				"ctrl+x": func(e *Editor) {
 					// sends exit signal to the main loop
-					e.screen.PostEvent(tcell.NewEventInterrupt(nil))
+					e.Screen.PostEvent(tcell.NewEventInterrupt(nil))
 				},
 			},
 		},
@@ -61,7 +61,7 @@ func DefaultKeyMap() ModeKeyMap {
 func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 	key := k.normalizeKeyName(ev)
 
-	buf := k.editor.activeBuffer
+	buf := k.editor.ActiveBuffer
 	mode := buf.Mode
 	if mode == MODE_INSERT {
 		if key == "Esc" {

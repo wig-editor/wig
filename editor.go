@@ -7,14 +7,26 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+type UiWidget interface {
+	Render()
+}
+
 type Editor struct {
-	screen       tcell.Screen
-	buffers      []*Buffer
-	activeBuffer *Buffer
+	Screen       tcell.Screen
+	Buffers      []*Buffer
+	ActiveBuffer *Buffer
+	widgets      []UiWidget
+}
+
+func (e *Editor) RegisterWidget(w UiWidget) {
+	e.widgets = append(e.widgets, w)
 }
 
 func NewEditor() *Editor {
-	return &Editor{}
+	return &Editor{
+		Buffers:      []*Buffer{},
+		ActiveBuffer: nil,
+	}
 }
 
 func (e *Editor) StartLoop() {
@@ -40,30 +52,26 @@ func (e *Editor) StartLoop() {
 		}
 	}()
 
-	editor := &Editor{
-		screen:       tscreen,
-		buffers:      []*Buffer{},
-		activeBuffer: nil,
-	}
+	e.Screen = tscreen
 
 	buf, err := BufferReadFile("/home/andrew/code/mcwig/render.go")
 	if err != nil {
 		panic(err)
 	}
-	editor.buffers = append(editor.buffers, buf)
-	editor.activeBuffer = buf
+	e.Buffers = append(e.Buffers, buf)
+	e.ActiveBuffer = buf
 
-	keyHandler := NewKeyHandler(editor, DefaultKeyMap())
+	keyHandler := NewKeyHandler(e, DefaultKeyMap())
 
 	for {
 		switch ev := tscreen.PollEvent().(type) {
 		case *tcell.EventResize:
 			tscreen.Sync()
-			editor.render()
+			e.render()
 		case *tcell.EventKey:
 			keyHandler.handleKey(ev)
 			tscreen.Sync()
-			editor.render()
+			e.render()
 		case *tcell.EventError:
 			fmt.Println("error:", ev)
 			return

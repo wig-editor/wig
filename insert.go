@@ -5,7 +5,7 @@ import (
 )
 
 func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
-	buf := e.activeBuffer
+	buf := e.ActiveBuffer
 	ch := ev.Rune()
 
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
