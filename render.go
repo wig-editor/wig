@@ -25,7 +25,6 @@ func setContent(s tcell.Screen, x, y int, str string, st tcell.Style) int {
 
 func (e *Editor) render() {
 	e.screen.Clear()
-	// e.screen.Fill(0, color("bg"))
 
 	currentLine := e.activeBuffer.Lines.Head
 	lineNum := 0
@@ -33,26 +32,23 @@ func (e *Editor) render() {
 	offset := e.activeBuffer.ScrollOffset
 	for currentLine != nil {
 		if lineNum >= offset {
-			// setContent(e.screen, 0, y, fmt.Sprintf(" %d|", lineNum), color("text"))
+			// render each character in the line separately
+			x := 0
 
-			if lineNum == e.activeBuffer.Cursor.Line {
-				// render text
-				setContent(e.screen, 0, y, string(currentLine.Data), color("text"))
-				if len(currentLine.Data) > 0 {
-					// render cursor
-					ch := '•'
-					curPos := e.activeBuffer.Cursor.Char
-					if curPos < len(currentLine.Data) {
-						ch = currentLine.Data[curPos]
-					}
-					setContent(e.screen, e.activeBuffer.Cursor.Char, y, string(ch), color("cursor"))
-				} else {
-					// render cursor on empty line
-					setContent(e.screen, 0, y, " ", color("cursor"))
+			if len(currentLine.Data) == 0 && lineNum == e.activeBuffer.Cursor.Line {
+				setContent(e.screen, x, y, " ", color("cursor"))
+			}
+
+			for i := 0; i < len(currentLine.Data); i++ {
+				ch := getRenderChar(currentLine.Data[i])
+				setContent(e.screen, x, y, string(ch), color("text"))
+
+				// render cursor
+				if lineNum == e.activeBuffer.Cursor.Line && i == e.activeBuffer.Cursor.Char {
+					setContent(e.screen, x, y, string(ch[0]), color("cursor"))
 				}
-			} else {
-				// render text
-				setContent(e.screen, 0, y, string(currentLine.Data), color("text"))
+
+				x += len(ch)
 			}
 
 			y++
@@ -63,4 +59,11 @@ func (e *Editor) render() {
 	}
 
 	e.screen.Show()
+}
+
+func getRenderChar(ch rune) string {
+	if ch == '\t' {
+		return "    "
+	}
+	return string(ch)
 }
