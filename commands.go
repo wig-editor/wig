@@ -166,6 +166,38 @@ func CmdForwardWord(e *Editor) {
 	}
 }
 
+func CmdForwardChar(e *Editor, ch string) {
+	buf := e.activeBuffer
+	line := cursorToLine(buf)
+	if len(line.Data) == 0 {
+		return
+	}
+
+	for i := 0; i < len(line.Data); i++ {
+		if string(line.Data[i]) == ch {
+			buf.Cursor.Char = i
+			buf.Cursor.PreserveCharPosition = i
+			break
+		}
+	}
+}
+
+func CmdBackwardChar(e *Editor, ch string) {
+	buf := e.activeBuffer
+	line := cursorToLine(buf)
+	if len(line.Data) == 0 {
+		return
+	}
+
+	for i := buf.Cursor.Char - 1; i >= 0; i-- {
+		if string(line.Data[i]) == ch {
+			buf.Cursor.Char = i
+			buf.Cursor.PreserveCharPosition = i
+			break
+		}
+	}
+}
+
 func CmdBackwardWord(e *Editor) {
 	buf := e.activeBuffer
 	line := cursorToLine(buf)

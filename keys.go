@@ -41,10 +41,13 @@ func DefaultKeyMap() ModeKeyMap {
 			"x":      CmdDeleteCharForward,
 			"X":      CmdDeleteCharBackward,
 			"^":      CmdCursorFirstNonBlank,
+			"$":      CmdGotoLineEnd,
 			"0":      CmdCursorBeginningOfTheLine,
 			"g": KeyMap{
 				"g": CmdGotoLine0,
 			},
+			"f": CmdForwardChar,
+			"F": CmdBackwardChar,
 			"ctrl+c": KeyMap{
 				"ctrl+x": func(e *Editor) {
 					// sends exit signal to the main loop
