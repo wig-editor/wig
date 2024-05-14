@@ -10,6 +10,13 @@ type Mode int
 const MODE_NORMAL Mode = 0
 const MODE_INSERT Mode = 1
 
+func (m Mode) String() string {
+	if m == MODE_NORMAL {
+		return "NOR"
+	}
+	return "INS"
+}
+
 type Line struct {
 	Data []rune
 	Next *Line
