@@ -7,14 +7,20 @@ import (
 
 type Mode int
 
-const MODE_NORMAL Mode = 0
-const MODE_INSERT Mode = 1
+const (
+	MODE_NORMAL Mode = 0
+	MODE_INSERT Mode = 1
+	MODE_VISUAL Mode = 2
+)
 
 func (m Mode) String() string {
 	if m == MODE_NORMAL {
 		return "NOR"
 	}
-	return "INS"
+	if m == MODE_INSERT {
+		return "INS"
+	}
+	return "VIS"
 }
 
 type Line struct {
