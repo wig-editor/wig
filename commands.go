@@ -311,3 +311,20 @@ func CmdLineOpenAbove(e *Editor) {
 	CmdCursorLineUp(e)
 	CmdLineOpenBelow(e)
 }
+
+func CmdDeleteLine(e *Editor) {
+	buf := e.ActiveBuffer
+	buf.Lines.Delete(buf.Cursor.Line)
+
+	if buf.Cursor.Line >= buf.Lines.Size {
+		CmdCursorLineUp(e)
+		CmdCursorBeginningOfTheLine(e)
+	}
+}
+
+func CmdChangeLine(e *Editor) {
+	buf := e.ActiveBuffer
+	line := cursorToLine(buf)
+	line.Data = nil
+	CmdInsertModeAfter(e)
+}
