@@ -26,6 +26,7 @@ func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 		return
 	}
 	if ev.Key() == tcell.KeyEnter {
+		CmdNewLine(e)
 		return
 	}
 

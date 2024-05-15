@@ -45,6 +45,8 @@ func DefaultKeyMap() ModeKeyMap {
 			"^":      CmdCursorFirstNonBlank,
 			"$":      CmdGotoLineEnd,
 			"0":      CmdCursorBeginningOfTheLine,
+			"o":      CmdLineOpenBelow,
+			"O":      CmdLineOpenAbove,
 			"g": KeyMap{
 				"g": CmdGotoLine0,
 			},

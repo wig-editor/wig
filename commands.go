@@ -286,3 +286,28 @@ func CmdAppendLine(e *Editor) {
 	CmdGotoLineEnd(e)
 	CmdInsertModeAfter(e)
 }
+
+func CmdNewLine(e *Editor) {
+	buf := e.ActiveBuffer
+	line := cursorToLine(buf)
+	if len(line.Data) == 0 {
+		buf.Lines.Insert(nil, buf.Cursor.Line)
+	} else {
+		tmpData := line.Data[buf.Cursor.Char:]
+		line.Data = line.Data[:buf.Cursor.Char]
+		buf.Lines.Insert(tmpData, buf.Cursor.Line+1)
+	}
+	CmdCursorLineDown(e)
+	CmdCursorBeginningOfTheLine(e)
+}
+
+func CmdLineOpenBelow(e *Editor) {
+	CmdAppendLine(e)
+	CmdNewLine(e)
+	CmdInsertModeAfter(e)
+}
+
+func CmdLineOpenAbove(e *Editor) {
+	CmdCursorLineUp(e)
+	CmdLineOpenBelow(e)
+}
