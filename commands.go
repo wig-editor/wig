@@ -41,6 +41,11 @@ func isSpecialChar(c rune) bool {
 	return false
 }
 
+func cursorGotoChar(buf *Buffer, ch int) {
+	buf.Cursor.Char = ch
+	buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+}
+
 func CmdScrollUp(e *Editor) {
 	if e.ActiveBuffer.ScrollOffset > 0 {
 		e.ActiveBuffer.ScrollOffset--
@@ -249,11 +254,30 @@ func CmdDeleteCharForward(e *Editor) {
 func CmdDeleteCharBackward(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
-	if buf.Cursor.Char >= len(line.Data) {
+
+	if len(line.Data) == 0 {
+		buf.Lines.Delete(buf.Cursor.Line)
+		CmdCursorLineUp(e)
+		CmdAppendLine(e)
+		return
+	}
+
+	if buf.Cursor.Char == 0 {
+		tmpData := line.Data
+		buf.Lines.Delete(buf.Cursor.Line)
+		CmdCursorLineUp(e)
+		line = cursorToLine(buf)
+		cursorGotoChar(buf, len(line.Data))
+		line.Data = append(line.Data, tmpData...)
+		return
+	}
+
+	if buf.Cursor.Char >= len(line.Data) && len(line.Data) > 0 {
 		line.Data = line.Data[:len(line.Data)-1]
 		CmdCursorLeft(e)
 		return
 	}
+
 	CmdCursorLeft(e)
 	CmdDeleteCharForward(e)
 }
