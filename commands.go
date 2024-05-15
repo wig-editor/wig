@@ -124,6 +124,13 @@ func CmdCursorLineDown(e *Editor) {
 }
 
 func CmdInsertMode(e *Editor) {
+	buf := e.ActiveBuffer
+	line := cursorToLine(buf)
+	if len(line.Data) == 0 {
+		CmdInsertModeAfter(e)
+		return
+	}
+
 	e.ActiveBuffer.Mode = MODE_INSERT
 }
 
