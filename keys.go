@@ -105,7 +105,11 @@ func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 		case func(*Editor):
 			k.waitingForInput = nil
 			action(k.editor)
+		default:
+			k.waitingForInput = nil
 		}
+	} else {
+		k.waitingForInput = nil
 	}
 }
 
