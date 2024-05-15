@@ -121,11 +121,12 @@ type Cursor struct {
 }
 
 type Buffer struct {
-	FilePath     string
 	Mode         Mode
+	FilePath     string
 	ScrollOffset int
 	Lines        *LineList
 	Cursor       Cursor
+	Selection    *Selection
 }
 
 func NewBuffer() *Buffer {
@@ -144,6 +145,10 @@ func BufferReadFile(path string) (*Buffer, error) {
 		FilePath: path,
 		Lines:    lines,
 		Cursor:   Cursor{0, 12, 12},
+		Selection: &Selection{
+			Start: Cursor{8, 3, 0},
+			End:   Cursor{12, 6, 0},
+		},
 	}
 	for _, line := range bytes.Split(data, []byte("\n")) {
 		lines.Append([]rune(string(line)))

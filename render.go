@@ -27,6 +27,7 @@ func (e *Editor) render() {
 	e.Screen.Clear()
 
 	buf := e.ActiveBuffer
+
 	currentLine := buf.Lines.Head
 	offset := buf.ScrollOffset
 	lineNum := 0
@@ -36,13 +37,21 @@ func (e *Editor) render() {
 			// render each character in the line separately
 			x := 0
 
+			// render cursor on empty line
 			if len(currentLine.Data) == 0 && lineNum == buf.Cursor.Line {
 				SetContent(e.Screen, x, y, " ", Color("cursor"))
 			}
 
 			for i := 0; i < len(currentLine.Data); i++ {
+
+				// render selection
+				textStyle := Color("text")
+				if SelectionCursorInRange(buf.Selection, Cursor{Line: lineNum, Char: i}) {
+					textStyle = Color("statusline.normal")
+				}
+
 				ch := getRenderChar(currentLine.Data[i])
-				SetContent(e.Screen, x, y, string(ch), Color("text"))
+				SetContent(e.Screen, x, y, string(ch), textStyle)
 
 				// render cursor
 				if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {

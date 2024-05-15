@@ -216,6 +216,7 @@ func CmdBackwardChar(e *Editor, ch string) {
 	}
 }
 
+// TODO: fix select first word
 func CmdBackwardWord(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)

@@ -8,6 +8,13 @@ import (
 
 func TestKeyHandler(t *testing.T) {
 	editor := NewEditor()
+	buf, err := BufferReadFile("/home/andrew/code/mcwig/render.go")
+	if err != nil {
+		panic(err)
+	}
+	editor.Buffers = append(editor.Buffers, buf)
+	editor.ActiveBuffer = buf
+
 	testForwardCalled := false
 	testDeleteCalled := false
 	capturedChar := ""
