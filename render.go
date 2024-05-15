@@ -28,9 +28,9 @@ func (e *Editor) render() {
 
 	buf := e.ActiveBuffer
 	currentLine := buf.Lines.Head
+	offset := buf.ScrollOffset
 	lineNum := 0
 	y := 0
-	offset := buf.ScrollOffset
 	for currentLine != nil {
 		if lineNum >= offset {
 			// render each character in the line separately
@@ -50,6 +50,11 @@ func (e *Editor) render() {
 				}
 
 				x += len(ch)
+			}
+
+			// render cursor after the end of the line in insert mode
+			if lineNum == buf.Cursor.Line && buf.Cursor.Char >= len(currentLine.Data) {
+				SetContent(e.Screen, x, y, " ", Color("cursor"))
 			}
 
 			y++

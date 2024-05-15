@@ -143,7 +143,7 @@ func BufferReadFile(path string) (*Buffer, error) {
 	buf := &Buffer{
 		FilePath: path,
 		Lines:    lines,
-		Cursor:   Cursor{3, 3, 3},
+		Cursor:   Cursor{0, 12, 12},
 	}
 	for _, line := range bytes.Split(data, []byte("\n")) {
 		lines.Append([]rune(string(line)))

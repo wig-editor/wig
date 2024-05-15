@@ -127,8 +127,14 @@ func CmdInsertMode(e *Editor) {
 	e.ActiveBuffer.Mode = MODE_INSERT
 }
 
+func CmdInsertModeAfter(e *Editor) {
+	e.ActiveBuffer.Cursor.Char++
+	e.ActiveBuffer.Mode = MODE_INSERT
+}
+
 func CmdNormalMode(e *Editor) {
 	e.ActiveBuffer.Mode = MODE_NORMAL
+	CmdCursorLeft(e)
 }
 
 func CmdGotoLine0(e *Editor) {
@@ -145,7 +151,10 @@ func CmdGotoLineEnd(e *Editor) {
 func CmdForwardWord(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
-	if e.ActiveBuffer.Cursor.Char < len(line.Data) {
+	if e.ActiveBuffer.Cursor.Char >= len(line.Data) {
+		CmdCursorLineDown(e)
+		CmdCursorBeginningOfTheLine(e)
+	} else {
 		for {
 			if e.ActiveBuffer.Cursor.Char >= len(line.Data)-1 {
 				CmdCursorLineDown(e)
@@ -160,9 +169,6 @@ func CmdForwardWord(e *Editor) {
 				break
 			}
 		}
-	} else {
-		CmdCursorLineDown(e)
-		CmdCursorBeginningOfTheLine(e)
 	}
 }
 
@@ -234,6 +240,18 @@ func CmdDeleteCharForward(e *Editor) {
 }
 
 func CmdDeleteCharBackward(e *Editor) {
+	buf := e.ActiveBuffer
+	line := cursorToLine(buf)
+	if buf.Cursor.Char >= len(line.Data) {
+		line.Data = line.Data[:len(line.Data)-1]
+		CmdCursorLeft(e)
+		return
+	}
 	CmdCursorLeft(e)
 	CmdDeleteCharForward(e)
+}
+
+func CmdAppendLine(e *Editor) {
+	CmdGotoLineEnd(e)
+	CmdInsertModeAfter(e)
 }

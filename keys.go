@@ -36,6 +36,8 @@ func DefaultKeyMap() ModeKeyMap {
 			"j":      CmdCursorLineDown,
 			"k":      CmdCursorLineUp,
 			"i":      CmdInsertMode,
+			"a":      CmdInsertModeAfter,
+			"A":      CmdAppendLine,
 			"w":      CmdForwardWord,
 			"b":      CmdBackwardWord,
 			"x":      CmdDeleteCharForward,
@@ -63,6 +65,7 @@ func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 
 	buf := k.editor.ActiveBuffer
 	mode := buf.Mode
+
 	if mode == MODE_INSERT {
 		if key == "Esc" {
 			CmdNormalMode(k.editor)
