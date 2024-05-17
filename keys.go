@@ -74,6 +74,9 @@ func DefaultKeyMap(e *Editor) ModeKeyMap {
 			"j": WithSelection(e, CmdCursorLineDown),
 			"k": WithSelection(e, CmdCursorLineUp),
 			"f": WithSelectionToChar(e, CmdForwardChar),
+			"g": KeyMap{
+				"g": WithSelection(e, CmdGotoLine0),
+			},
 		},
 	}
 }
