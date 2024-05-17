@@ -305,12 +305,11 @@ func CmdDeleteCharBackward(e *Editor) {
 	}
 
 	if buf.Cursor.Char == 0 {
-		tmpData := line.Data
-		buf.Lines.DeleteByIndex(buf.Cursor.Line)
 		CmdCursorLineUp(e)
 		line = cursorToLine(buf)
-		cursorGotoChar(buf, len(line.Data))
-		line.Data = append(line.Data, tmpData...)
+		pos := len(line.Data)
+		lineJoinNext(buf, line)
+		cursorGotoChar(buf, pos)
 		return
 	}
 
