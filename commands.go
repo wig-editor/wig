@@ -1,8 +1,9 @@
 package mcwig
 
-import "unicode"
+import (
+	"unicode"
+)
 
-// TODO: check performance on big files. cache pointer?
 func cursorToLine(buf *Buffer) *Line {
 	num := 0
 	currentLine := buf.Lines.Head
@@ -12,6 +13,19 @@ func cursorToLine(buf *Buffer) *Line {
 		}
 		currentLine = currentLine.Next
 		num++
+	}
+	return currentLine
+}
+
+func lineByNum(buf *Buffer, num int) *Line {
+	i := 0
+	currentLine := buf.Lines.Head
+	for currentLine != nil {
+		if i == num {
+			return currentLine
+		}
+		currentLine = currentLine.Next
+		i++
 	}
 	return currentLine
 }
@@ -44,6 +58,16 @@ func isSpecialChar(c rune) bool {
 func cursorGotoChar(buf *Buffer, ch int) {
 	buf.Cursor.Char = ch
 	buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+}
+
+func lineJoinNext(buf *Buffer, line *Line) {
+	next := line.Next
+	if next == nil {
+		return
+	}
+
+	line.Data = append(line.Data, next.Data...)
+	buf.Lines.Delete(next)
 }
 
 func CmdScrollUp(e *Editor) {
@@ -274,7 +298,7 @@ func CmdDeleteCharBackward(e *Editor) {
 	line := cursorToLine(buf)
 
 	if len(line.Data) == 0 {
-		buf.Lines.Delete(buf.Cursor.Line)
+		buf.Lines.DeleteByIndex(buf.Cursor.Line)
 		CmdCursorLineUp(e)
 		CmdAppendLine(e)
 		return
@@ -282,7 +306,7 @@ func CmdDeleteCharBackward(e *Editor) {
 
 	if buf.Cursor.Char == 0 {
 		tmpData := line.Data
-		buf.Lines.Delete(buf.Cursor.Line)
+		buf.Lines.DeleteByIndex(buf.Cursor.Line)
 		CmdCursorLineUp(e)
 		line = cursorToLine(buf)
 		cursorGotoChar(buf, len(line.Data))
@@ -332,7 +356,7 @@ func CmdLineOpenAbove(e *Editor) {
 
 func CmdDeleteLine(e *Editor) {
 	buf := e.ActiveBuffer
-	buf.Lines.Delete(buf.Cursor.Line)
+	buf.Lines.DeleteByIndex(buf.Cursor.Line)
 
 	if buf.Cursor.Line >= buf.Lines.Size {
 		CmdCursorLineUp(e)
@@ -345,6 +369,59 @@ func CmdChangeLine(e *Editor) {
 	line := cursorToLine(buf)
 	line.Data = nil
 	CmdInsertModeAfter(e)
+}
+
+func CmdSelectinDelete(e *Editor) {
+	buf := e.ActiveBuffer
+	if buf.Selection == nil {
+		return
+	}
+
+	start := buf.Selection.Start
+	end := buf.Selection.End
+
+	if start.Line > end.Line {
+		start, end = end, start
+	}
+
+	lineNum := start.Line
+	line := lineByNum(buf, start.Line)
+
+	if lineNum == start.Line && lineNum == end.Line {
+		line.Data = append(line.Data[:start.Char], line.Data[end.Char+1:]...)
+	} else {
+		for lineNum <= end.Line {
+			if lineNum == start.Line {
+				line.Data = line.Data[:start.Char]
+				goto next
+			}
+
+			if lineNum == end.Line {
+				line.Data = line.Data[end.Char:]
+				goto next
+			}
+
+			buf.Lines.Delete(line)
+
+		next:
+			line = line.Next
+			lineNum++
+		}
+
+		line = lineByNum(buf, start.Line)
+		lineJoinNext(buf, line)
+	}
+
+	// TODO: fix panic on last line delete
+	buf.Cursor.Line = start.Line
+	line = cursorToLine(buf)
+	if line != nil && start.Char < len(line.Data) {
+		cursorGotoChar(buf, start.Char)
+	} else {
+		CmdGotoLineEnd(e)
+	}
+
+	CmdNormalMode(e)
 }
 
 func WithSelection(e *Editor, fn func(*Editor)) func(*Editor) {

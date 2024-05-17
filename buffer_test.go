@@ -19,5 +19,23 @@ func TestBufferReadFile(t *testing.T) {
 		t.Errorf("expected nil, got %v", err)
 	}
 
-	assert.Equal(t, 3, buf.Lines.Size)
+	assert.Equal(t, 6, buf.Lines.Size)
+}
+
+func TestLineByNum(t *testing.T) {
+	buf, err := BufferReadFile("/home/andrew/code/mcwig/buffer_test.txt")
+	if err != nil {
+		t.Errorf("expected nil, got %v", err)
+	}
+
+	line := lineByNum(buf, 1)
+
+	assert.Equal(t, "line two", string(line.Data))
+}
+
+func TestSelectionDelete(t *testing.T) {
+	// buf, err := BufferReadFile("/home/andrew/code/mcwig/buffer_test.txt")
+	// if err != nil {
+	// 	t.Errorf("expected nil, got %v", err)
+	// }
 }

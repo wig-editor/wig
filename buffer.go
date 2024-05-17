@@ -84,7 +84,7 @@ func (ll *LineList) Insert(data []rune, index int) *Line {
 	return line
 }
 
-func (ll *LineList) Delete(index int) {
+func (ll *LineList) DeleteByIndex(index int) {
 	if index < 0 || index >= ll.Size {
 		return
 	}
@@ -106,6 +106,12 @@ func (ll *LineList) Delete(index int) {
 		current.Prev.Next = current.Next
 		current.Next.Prev = current.Prev
 	}
+	ll.Size--
+}
+
+func (ll *LineList) Delete(line *Line) {
+	line.Prev.Next = line.Next
+	line.Next.Prev = line.Prev
 	ll.Size--
 }
 
