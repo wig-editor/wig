@@ -95,6 +95,18 @@ func CmdCursorLineUp(e *Editor) {
 	}
 }
 
+func CmdCursorLineDown(e *Editor) {
+	if e.ActiveBuffer.Cursor.Line < e.ActiveBuffer.Lines.Size-1 {
+		e.ActiveBuffer.Cursor.Line++
+		restoreCharPosition(e.ActiveBuffer)
+
+		_, h := e.Screen.Size()
+		if e.ActiveBuffer.Cursor.Line-e.ActiveBuffer.ScrollOffset > h-3 {
+			CmdScrollDown(e)
+		}
+	}
+}
+
 func CmdCursorBeginningOfTheLine(e *Editor) {
 	e.ActiveBuffer.Cursor.Char = 0
 	e.ActiveBuffer.Cursor.PreserveCharPosition = 0
@@ -116,18 +128,6 @@ func CmdCursorFirstNonBlank(e *Editor) {
 	}
 }
 
-func CmdCursorLineDown(e *Editor) {
-	if e.ActiveBuffer.Cursor.Line < e.ActiveBuffer.Lines.Size-1 {
-		e.ActiveBuffer.Cursor.Line++
-		restoreCharPosition(e.ActiveBuffer)
-
-		_, h := e.Screen.Size()
-		if e.ActiveBuffer.Cursor.Line-e.ActiveBuffer.ScrollOffset > h-3 {
-			CmdScrollDown(e)
-		}
-	}
-}
-
 func CmdInsertMode(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
@@ -139,14 +139,31 @@ func CmdInsertMode(e *Editor) {
 	e.ActiveBuffer.Mode = MODE_INSERT
 }
 
+func CmdVisualMode(e *Editor) {
+	buf := e.ActiveBuffer
+	buf.Selection = &Selection{
+		Start: buf.Cursor,
+		End:   buf.Cursor,
+	}
+	buf.Mode = MODE_VISUAL
+}
+
 func CmdInsertModeAfter(e *Editor) {
 	e.ActiveBuffer.Cursor.Char++
 	e.ActiveBuffer.Mode = MODE_INSERT
 }
 
 func CmdNormalMode(e *Editor) {
-	e.ActiveBuffer.Mode = MODE_NORMAL
-	CmdCursorLeft(e)
+	buf := e.ActiveBuffer
+	if buf.Mode == MODE_INSERT {
+		CmdCursorLeft(e)
+	}
+
+	if buf.Mode == MODE_VISUAL {
+		buf.Selection = nil
+	}
+
+	buf.Mode = MODE_NORMAL
 }
 
 func CmdGotoLine0(e *Editor) {
@@ -184,6 +201,30 @@ func CmdForwardWord(e *Editor) {
 	}
 }
 
+// TODO: fix select first word
+func CmdBackwardWord(e *Editor) {
+	buf := e.ActiveBuffer
+	line := cursorToLine(buf)
+	if e.ActiveBuffer.Cursor.Char > 0 {
+		for {
+			if e.ActiveBuffer.Cursor.Char == 0 {
+				CmdCursorLineUp(e)
+				CmdGotoLineEnd(e)
+				break
+			}
+
+			CmdCursorLeft(e)
+
+			if isSpecialChar(line.Data[e.ActiveBuffer.Cursor.Char]) {
+				break
+			}
+		}
+	} else {
+		CmdCursorLineUp(e)
+		CmdGotoLineEnd(e)
+	}
+}
+
 func CmdForwardChar(e *Editor, ch string) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
@@ -213,30 +254,6 @@ func CmdBackwardChar(e *Editor, ch string) {
 			buf.Cursor.PreserveCharPosition = i
 			break
 		}
-	}
-}
-
-// TODO: fix select first word
-func CmdBackwardWord(e *Editor) {
-	buf := e.ActiveBuffer
-	line := cursorToLine(buf)
-	if e.ActiveBuffer.Cursor.Char > 0 {
-		for {
-			if e.ActiveBuffer.Cursor.Char == 0 {
-				CmdCursorLineUp(e)
-				CmdGotoLineEnd(e)
-				break
-			}
-
-			CmdCursorLeft(e)
-
-			if isSpecialChar(line.Data[e.ActiveBuffer.Cursor.Char]) {
-				break
-			}
-		}
-	} else {
-		CmdCursorLineUp(e)
-		CmdGotoLineEnd(e)
 	}
 }
 
@@ -328,4 +345,20 @@ func CmdChangeLine(e *Editor) {
 	line := cursorToLine(buf)
 	line.Data = nil
 	CmdInsertModeAfter(e)
+}
+
+func WithSelection(e *Editor, fn func(*Editor)) func(*Editor) {
+	return func(e *Editor) {
+		fn(e)
+		buf := e.ActiveBuffer
+		buf.Selection.End = buf.Cursor
+	}
+}
+
+func WithSelectionToChar(e *Editor, fn func(*Editor, string)) func(*Editor, string) {
+	return func(e *Editor, ch string) {
+		fn(e, ch)
+		buf := e.ActiveBuffer
+		buf.Selection.End = buf.Cursor
+	}
 }

@@ -61,7 +61,7 @@ func (e *Editor) StartLoop() {
 	e.Buffers = append(e.Buffers, buf)
 	e.ActiveBuffer = buf
 
-	keyHandler := NewKeyHandler(e, DefaultKeyMap())
+	keyHandler := NewKeyHandler(e, DefaultKeyMap(e))
 
 	for {
 		switch ev := tscreen.PollEvent().(type) {

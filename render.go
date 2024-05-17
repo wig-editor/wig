@@ -46,8 +46,10 @@ func (e *Editor) render() {
 
 				// render selection
 				textStyle := Color("text")
-				if SelectionCursorInRange(buf.Selection, Cursor{Line: lineNum, Char: i}) {
-					textStyle = Color("statusline.normal")
+				if buf.Selection != nil {
+					if SelectionCursorInRange(buf.Selection, Cursor{Line: lineNum, Char: i}) {
+						textStyle = Color("statusline.normal")
+					}
 				}
 
 				ch := getRenderChar(currentLine.Data[i])

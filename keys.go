@@ -26,7 +26,7 @@ func NewKeyHandler(editor *Editor, keymap ModeKeyMap) *KeyHandler {
 	}
 }
 
-func DefaultKeyMap() ModeKeyMap {
+func DefaultKeyMap(e *Editor) ModeKeyMap {
 	return ModeKeyMap{
 		MODE_NORMAL: map[string]interface{}{
 			"ctrl+e": CmdScrollDown,
@@ -36,6 +36,7 @@ func DefaultKeyMap() ModeKeyMap {
 			"j":      CmdCursorLineDown,
 			"k":      CmdCursorLineUp,
 			"i":      CmdInsertMode,
+			"v":      CmdVisualMode,
 			"a":      CmdInsertModeAfter,
 			"A":      CmdAppendLine,
 			"w":      CmdForwardWord,
@@ -65,6 +66,15 @@ func DefaultKeyMap() ModeKeyMap {
 				},
 			},
 		},
+		MODE_VISUAL: map[string]interface{}{
+			"w": WithSelection(e, CmdForwardWord),
+			"b": WithSelection(e, CmdBackwardWord),
+			"h": WithSelection(e, CmdCursorLeft),
+			"l": WithSelection(e, CmdCursorRight),
+			"j": WithSelection(e, CmdCursorLineDown),
+			"k": WithSelection(e, CmdCursorLineUp),
+			"f": WithSelectionToChar(e, CmdForwardChar),
+		},
 	}
 }
 
@@ -82,6 +92,13 @@ func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 
 		HandleInsertKey(k.editor, ev)
 		return
+	}
+
+	if mode == MODE_VISUAL {
+		if key == "Esc" {
+			CmdNormalMode(k.editor)
+			return
+		}
 	}
 
 	var keySet KeyMap
