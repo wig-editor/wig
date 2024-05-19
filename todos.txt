@@ -1,2 +1,3 @@
 bugs:
 delete all lines and edit.
+select and line result in -1 cursor

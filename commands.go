@@ -389,6 +389,9 @@ func CmdSelectinDelete(e *Editor) {
 	lineEnd := lineByNum(buf, curEnd.Line)
 
 	if lineNum == curStart.Line && lineNum == curEnd.Line {
+		if curStart.Char > curEnd.Char {
+			curStart, curEnd = curEnd, curStart
+		}
 		lineStart.Data = append(lineStart.Data[:curStart.Char], lineStart.Data[curEnd.Char+1:]...)
 	} else {
 		lineStart.Next = lineEnd
