@@ -397,7 +397,10 @@ func CmdSelectinDelete(e *Editor) {
 		lineStart.Next = lineEnd
 		lineEnd.Prev = lineStart
 		lineStart.Data = lineStart.Data[:curStart.Char]
-		lineEnd.Data = lineEnd.Data[curEnd.Char:]
+		lineEnd.Data = lineEnd.Data[curEnd.Char+1:]
+		if len(lineEnd.Data) == 0 {
+			buf.Lines.Delete(lineEnd)
+		}
 		lineJoinNext(buf, lineStart)
 	}
 
