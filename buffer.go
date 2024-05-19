@@ -154,13 +154,10 @@ func BufferReadFile(path string) (*Buffer, error) {
 	}
 	lines := &LineList{}
 	buf := &Buffer{
-		FilePath: path,
-		Lines:    lines,
-		Cursor:   Cursor{0, 12, 12},
-		Selection: &Selection{
-			Start: Cursor{8, 3, 0},
-			End:   Cursor{12, 6, 0},
-		},
+		FilePath:  path,
+		Lines:     lines,
+		Cursor:    Cursor{0, 12, 12},
+		Selection: nil,
 	}
 	for _, line := range bytes.Split(data, []byte("\n")) {
 		lines.Append([]rune(string(line)))

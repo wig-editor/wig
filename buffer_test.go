@@ -34,8 +34,16 @@ func TestLineByNum(t *testing.T) {
 }
 
 func TestSelectionDelete(t *testing.T) {
-	// buf, err := BufferReadFile("/home/andrew/code/mcwig/buffer_test.txt")
-	// if err != nil {
-	// 	t.Errorf("expected nil, got %v", err)
-	// }
+	buf, err := BufferReadFile("/home/andrew/code/mcwig/buffer_test.txt")
+	if err != nil {
+		t.Errorf("expected nil, got %v", err)
+	}
+
+	buf.Selection = &Selection{
+		Start: Cursor{Line: 0, Char: 0},
+		End:   Cursor{Line: 1, Char: 0},
+	}
+	CmdSelectinDelete(&Editor{ActiveBuffer: buf})
+	line := lineByNum(buf, 0)
+	assert.Equal(t, "line two", string(line.Data))
 }

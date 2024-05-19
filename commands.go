@@ -370,56 +370,41 @@ func CmdChangeLine(e *Editor) {
 	CmdInsertModeAfter(e)
 }
 
+// FIXME: delete last char on last line
 func CmdSelectinDelete(e *Editor) {
 	buf := e.ActiveBuffer
 	if buf.Selection == nil {
 		return
 	}
 
-	start := buf.Selection.Start
-	end := buf.Selection.End
+	curStart := buf.Selection.Start
+	curEnd := buf.Selection.End
 
-	if start.Line > end.Line {
-		start, end = end, start
+	if curStart.Line > curEnd.Line {
+		curStart, curEnd = curEnd, curStart
 	}
 
-	lineNum := start.Line
-	line := lineByNum(buf, start.Line)
+	lineNum := curStart.Line
+	lineStart := lineByNum(buf, curStart.Line)
+	lineEnd := lineByNum(buf, curEnd.Line)
 
-	if lineNum == start.Line && lineNum == end.Line {
-		line.Data = append(line.Data[:start.Char], line.Data[end.Char+1:]...)
+	if lineNum == curStart.Line && lineNum == curEnd.Line {
+		lineStart.Data = append(lineStart.Data[:curStart.Char], lineStart.Data[curEnd.Char+1:]...)
 	} else {
-		for lineNum <= end.Line {
-			if lineNum == start.Line {
-				line.Data = line.Data[:start.Char]
-				goto next
-			}
-
-			if lineNum == end.Line {
-				line.Data = line.Data[end.Char:]
-				goto next
-			}
-
-			buf.Lines.Delete(line)
-
-		next:
-			line = line.Next
-			lineNum++
-		}
-
-		line = lineByNum(buf, start.Line)
-		lineJoinNext(buf, line)
+		lineStart.Next = lineEnd
+		lineEnd.Prev = lineStart
+		lineStart.Data = lineStart.Data[:curStart.Char]
+		lineEnd.Data = lineEnd.Data[curEnd.Char:]
+		lineJoinNext(buf, lineStart)
 	}
 
 	// TODO: fix panic on last line delete
-	buf.Cursor.Line = start.Line
-	line = cursorToLine(buf)
-	if line != nil && start.Char < len(line.Data) {
-		cursorGotoChar(buf, start.Char)
+	buf.Cursor.Line = curStart.Line
+	if lineStart != nil && curStart.Char < len(lineStart.Data) {
+		cursorGotoChar(buf, curStart.Char)
 	} else {
 		CmdGotoLineEnd(e)
 	}
-
 	CmdNormalMode(e)
 }
 
