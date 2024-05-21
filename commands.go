@@ -355,7 +355,8 @@ func CmdLineOpenAbove(e *Editor) {
 
 func CmdDeleteLine(e *Editor) {
 	buf := e.ActiveBuffer
-	buf.Lines.DeleteByIndex(buf.Cursor.Line)
+	line := cursorToLine(buf)
+	buf.Lines.Delete(line)
 
 	if buf.Cursor.Line >= buf.Lines.Size {
 		CmdCursorLineUp(e)
@@ -371,6 +372,7 @@ func CmdChangeLine(e *Editor) {
 }
 
 // FIXME: delete last char on last line
+// FIXME: adjust scrolling position after meny lines has been deleted
 func CmdSelectinDelete(e *Editor) {
 	buf := e.ActiveBuffer
 	if buf.Selection == nil {
@@ -394,13 +396,28 @@ func CmdSelectinDelete(e *Editor) {
 		}
 		lineStart.Data = append(lineStart.Data[:curStart.Char], lineStart.Data[curEnd.Char+1:]...)
 	} else {
-		lineStart.Next = lineEnd
-		lineEnd.Prev = lineStart
+		// delete all lines between start and end line
+		currentLine := lineStart.Next
+		i := curStart.Line + 1
+		for currentLine != nil {
+			if i == curEnd.Line {
+				break
+			}
+			buf.Lines.Delete(currentLine)
+			currentLine = currentLine.Next
+			i++
+		}
+
 		lineStart.Data = lineStart.Data[:curStart.Char]
-		lineEnd.Data = lineEnd.Data[curEnd.Char+1:]
+
+		if curEnd.Char+1 <= len(lineEnd.Data) {
+			lineEnd.Data = lineEnd.Data[curEnd.Char+1:]
+		}
+
 		if len(lineEnd.Data) == 0 {
 			buf.Lines.Delete(lineEnd)
 		}
+
 		lineJoinNext(buf, lineStart)
 	}
 
