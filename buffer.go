@@ -110,8 +110,17 @@ func (ll *LineList) DeleteByIndex(index int) {
 }
 
 func (ll *LineList) Delete(line *Line) {
-	line.Prev.Next = line.Next
-	line.Next.Prev = line.Prev
+	if line == nil {
+		return
+	}
+
+	if line.Prev != nil {
+		line.Prev.Next = line.Next
+	}
+	if line.Next != nil {
+		line.Next.Prev = line.Prev
+	}
+
 	ll.Size--
 }
 

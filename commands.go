@@ -371,7 +371,6 @@ func CmdChangeLine(e *Editor) {
 	CmdInsertModeAfter(e)
 }
 
-// FIXME: delete last char on last line
 // FIXME: adjust scrolling position after meny lines has been deleted
 func CmdSelectinDelete(e *Editor) {
 	buf := e.ActiveBuffer
