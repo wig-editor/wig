@@ -342,7 +342,8 @@ func CmdNewLine(e *Editor) {
 	if len(line.Value) == 0 {
 		line.Value = Line{}
 	} else {
-		tmpData := line.Value[buf.Cursor.Char:]
+		tmpData := make([]rune, len(line.Value[buf.Cursor.Char:]))
+		copy(tmpData, line.Value[buf.Cursor.Char:])
 		line.Value = line.Value[:buf.Cursor.Char]
 		buf.Lines.insertValueAfter(tmpData, line)
 	}

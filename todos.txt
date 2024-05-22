@@ -4,3 +4,4 @@ select and line result in -1 cursor
 leave only one line and insert EOL
 delete first line freeze
 open new line when just one line left
+move cursor to EOL. Enter. cursor stays behind one character.
