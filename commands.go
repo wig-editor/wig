@@ -357,6 +357,14 @@ func CmdLineOpenBelow(e *Editor) {
 }
 
 func CmdLineOpenAbove(e *Editor) {
+	buf := e.ActiveBuffer
+	if buf.Cursor.Line == 0 {
+		buf.Lines.PushFront(Line{})
+		CmdCursorBeginningOfTheLine(e)
+		CmdInsertModeAfter(e)
+		return
+	}
+
 	CmdCursorLineUp(e)
 	CmdLineOpenBelow(e)
 }
@@ -373,6 +381,12 @@ func CmdDeleteLine(e *Editor) {
 		CmdCursorLineUp(e)
 		CmdCursorBeginningOfTheLine(e)
 	}
+
+	if buf.Lines.Len == 0 {
+		buf.Lines.PushFront(Line{})
+	}
+
+	restoreCharPosition(buf)
 }
 
 func CmdChangeLine(e *Editor) {
