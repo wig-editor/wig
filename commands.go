@@ -70,7 +70,7 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 		return
 	}
 
-	line.Value = (append(line.Value, next.Value...))
+	line.Value = append(line.Value, next.Value...)
 
 	buf.Lines.Remove(next)
 }
@@ -339,14 +339,13 @@ func CmdAppendLine(e *Editor) {
 func CmdNewLine(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
-	if len(line.Value) == 0 {
-		line.Value = Line{}
-	} else {
+	if len(line.Value) > 0 {
 		tmpData := make([]rune, len(line.Value[buf.Cursor.Char:]))
 		copy(tmpData, line.Value[buf.Cursor.Char:])
 		line.Value = line.Value[:buf.Cursor.Char]
 		buf.Lines.insertValueAfter(tmpData, line)
 	}
+
 	CmdCursorLineDown(e)
 	CmdCursorBeginningOfTheLine(e)
 }

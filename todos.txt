@@ -1,7 +1,3 @@
-bugs:
-delete all lines and edit.
-select and line result in -1 cursor
-leave only one line and insert EOL
-delete first line freeze
-open new line when just one line left
+Bugs:
 move cursor to EOL. Enter. cursor stays behind one character.
+press Enter on empty line.
