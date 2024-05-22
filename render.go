@@ -28,7 +28,7 @@ func (e *Editor) render() {
 
 	buf := e.ActiveBuffer
 
-	currentLine := buf.Lines.Head
+	currentLine := buf.Lines.First()
 	offset := buf.ScrollOffset
 	lineNum := 0
 	y := 0
@@ -38,11 +38,11 @@ func (e *Editor) render() {
 			x := 0
 
 			// render cursor on empty line
-			if len(currentLine.Data) == 0 && lineNum == buf.Cursor.Line {
+			if len(currentLine.Value) == 0 && lineNum == buf.Cursor.Line {
 				SetContent(e.Screen, x, y, " ", Color("cursor"))
 			}
 
-			for i := 0; i < len(currentLine.Data); i++ {
+			for i := 0; i < len(currentLine.Value); i++ {
 
 				// render selection
 				textStyle := Color("text")
@@ -52,7 +52,7 @@ func (e *Editor) render() {
 					}
 				}
 
-				ch := getRenderChar(currentLine.Data[i])
+				ch := getRenderChar(currentLine.Value[i])
 				SetContent(e.Screen, x, y, string(ch), textStyle)
 
 				// render cursor
@@ -64,14 +64,14 @@ func (e *Editor) render() {
 			}
 
 			// render cursor after the end of the line in insert mode
-			if lineNum == buf.Cursor.Line && buf.Cursor.Char >= len(currentLine.Data) {
+			if lineNum == buf.Cursor.Line && buf.Cursor.Char >= len(currentLine.Value) {
 				SetContent(e.Screen, x, y, " ", Color("cursor"))
 			}
 
 			y++
 		}
 
-		currentLine = currentLine.Next
+		currentLine = currentLine.Next()
 		lineNum++
 	}
 

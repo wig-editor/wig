@@ -8,9 +8,9 @@ import (
 
 func TestBuffer(t *testing.T) {
 	buf := NewBuffer()
-	buf.Lines.Insert([]rune("hello"), 0)
-
-	assert.Equal(t, 1, buf.Lines.Size)
+	assert.Equal(t, 0, buf.Lines.Len)
+	buf.Lines.PushFront(Line{})
+	assert.Equal(t, 1, buf.Lines.Len)
 }
 
 func TestBufferReadFile(t *testing.T) {
@@ -19,7 +19,7 @@ func TestBufferReadFile(t *testing.T) {
 		t.Errorf("expected nil, got %v", err)
 	}
 
-	assert.Equal(t, 6, buf.Lines.Size)
+	assert.Equal(t, 6, buf.Lines.Len)
 }
 
 func TestLineByNum(t *testing.T) {
@@ -30,7 +30,7 @@ func TestLineByNum(t *testing.T) {
 
 	line := lineByNum(buf, 1)
 
-	assert.Equal(t, "line two", string(line.Data))
+	assert.Equal(t, "line two", string(line.Value))
 }
 
 func TestSelectionDelete(t *testing.T) {
@@ -45,5 +45,5 @@ func TestSelectionDelete(t *testing.T) {
 	}
 	CmdSelectinDelete(&Editor{ActiveBuffer: buf})
 	line := lineByNum(buf, 0)
-	assert.Equal(t, "ine two", string(line.Data))
+	assert.Equal(t, "ine two", string(line.Value))
 }
