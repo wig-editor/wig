@@ -74,6 +74,13 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	buf.Lines.Remove(next)
 }
 
+func CmdJoinNextLine(e *Editor) {
+	buf := e.ActiveBuffer
+	line := cursorToLine(buf)
+	CmdGotoLineEnd(e)
+	lineJoinNext(buf, line)
+}
+
 func CmdScrollUp(e *Editor) {
 	if e.ActiveBuffer.ScrollOffset > 0 {
 		e.ActiveBuffer.ScrollOffset--

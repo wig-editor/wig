@@ -48,6 +48,7 @@ func DefaultKeyMap(e *Editor) ModeKeyMap {
 			"0":      CmdCursorBeginningOfTheLine,
 			"o":      CmdLineOpenBelow,
 			"O":      CmdLineOpenAbove,
+			"J":      CmdJoinNextLine,
 			"c": KeyMap{
 				"c": CmdChangeLine,
 			},
