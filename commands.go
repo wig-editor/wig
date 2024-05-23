@@ -187,8 +187,12 @@ func CmdInsertModeAfter(e *Editor) {
 
 func CmdNormalMode(e *Editor) {
 	buf := e.ActiveBuffer
+	line := cursorToLine(buf)
 	if buf.Mode == MODE_INSERT {
 		CmdCursorLeft(e)
+		if buf.Cursor.Char >= len(line.Value) {
+			CmdGotoLineEnd(e)
+		}
 	}
 
 	if buf.Mode == MODE_VISUAL {
