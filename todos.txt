@@ -1,2 +1,1 @@
 Bugs:
-press Enter on empty line. line stays.
