@@ -223,9 +223,15 @@ func CmdForwardWord(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
 
-	if buf.Cursor.Char >= len(line.Value) || line.Value.IsEmpty() {
-		CmdCursorLineDown(e)
-		CmdCursorBeginningOfTheLine(e)
+	checkEOF := func(line *Element[Line]) bool {
+		if buf.Cursor.Char >= len(line.Value) || line.Value.IsEmpty() {
+			CmdCursorLineDown(e)
+			CmdCursorFirstNonBlank(e)
+			return true
+		}
+		return false
+	}
+	if checkEOF(line) {
 		return
 	}
 
@@ -234,9 +240,12 @@ func CmdForwardWord(e *Editor) {
 	ch := line.Value[buf.Cursor.Char]
 
 	for {
+		if checkEOF(line) {
+			return
+		}
+
 		if buf.Cursor.Char >= len(line.Value)-1 {
 			CmdCursorLineDown(e)
-			CmdCursorBeginningOfTheLine(e)
 			CmdCursorFirstNonBlank(e)
 			line = cursorToLine(buf)
 			if line.Value.IsEmpty() {
@@ -245,13 +254,7 @@ func CmdForwardWord(e *Editor) {
 			break
 		}
 
-		if unicode.IsSpace(ch) {
-			exitOn = func(ch rune) bool {
-				return !unicode.IsSpace(ch)
-			}
-		}
-
-		if isSpecialChar(ch) {
+		if unicode.IsSpace(ch) || isSpecialChar(ch) {
 			exitOn = func(ch rune) bool {
 				return !unicode.IsSpace(ch)
 			}
@@ -274,26 +277,41 @@ func CmdBackwardWord(e *Editor) {
 		return
 	}
 
-	if e.ActiveBuffer.Cursor.Char > 0 {
-		for {
-			if buf.Cursor.Char == 0 && buf.Cursor.Line == 0 {
-				return
-			}
-			if buf.Cursor.Char == 0 {
-				CmdCursorLineUp(e)
-				CmdGotoLineEnd(e)
-				break
-			}
-
-			CmdCursorLeft(e)
-
-			if isSpecialChar(line.Value[e.ActiveBuffer.Cursor.Char]) {
-				break
-			}
-		}
-	} else {
+	if buf.Cursor.Char == 0 || line.Value.IsEmpty() {
 		CmdCursorLineUp(e)
 		CmdGotoLineEnd(e)
+		return
+	}
+
+	CmdCursorLeft(e)
+
+	for {
+		line = cursorToLine(buf)
+		ch := line.Value[buf.Cursor.Char]
+
+		if buf.Cursor.Char == 0 {
+			if unicode.IsSpace(ch) {
+				CmdCursorLineUp(e)
+				CmdGotoLineEnd(e)
+			}
+			break
+		}
+
+		if unicode.IsSpace(ch) {
+			CmdCursorLeft(e)
+			continue
+		}
+
+		if isSpecialChar(ch) {
+			break
+		}
+
+		prevCh := line.Value[buf.Cursor.Char-1]
+		if unicode.IsSpace(prevCh) || isSpecialChar(prevCh) {
+			break
+		}
+
+		CmdCursorLeft(e)
 	}
 }
 
