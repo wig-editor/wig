@@ -223,13 +223,14 @@ func CmdForwardWord(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
 
-	if buf.Cursor.Char >= len(line.Value) {
+	if buf.Cursor.Char >= len(line.Value) || line.Value.IsEmpty() {
 		CmdCursorLineDown(e)
 		CmdCursorBeginningOfTheLine(e)
 		return
 	}
 
 	exitOn := isSpecialChar
+
 	ch := line.Value[buf.Cursor.Char]
 
 	for {
@@ -237,6 +238,10 @@ func CmdForwardWord(e *Editor) {
 			CmdCursorLineDown(e)
 			CmdCursorBeginningOfTheLine(e)
 			CmdCursorFirstNonBlank(e)
+			line = cursorToLine(buf)
+			if line.Value.IsEmpty() {
+				continue
+			}
 			break
 		}
 

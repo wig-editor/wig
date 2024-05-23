@@ -4,6 +4,10 @@ package mcwig
 
 type Line []rune
 
+func (l Line) IsEmpty() bool {
+	return len(l) == 0
+}
+
 // the zero value is ready to use.
 type List[T any] struct {
 	root Element[T]
