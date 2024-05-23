@@ -509,6 +509,7 @@ func CmdSelectinDelete(e *Editor) {
 	} else {
 		CmdGotoLineEnd(e)
 	}
+
 	CmdNormalMode(e)
 }
 
