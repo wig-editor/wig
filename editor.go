@@ -76,6 +76,8 @@ func (e *Editor) StartLoop() {
 			fmt.Println("error:", ev)
 			return
 		case *tcell.EventInterrupt:
+			e.Screen.Clear()
+			e.Screen.Fini()
 			return
 		}
 	}
