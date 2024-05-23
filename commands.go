@@ -233,7 +233,7 @@ func CmdForwardWord(e *Editor) {
 	}
 }
 
-// TODO: fix select first word
+// FIXME: fix select first word
 func CmdBackwardWord(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
@@ -339,13 +339,21 @@ func CmdAppendLine(e *Editor) {
 func CmdNewLine(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
-	if len(line.Value) > 0 {
-		tmpData := make([]rune, len(line.Value[buf.Cursor.Char:]))
-		copy(tmpData, line.Value[buf.Cursor.Char:])
-		line.Value = line.Value[:buf.Cursor.Char]
-		buf.Lines.insertValueAfter(tmpData, line)
+
+	// EOL
+	if (buf.Cursor.Char) >= len(line.Value) {
+		buf.Lines.insertValueAfter(Line{}, line)
+		buf.Cursor.Line++
+		buf.Cursor.Char = 1
+		buf.Cursor.PreserveCharPosition = 0
+		return
 	}
 
+	// split line
+	tmpData := make([]rune, len(line.Value[buf.Cursor.Char:]))
+	copy(tmpData, line.Value[buf.Cursor.Char:])
+	line.Value = line.Value[:buf.Cursor.Char]
+	buf.Lines.insertValueAfter(tmpData, line)
 	CmdCursorLineDown(e)
 	CmdCursorBeginningOfTheLine(e)
 }

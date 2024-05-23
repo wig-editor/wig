@@ -1,3 +1,2 @@
 Bugs:
-move cursor to EOL. Enter. cursor stays behind one character.
-press Enter on empty line.
+press Enter on empty line. line stays.
