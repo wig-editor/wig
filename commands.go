@@ -50,7 +50,7 @@ func restoreCharPosition(buf *Buffer) {
 }
 
 func isSpecialChar(c rune) bool {
-	specialChars := []rune(" ,.()[]{}<>:;+*/-=~!@#$%^&|?`\"")
+	specialChars := []rune(",.()[]{}<>:;+*/-=~!@#$%^&|?`\"")
 	for _, char := range specialChars {
 		if c == char {
 			return true
@@ -222,32 +222,39 @@ func CmdGotoLineEnd(e *Editor) {
 func CmdForwardWord(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
-	if e.ActiveBuffer.Cursor.Char >= len(line.Value) {
+
+	if buf.Cursor.Char >= len(line.Value) {
 		CmdCursorLineDown(e)
 		CmdCursorBeginningOfTheLine(e)
 		return
 	}
 
 	exitOn := isSpecialChar
+	ch := line.Value[buf.Cursor.Char]
 
 	for {
-		if e.ActiveBuffer.Cursor.Char >= len(line.Value)-1 {
+		if buf.Cursor.Char >= len(line.Value)-1 {
 			CmdCursorLineDown(e)
 			CmdCursorBeginningOfTheLine(e)
 			CmdCursorFirstNonBlank(e)
 			break
 		}
 
-		CmdCursorRight(e)
-
-		ch := line.Value[e.ActiveBuffer.Cursor.Char]
 		if unicode.IsSpace(ch) {
-			// exit on first non-whitespace char
 			exitOn = func(ch rune) bool {
 				return !unicode.IsSpace(ch)
 			}
-			continue
 		}
+
+		if isSpecialChar(ch) {
+			exitOn = func(ch rune) bool {
+				return !unicode.IsSpace(ch)
+			}
+		}
+
+		CmdCursorRight(e)
+
+		ch = line.Value[buf.Cursor.Char]
 
 		if exitOn(ch) {
 			break
