@@ -267,7 +267,6 @@ func CmdForwardWord(e *Editor) {
 	}
 }
 
-// FIXME: fix select first word
 func CmdBackwardWord(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
