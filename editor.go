@@ -54,7 +54,7 @@ func (e *Editor) StartLoop() {
 
 	e.Screen = tscreen
 
-	buf, err := BufferReadFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf, err := BufferReadFile("/home/andrew/code/mcwig/editor.go")
 	if err != nil {
 		panic(err)
 	}

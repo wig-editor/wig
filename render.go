@@ -25,6 +25,7 @@ func SetContent(s tcell.Screen, x, y int, str string, st tcell.Style) int {
 
 func (e *Editor) render() {
 	e.Screen.Clear()
+	e.Screen.Fill(' ', Color("bg"))
 
 	buf := e.ActiveBuffer
 
