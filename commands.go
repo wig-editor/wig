@@ -462,7 +462,6 @@ func CmdChangeLine(e *Editor) {
 	CmdInsertModeAfter(e)
 }
 
-// FIXME: adjust scrolling position after meny lines has been deleted
 func CmdSelectinDelete(e *Editor) {
 	buf := e.ActiveBuffer
 	if buf.Selection == nil {
@@ -487,15 +486,8 @@ func CmdSelectinDelete(e *Editor) {
 		lineStart.Value = append(lineStart.Value[:curStart.Char], lineStart.Value[curEnd.Char+1:]...)
 	} else {
 		// delete all lines between start and end line
-		currentLine := lineStart.Next()
-		i := curStart.Line + 1
-		for currentLine != nil {
-			if i == curEnd.Line {
-				break
-			}
-			buf.Lines.Remove(currentLine)
-			currentLine = currentLine.Next()
-			i++
+		for lineStart.Next() != lineEnd {
+			buf.Lines.Remove(lineStart.Next())
 		}
 
 		lineStart.Value = lineStart.Value[:curStart.Char]
@@ -511,7 +503,6 @@ func CmdSelectinDelete(e *Editor) {
 		lineJoinNext(buf, lineStart)
 	}
 
-	// TODO: fix panic on last line delete
 	buf.Cursor.Line = curStart.Line
 	if lineStart != nil && curStart.Char < len(lineStart.Value) {
 		cursorGotoChar(buf, curStart.Char)
