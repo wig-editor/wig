@@ -105,8 +105,8 @@ func (l *List[T]) insertValueAfter(v T, at *Element[T]) *Element[T] {
 func (l *List[T]) remove(e *Element[T]) {
 	e.prev.next = e.next
 	e.next.prev = e.prev
-	// e.next = nil
-	// e.prev = nil
-	// e.list = nil
+	e.next = nil
+	e.prev = nil
+	e.list = nil
 	l.Len--
 }
