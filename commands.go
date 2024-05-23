@@ -71,7 +71,6 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	}
 
 	line.Value = append(line.Value, next.Value...)
-
 	buf.Lines.Remove(next)
 }
 
@@ -219,20 +218,32 @@ func CmdForwardWord(e *Editor) {
 	if e.ActiveBuffer.Cursor.Char >= len(line.Value) {
 		CmdCursorLineDown(e)
 		CmdCursorBeginningOfTheLine(e)
-	} else {
-		for {
-			if e.ActiveBuffer.Cursor.Char >= len(line.Value)-1 {
-				CmdCursorLineDown(e)
-				CmdCursorBeginningOfTheLine(e)
-				CmdCursorFirstNonBlank(e)
-				break
-			}
+		return
+	}
 
-			CmdCursorRight(e)
+	exitOn := isSpecialChar
 
-			if isSpecialChar(line.Value[e.ActiveBuffer.Cursor.Char]) {
-				break
+	for {
+		if e.ActiveBuffer.Cursor.Char >= len(line.Value)-1 {
+			CmdCursorLineDown(e)
+			CmdCursorBeginningOfTheLine(e)
+			CmdCursorFirstNonBlank(e)
+			break
+		}
+
+		CmdCursorRight(e)
+
+		ch := line.Value[e.ActiveBuffer.Cursor.Char]
+		if unicode.IsSpace(ch) {
+			// exit on first non-whitespace char
+			exitOn = func(ch rune) bool {
+				return !unicode.IsSpace(ch)
 			}
+			continue
+		}
+
+		if exitOn(ch) {
+			break
 		}
 	}
 }
@@ -241,9 +252,16 @@ func CmdForwardWord(e *Editor) {
 func CmdBackwardWord(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
+	if buf.Cursor.Char == 0 && buf.Cursor.Line == 0 {
+		return
+	}
+
 	if e.ActiveBuffer.Cursor.Char > 0 {
 		for {
-			if e.ActiveBuffer.Cursor.Char == 0 {
+			if buf.Cursor.Char == 0 && buf.Cursor.Line == 0 {
+				return
+			}
+			if buf.Cursor.Char == 0 {
 				CmdCursorLineUp(e)
 				CmdGotoLineEnd(e)
 				break
