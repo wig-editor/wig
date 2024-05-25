@@ -1,84 +1,45 @@
 package mcwig
 
-import (
-	"fmt"
-	"runtime/debug"
+import "github.com/gdamore/tcell/v2"
 
-	"github.com/gdamore/tcell/v2"
-)
+type Viewport interface {
+	Size() (width, height int)
+}
 
-type UiWidget interface {
-	Render()
+type View interface {
+	SetContent(x, y int, str string, st tcell.Style)
 }
 
 type Editor struct {
-	Screen       tcell.Screen
+	Viewport     Viewport
+	Keys         *KeyHandler
 	Buffers      []*Buffer
 	ActiveBuffer *Buffer
-	widgets      []UiWidget
+	ExitCh       chan int
 }
 
-func (e *Editor) RegisterWidget(w UiWidget) {
-	e.widgets = append(e.widgets, w)
-}
-
-func NewEditor() *Editor {
+func NewEditor(
+	viewport Viewport,
+	keys *KeyHandler,
+) *Editor {
 	return &Editor{
+		Viewport:     viewport,
+		Keys:         keys,
 		Buffers:      []*Buffer{},
 		ActiveBuffer: nil,
+		ExitCh:       make(chan int),
 	}
 }
 
-func (e *Editor) StartLoop() {
-	tscreen, err := tcell.NewScreen()
-	if err != nil {
-		panic(err)
-	}
-
-	err = tscreen.Init()
-	if err != nil {
-		panic(err)
-	}
-
-	tscreen.Sync()
-
-	// catch panic
-	defer func() {
-		if r := recover(); r != nil {
-			tscreen.Clear()
-			tscreen.Fini()
-			fmt.Println("Recovered from panic:", r)
-			debug.PrintStack()
-		}
-	}()
-
-	e.Screen = tscreen
-
-	buf, err := BufferReadFile("/home/andrew/code/mcwig/editor.go")
+func (e *Editor) OpenFile(path string) {
+	buf, err := BufferReadFile(path)
 	if err != nil {
 		panic(err)
 	}
 	e.Buffers = append(e.Buffers, buf)
 	e.ActiveBuffer = buf
+}
 
-	keyHandler := NewKeyHandler(e, DefaultKeyMap(e))
-
-	for {
-		switch ev := tscreen.PollEvent().(type) {
-		case *tcell.EventResize:
-			tscreen.Sync()
-			e.render()
-		case *tcell.EventKey:
-			keyHandler.handleKey(ev)
-			tscreen.Sync()
-			e.render()
-		case *tcell.EventError:
-			fmt.Println("error:", ev)
-			return
-		case *tcell.EventInterrupt:
-			e.Screen.Clear()
-			e.Screen.Fini()
-			return
-		}
-	}
+func (e *Editor) HandleInput(ev *tcell.EventKey) {
+	e.Keys.HandleKey(e, ev)
 }

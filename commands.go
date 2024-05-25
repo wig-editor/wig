@@ -85,7 +85,7 @@ func CmdScrollUp(e *Editor) {
 	if e.ActiveBuffer.ScrollOffset > 0 {
 		e.ActiveBuffer.ScrollOffset--
 
-		_, h := e.Screen.Size()
+		_, h := e.Viewport.Size()
 		if e.ActiveBuffer.Cursor.Line > e.ActiveBuffer.ScrollOffset+h-3 {
 			CmdCursorLineUp(e)
 		}
@@ -135,7 +135,7 @@ func CmdCursorLineDown(e *Editor) {
 		e.ActiveBuffer.Cursor.Line++
 		restoreCharPosition(e.ActiveBuffer)
 
-		_, h := e.Screen.Size()
+		_, h := e.Viewport.Size()
 		if e.ActiveBuffer.Cursor.Line-e.ActiveBuffer.ScrollOffset > h-3 {
 			CmdScrollDown(e)
 		}
@@ -513,7 +513,11 @@ func CmdSelectinDelete(e *Editor) {
 	CmdNormalMode(e)
 }
 
-func WithSelection(e *Editor, fn func(*Editor)) func(*Editor) {
+func CmdExit(e *Editor) {
+	e.ExitCh <- 1
+}
+
+func WithSelection(fn func(*Editor)) func(*Editor) {
 	return func(e *Editor) {
 		fn(e)
 		buf := e.ActiveBuffer
@@ -521,7 +525,7 @@ func WithSelection(e *Editor, fn func(*Editor)) func(*Editor) {
 	}
 }
 
-func WithSelectionToChar(e *Editor, fn func(*Editor, string)) func(*Editor, string) {
+func WithSelectionToChar(fn func(*Editor, string)) func(*Editor, string) {
 	return func(e *Editor, ch string) {
 		fn(e, ch)
 		buf := e.ActiveBuffer

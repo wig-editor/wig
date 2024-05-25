@@ -30,7 +30,7 @@ var theme = map[string]termColor{
 var stylesCache = map[string]tcell.Style{}
 var defaultStyle tcell.Style
 
-func ThemeInit() {
+func init() {
 	defaultStyle = tcell.StyleDefault
 }
 

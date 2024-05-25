@@ -11,22 +11,19 @@ type ModeKeyMap map[Mode]KeyMap
 type KeyMap map[string]interface{}
 
 type KeyHandler struct {
-	editor *Editor
 	keymap ModeKeyMap
-
 	// KeyMap or func(*Editor) or func(*Editor, string)
 	waitingForInput interface{}
 }
 
-func NewKeyHandler(editor *Editor, keymap ModeKeyMap) *KeyHandler {
+func NewKeyHandler(keymap ModeKeyMap) *KeyHandler {
 	return &KeyHandler{
-		editor:          editor,
 		keymap:          keymap,
 		waitingForInput: nil,
 	}
 }
 
-func DefaultKeyMap(e *Editor) ModeKeyMap {
+func DefaultKeyMap() ModeKeyMap {
 	return ModeKeyMap{
 		MODE_NORMAL: map[string]interface{}{
 			"ctrl+e": CmdScrollDown,
@@ -61,52 +58,49 @@ func DefaultKeyMap(e *Editor) ModeKeyMap {
 			"f": CmdForwardChar,
 			"F": CmdBackwardChar,
 			"ctrl+c": KeyMap{
-				"ctrl+x": func(e *Editor) {
-					// sends exit signal to the main loop
-					e.Screen.PostEvent(tcell.NewEventInterrupt(nil))
-				},
+				"ctrl+x": CmdExit,
 			},
 		},
 		MODE_VISUAL: map[string]interface{}{
-			"ctrl+e": WithSelection(e, CmdScrollDown),
-			"ctrl+y": WithSelection(e, CmdScrollUp),
-			"w":      WithSelection(e, CmdForwardWord),
-			"b":      WithSelection(e, CmdBackwardWord),
-			"h":      WithSelection(e, CmdCursorLeft),
-			"l":      WithSelection(e, CmdCursorRight),
-			"j":      WithSelection(e, CmdCursorLineDown),
-			"k":      WithSelection(e, CmdCursorLineUp),
-			"f":      WithSelectionToChar(e, CmdForwardChar),
-			"$":      WithSelection(e, CmdGotoLineEnd),
-			"0":      WithSelection(e, CmdCursorBeginningOfTheLine),
+			"ctrl+e": WithSelection(CmdScrollDown),
+			"ctrl+y": WithSelection(CmdScrollUp),
+			"w":      WithSelection(CmdForwardWord),
+			"b":      WithSelection(CmdBackwardWord),
+			"h":      WithSelection(CmdCursorLeft),
+			"l":      WithSelection(CmdCursorRight),
+			"j":      WithSelection(CmdCursorLineDown),
+			"k":      WithSelection(CmdCursorLineUp),
+			"f":      WithSelectionToChar(CmdForwardChar),
+			"$":      WithSelection(CmdGotoLineEnd),
+			"0":      WithSelection(CmdCursorBeginningOfTheLine),
 			"x":      CmdSelectinDelete,
 			"d":      CmdSelectinDelete,
 			"g": KeyMap{
-				"g": WithSelection(e, CmdGotoLine0),
+				"g": WithSelection(CmdGotoLine0),
 			},
 		},
 	}
 }
 
-func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
+func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey) {
 	key := k.normalizeKeyName(ev)
 
-	buf := k.editor.ActiveBuffer
+	buf := editor.ActiveBuffer
 	mode := buf.Mode
 
 	if mode == MODE_INSERT {
 		if key == "Esc" {
-			CmdNormalMode(k.editor)
+			CmdNormalMode(editor)
 			return
 		}
 
-		HandleInsertKey(k.editor, ev)
+		HandleInsertKey(editor, ev)
 		return
 	}
 
 	if mode == MODE_VISUAL {
 		if key == "Esc" {
-			CmdNormalMode(k.editor)
+			CmdNormalMode(editor)
 			return
 		}
 	}
@@ -117,7 +111,7 @@ func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 		keySet = v
 	case func(e *Editor, ch string):
 		k.waitingForInput = nil
-		v(k.editor, key)
+		v(editor, key)
 		return
 	default:
 		keySet = k.keymap[mode]
@@ -131,7 +125,7 @@ func (k *KeyHandler) handleKey(ev *tcell.EventKey) {
 			k.waitingForInput = action
 		case func(*Editor):
 			k.waitingForInput = nil
-			action(k.editor)
+			action(editor)
 		default:
 			k.waitingForInput = nil
 		}

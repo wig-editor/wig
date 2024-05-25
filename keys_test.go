@@ -7,13 +7,13 @@ import (
 )
 
 func TestKeyHandler(t *testing.T) {
-	editor := NewEditor()
-	buf, err := BufferReadFile("/home/andrew/code/mcwig/render.go")
-	if err != nil {
-		panic(err)
-	}
-	editor.Buffers = append(editor.Buffers, buf)
-	editor.ActiveBuffer = buf
+	tscreen, _ := tcell.NewScreen()
+	editor := NewEditor(
+		tscreen,
+		nil,
+	)
+
+	editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
 
 	testForwardCalled := false
 	testDeleteCalled := false
@@ -38,27 +38,27 @@ func TestKeyHandler(t *testing.T) {
 	}
 
 	t.Run("f", func(t *testing.T) {
-		h := NewKeyHandler(editor, testKeyMap())
-		h.handleKey(tcell.NewEventKey(tcell.KeyRune, 'f', tcell.ModNone))
+		h := NewKeyHandler(testKeyMap())
+		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'f', tcell.ModNone))
 		if testForwardCalled == false {
 			t.Error("testForwardCalled should be true")
 		}
 	})
 
 	t.Run("dd", func(t *testing.T) {
-		h := NewKeyHandler(editor, testKeyMap())
-		h.handleKey(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
-		h.handleKey(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
+		h := NewKeyHandler(testKeyMap())
+		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
+		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
 		if testDeleteCalled == false {
 			t.Error("testDeleteCalled should be true")
 		}
 	})
 
 	t.Run("dtv", func(t *testing.T) {
-		h := NewKeyHandler(editor, testKeyMap())
-		h.handleKey(tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
-		h.handleKey(tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone))
-		h.handleKey(tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModNone))
+		h := NewKeyHandler(testKeyMap())
+		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone))
+		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone))
+		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModNone))
 		if capturedChar != "v" {
 			t.Error("capturedChar should be 'v'")
 		}
