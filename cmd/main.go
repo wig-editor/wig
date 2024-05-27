@@ -8,6 +8,7 @@ import (
 
 	"github.com/firstrow/mcwig"
 	"github.com/firstrow/mcwig/render"
+	"github.com/firstrow/mcwig/ui"
 )
 
 func main() {
@@ -36,6 +37,10 @@ func main() {
 		mcwig.NewKeyHandler(mcwig.DefaultKeyMap()),
 	)
 	editor.OpenFile("/home/andrew/code/mcwig/editor.go")
+
+	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
+		":": ui.CommandLineInit,
+	})
 
 	renderer := render.New(editor, tscreen)
 

@@ -92,6 +92,10 @@ func (r *Renderer) Render() {
 		lineNum++
 	}
 
+	for _, c := range r.e.UiComponents {
+		c.Render(r, r.screen)
+	}
+
 	ui.StatuslineRender(r.e, r, r.screen)
 
 	r.screen.Show()

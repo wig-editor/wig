@@ -21,7 +21,7 @@ func TestKeyHandler(t *testing.T) {
 
 	testKeyMap := func() ModeKeyMap {
 		return ModeKeyMap{
-			MODE_NORMAL: map[string]interface{}{
+			MODE_NORMAL: KeyMap{
 				"f": func(e *Editor) {
 					testForwardCalled = true
 				},
@@ -80,7 +80,7 @@ func TestKeyHandlerMap(t *testing.T) {
 
 	testKeyMap := func() ModeKeyMap {
 		return ModeKeyMap{
-			MODE_NORMAL: map[string]interface{}{
+			MODE_NORMAL: KeyMap{
 				":": func(e *Editor) {
 					panic(": must not be called")
 				},

@@ -138,7 +138,6 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 		default:
 			k.waitingForInput = nil
 		}
-
 		return
 	}
 
