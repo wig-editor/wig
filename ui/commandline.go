@@ -58,11 +58,20 @@ func (u *uiCommandLine) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 		return
 	}
 	if ev.Key() == tcell.KeyEnter {
+		cmd := strings.TrimSpace(string(u.chBuf))
+		u.execute(cmd)
 		e.PopUi()
 		return
 	}
 
 	u.chBuf = append(u.chBuf, ev.Rune())
+}
+
+func (u *uiCommandLine) execute(cmd string) {
+	switch cmd {
+	case "q":
+		mcwig.CmdExit(u.e)
+	}
 }
 
 func (u *uiCommandLine) Mode() mcwig.Mode {
