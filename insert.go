@@ -6,6 +6,11 @@ import (
 
 func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 	buf := e.ActiveBuffer
+
+	if buf.Mode != MODE_INSERT {
+		return
+	}
+
 	ch := ev.Rune()
 
 	// check for CTRL modifier

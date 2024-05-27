@@ -12,6 +12,10 @@ type KeyMap map[string]interface{}
 
 type KeyHandler struct {
 	keymap ModeKeyMap
+
+	// if key has been not found in KeyMap, fallback will be called.
+	fallback func(e *Editor, ev *tcell.EventKey)
+
 	// KeyMap or func(*Editor) or func(*Editor, string)
 	waitingForInput interface{}
 }
@@ -19,6 +23,7 @@ type KeyHandler struct {
 func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
 	return &KeyHandler{
 		keymap:          mkeymap,
+		fallback:        HandleInsertKey,
 		waitingForInput: nil,
 	}
 }
@@ -111,6 +116,10 @@ func mergeKeyMaps(k1 KeyMap, k2 KeyMap) {
 	}
 }
 
+func (k *KeyHandler) Fallback(fn func(e *Editor, ev *tcell.EventKey)) {
+	k.fallback = fn
+}
+
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	key := k.normalizeKeyName(ev)
 
@@ -141,9 +150,7 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 		return
 	}
 
-	if mode == MODE_INSERT {
-		HandleInsertKey(editor, ev)
-	}
+	k.fallback(editor, ev)
 
 	k.waitingForInput = nil
 }
