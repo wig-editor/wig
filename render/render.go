@@ -62,7 +62,7 @@ func (r *Renderer) Render() {
 			for i := 0; i < len(currentLine.Value); i++ {
 
 				// render selection
-				textStyle := mcwig.Color("text")
+				textStyle := mcwig.Color("default")
 				if buf.Selection != nil {
 					if mcwig.SelectionCursorInRange(buf.Selection, mcwig.Cursor{Line: lineNum, Char: i}) {
 						textStyle = mcwig.Color("statusline.normal")
