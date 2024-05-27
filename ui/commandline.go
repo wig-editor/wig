@@ -74,12 +74,13 @@ func (u *uiCommandLine) Keymap() *mcwig.KeyHandler {
 }
 
 func (u *uiCommandLine) Render(view mcwig.View, viewport mcwig.Viewport) {
+	st := mcwig.Color("statusline")
 	w, h := viewport.Size()
 	h -= 1
 
 	bg := strings.Repeat(" ", w)
-	view.SetContent(0, h, bg, mcwig.Color("statusline.insert"))
+	view.SetContent(0, h, bg, st)
 
 	msg := fmt.Sprintf(":%s", string(u.chBuf))
-	view.SetContent(0, h, msg, mcwig.Color("statusline.normal"))
+	view.SetContent(0, h, msg, st)
 }

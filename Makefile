@@ -1,5 +1,6 @@
 
 run:
+	-pkill -f go-build
 	go run cmd/main.go
 
 test:
