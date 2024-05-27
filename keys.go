@@ -16,16 +16,16 @@ type KeyHandler struct {
 	waitingForInput interface{}
 }
 
-func NewKeyHandler(keymap ModeKeyMap) *KeyHandler {
+func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
 	return &KeyHandler{
-		keymap:          keymap,
+		keymap:          mkeymap,
 		waitingForInput: nil,
 	}
 }
 
 func DefaultKeyMap() ModeKeyMap {
 	return ModeKeyMap{
-		MODE_NORMAL: map[string]interface{}{
+		MODE_NORMAL: KeyMap{
 			"ctrl+e": CmdScrollDown,
 			"ctrl+y": CmdScrollUp,
 			"h":      CmdCursorLeft,
@@ -61,7 +61,8 @@ func DefaultKeyMap() ModeKeyMap {
 				"ctrl+x": CmdExit,
 			},
 		},
-		MODE_VISUAL: map[string]interface{}{
+
+		MODE_VISUAL: KeyMap{
 			"ctrl+e": WithSelection(CmdScrollDown),
 			"ctrl+y": WithSelection(CmdScrollUp),
 			"w":      WithSelection(CmdForwardWord),
@@ -75,44 +76,52 @@ func DefaultKeyMap() ModeKeyMap {
 			"0":      WithSelection(CmdCursorBeginningOfTheLine),
 			"x":      CmdSelectinDelete,
 			"d":      CmdSelectinDelete,
+			"Esc":    CmdNormalMode,
 			"g": KeyMap{
 				"g": WithSelection(CmdGotoLine0),
 			},
 		},
+
+		MODE_INSERT: KeyMap{
+			"Esc":    CmdNormalMode,
+			"ctrl+f": CmdCursorRight,
+			"ctrl+b": CmdCursorLeft,
+		},
 	}
 }
 
-func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey) {
+// Map/merge keymap by selected mode
+func (k *KeyHandler) Map(editor *Editor, mode Mode, newMappings KeyMap) {
+	mergeKeyMaps(k.keymap[mode], newMappings)
+}
+
+func mergeKeyMaps(k1 KeyMap, k2 KeyMap) {
+	for rkey := range k2 {
+		if currentVal, ok := k1[rkey]; ok {
+			lval, lok := currentVal.(KeyMap)
+			rval, rok := k2[rkey].(KeyMap)
+			if lok && rok {
+				mergeKeyMaps(lval, rval)
+			} else {
+				k1[rkey] = k2[rkey]
+			}
+		} else {
+			k1[rkey] = k2[rkey]
+		}
+	}
+}
+
+func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	key := k.normalizeKeyName(ev)
-
-	buf := editor.ActiveBuffer
-	mode := buf.Mode
-
-	if mode == MODE_INSERT {
-		if key == "Esc" {
-			CmdNormalMode(editor)
-			return
-		}
-
-		HandleInsertKey(editor, ev)
-		return
-	}
-
-	if mode == MODE_VISUAL {
-		if key == "Esc" {
-			CmdNormalMode(editor)
-			return
-		}
-	}
 
 	var keySet KeyMap
 	switch v := k.waitingForInput.(type) {
-	case KeyMap:
-		keySet = v
 	case func(e *Editor, ch string):
 		k.waitingForInput = nil
 		v(editor, key)
 		return
+	case KeyMap:
+		keySet = v
 	default:
 		keySet = k.keymap[mode]
 	}
@@ -129,9 +138,15 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey) {
 		default:
 			k.waitingForInput = nil
 		}
-	} else {
-		k.waitingForInput = nil
+
+		return
 	}
+
+	if mode == MODE_INSERT {
+		HandleInsertKey(editor, ev)
+	}
+
+	k.waitingForInput = nil
 }
 
 func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {

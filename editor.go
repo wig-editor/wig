@@ -41,5 +41,7 @@ func (e *Editor) OpenFile(path string) {
 }
 
 func (e *Editor) HandleInput(ev *tcell.EventKey) {
-	e.Keys.HandleKey(e, ev)
+	buf := e.ActiveBuffer
+	mode := buf.Mode
+	e.Keys.HandleKey(e, ev, mode)
 }

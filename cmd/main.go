@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"runtime/debug"
 
+	"github.com/gdamore/tcell/v2"
+
 	"github.com/firstrow/mcwig"
 	"github.com/firstrow/mcwig/render"
-	"github.com/gdamore/tcell/v2"
 )
 
 func main() {
