@@ -65,6 +65,7 @@ func DefaultKeyMap() ModeKeyMap {
 			"ctrl+c": KeyMap{
 				"ctrl+x": CmdExit,
 			},
+			"Esc": CmdExit,
 		},
 
 		MODE_VISUAL: KeyMap{

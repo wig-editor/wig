@@ -1,1 +1,2 @@
 Bugs:
+- word movements adjust cursor preserved position

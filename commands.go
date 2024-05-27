@@ -513,6 +513,10 @@ func CmdSelectinDelete(e *Editor) {
 	CmdNormalMode(e)
 }
 
+func CmdSaveFile(e *Editor) {
+	// e.ActiveBuffer
+}
+
 func CmdExit(e *Editor) {
 	e.ExitCh <- 1
 }

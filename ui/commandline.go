@@ -23,9 +23,6 @@ func CommandLineInit(e *mcwig.Editor) {
 	}
 	cmdLine.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
 		mcwig.MODE_NORMAL: mcwig.KeyMap{
-			"Tab": func(e *mcwig.Editor) {
-				// panic("WORKS")
-			},
 			"Esc": func(e *mcwig.Editor) {
 				e.PopUi()
 			},
@@ -71,6 +68,8 @@ func (u *uiCommandLine) execute(cmd string) {
 	switch cmd {
 	case "q":
 		mcwig.CmdExit(u.e)
+	case "w":
+		mcwig.CmdSaveFile(u.e)
 	}
 }
 
@@ -90,6 +89,6 @@ func (u *uiCommandLine) Render(view mcwig.View, viewport mcwig.Viewport) {
 	bg := strings.Repeat(" ", w)
 	view.SetContent(0, h, bg, st)
 
-	msg := fmt.Sprintf(":%s", string(u.chBuf))
+	msg := fmt.Sprintf(":%s%s", string(u.chBuf), string(tcell.RuneBlock))
 	view.SetContent(0, h, msg, st)
 }

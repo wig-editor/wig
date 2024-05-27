@@ -40,7 +40,24 @@ func main() {
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
+		// "p": ui.PickerInit,
 	})
+
+	items := []ui.PickerItem[*mcwig.Buffer]{}
+
+	for _, b := range editor.Buffers {
+		items = append(items, ui.PickerItem[*mcwig.Buffer]{
+			Name:  b.FilePath + b.FilePath,
+			Value: b,
+		})
+	}
+
+	ui.PickerInit(
+		editor,
+		func(i ui.PickerItem[*mcwig.Buffer]) {
+		},
+		items,
+	)
 
 	renderer := render.New(editor, tscreen)
 
