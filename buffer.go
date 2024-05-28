@@ -78,6 +78,25 @@ func (b *Buffer) AppendStringLine(s string) {
 	b.Lines.PushBack([]rune(string(s)))
 }
 
+func (b *Buffer) Save() error {
+	f, err := os.Create(b.FilePath)
+	if err != nil {
+		return err
+	}
+
+	line := b.Lines.First()
+	sep := "\n"
+	for line != nil {
+		if line.Next() == nil {
+			sep = ""
+		}
+		f.WriteString(string(line.Value) + sep)
+		line = line.Next()
+	}
+
+	return nil
+}
+
 // Find or create new buffer
 func (e *Editor) BufferGetByName(name string) *Buffer {
 	for _, b := range e.Buffers {

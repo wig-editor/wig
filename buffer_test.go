@@ -1,6 +1,7 @@
 package mcwig
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,4 +47,33 @@ func TestSelectionDelete(t *testing.T) {
 	CmdSelectinDelete(&Editor{ActiveBuffer: buf})
 	line := lineByNum(buf, 0)
 	assert.Equal(t, "ine two", string(line.Value))
+}
+
+func TestSaveFile(t *testing.T) {
+	tmpFilePath := "/tmp/wcwig_test.go"
+	testFilePath := "/home/andrew/code/mcwig/buffer_test.txt"
+
+	err := copyFile(testFilePath, tmpFilePath)
+	assert.NoError(t, err)
+
+	buf, err := BufferReadFile(tmpFilePath)
+	assert.NoError(t, err)
+
+	err = buf.Save()
+	err = buf.Save()
+	if err != nil {
+		t.Errorf("expected nil, got %v", err)
+	}
+
+	buf, err = BufferReadFile(tmpFilePath)
+	assert.NoError(t, err)
+	assert.Equal(t, 6, buf.Lines.Len)
+}
+
+func copyFile(src string, dst string) error {
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dst, data, 0644)
 }

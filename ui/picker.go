@@ -29,11 +29,7 @@ type uiPicker[T any] struct {
 	activeItemT PickerItem[T]
 }
 
-func PickerInit[T any](
-	e *mcwig.Editor,
-	action PickerAction[T],
-	items []PickerItem[T],
-) {
+func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) {
 	picker := &uiPicker[T]{
 		e:          e,
 		chBuf:      []rune{},
@@ -65,6 +61,14 @@ func PickerInit[T any](
 	picker.keymap.Fallback(picker.insertCh)
 
 	e.PushUi(picker)
+}
+
+func (u *uiPicker[T]) Mode() mcwig.Mode {
+	return mcwig.MODE_NORMAL
+}
+
+func (u *uiPicker[T]) Keymap() *mcwig.KeyHandler {
+	return u.keymap
 }
 
 func (u *uiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
@@ -110,30 +114,22 @@ func (u *uiPicker[T]) filterUpdate() {
 	}
 
 	matches := fuzzy.Find(pattern, data)
-
 	u.filtered = make([]PickerItem[T], 0, len(matches))
 	for _, row := range matches {
 		u.filtered = append(u.filtered, u.items[row.Index])
 	}
 }
 
-func (u *uiPicker[T]) Mode() mcwig.Mode {
-	return mcwig.MODE_NORMAL
-}
-
-func (u *uiPicker[T]) Keymap() *mcwig.KeyHandler {
-	return u.keymap
-}
-
 func (u *uiPicker[T]) Render(view mcwig.View, viewport mcwig.Viewport) {
 	vw, vh := viewport.Size()
 
-	w := int(float32(vw) * 0.8)
+	w := int(float32(vw) * 0.86)
 	h := vh - 5
 	x := vw/2 - w/2
 	y := 3
 	pageSize := h - 6
 
+	// fill box
 	drawBox(view, x, y, w, h, mcwig.Color("default"))
 
 	// prompt
@@ -144,17 +140,18 @@ func (u *uiPicker[T]) Render(view mcwig.View, viewport mcwig.Viewport) {
 	line := strings.Repeat(string(tcell.RuneHLine), w-x-3)
 	view.SetContent(x+2, y+2, line, mcwig.Color("default"))
 
+	// pagination
 	pageNumber := math.Ceil(float64(u.activeItem+1)/float64(pageSize)) - 1
 	startIndex := int(pageNumber) * pageSize
 	endIndex := startIndex + pageSize
 	if endIndex > len(u.filtered) {
 		endIndex = len(u.filtered)
 	}
+
 	dataset := u.filtered[startIndex:endIndex]
 
 	i := 0
 	for key, row := range dataset {
-		line := ""
 		if key+startIndex == u.activeItem {
 			u.activeItemT = row
 			line = fmt.Sprintf("> %s", truncate(row.Name, w-x-5))
@@ -200,7 +197,8 @@ func drawBox(s mcwig.View, x1, y1, x2, y2 int, style tcell.Style) {
 		s.SetContent(x1, y2, string(tcell.RuneLLCorner), style)
 		s.SetContent(x2, y2, string(tcell.RuneLRCorner), style)
 	}
-	// fill
+
+	// fill bg
 	for row := y1 + 1; row < y2; row++ {
 		for col := x1 + 1; col < x2; col++ {
 			s.SetContent(col, row, " ", style)
