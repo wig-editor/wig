@@ -36,11 +36,15 @@ type Buffer struct {
 	Lines        List[Line]
 	Cursor       Cursor
 	Selection    *Selection
+
+	Name string
 }
 
 func NewBuffer() *Buffer {
 	return &Buffer{
-		Lines: List[Line]{},
+		Lines:     List[Line]{},
+		Cursor:    Cursor{0, 0, 0},
+		Selection: nil,
 	}
 }
 
@@ -52,6 +56,7 @@ func BufferReadFile(path string) (*Buffer, error) {
 
 	buf := NewBuffer()
 	buf.FilePath = path
+	buf.Name = path
 	buf.Cursor = Cursor{0, 0, 0}
 	buf.Selection = nil
 
@@ -60,4 +65,29 @@ func BufferReadFile(path string) (*Buffer, error) {
 	}
 
 	return buf, nil
+}
+
+func (b *Buffer) GetName() string {
+	if len(b.Name) > 0 {
+		return b.Name
+	}
+	return b.FilePath
+}
+
+func (b *Buffer) AppendStringLine(s string) {
+	b.Lines.PushBack([]rune(string(s)))
+}
+
+// Find or create new buffer
+func (e *Editor) BufferGetByName(name string) *Buffer {
+	for _, b := range e.Buffers {
+		if b.Name == name {
+			return b
+		}
+	}
+
+	b := NewBuffer()
+	b.Name = name
+	e.Buffers = append(e.Buffers, b)
+	return b
 }

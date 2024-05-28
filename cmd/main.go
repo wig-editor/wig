@@ -11,6 +11,24 @@ import (
 	"github.com/firstrow/mcwig/ui"
 )
 
+func CmdBufferPicker(editor *mcwig.Editor) {
+	items := []ui.PickerItem[*mcwig.Buffer]{}
+	for _, b := range editor.Buffers {
+		items = append(items, ui.PickerItem[*mcwig.Buffer]{
+			Name:  b.GetName(),
+			Value: b,
+		})
+	}
+	ui.PickerInit(
+		editor,
+		func(i ui.PickerItem[*mcwig.Buffer]) {
+			editor.ActiveBuffer = i.Value
+			editor.PopUi()
+		},
+		items,
+	)
+}
+
 func main() {
 	tscreen, err := tcell.NewScreen()
 	if err != nil {
@@ -37,28 +55,13 @@ func main() {
 		mcwig.NewKeyHandler(mcwig.DefaultKeyMap()),
 	)
 	editor.OpenFile("/home/andrew/code/mcwig/editor.go")
+	editor.OpenFile("/home/andrew/code/mcwig/keys.go")
 	editor.OpenFile("/home/andrew/code/mcwig/cmd/main.go")
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
-		// "p": ui.PickerInit,
+		"p": CmdBufferPicker,
 	})
-
-	items := []ui.PickerItem[*mcwig.Buffer]{}
-	for _, b := range editor.Buffers {
-		items = append(items, ui.PickerItem[*mcwig.Buffer]{
-			Name:  b.FilePath,
-			Value: b,
-		})
-	}
-	ui.PickerInit(
-		editor,
-		func(i ui.PickerItem[*mcwig.Buffer]) {
-			editor.ActiveBuffer = i.Value
-			editor.PopUi()
-		},
-		items,
-	)
 
 	// items := []ui.PickerItem[int]{}
 	// i := 0

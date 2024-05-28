@@ -66,6 +66,9 @@ func DefaultKeyMap() ModeKeyMap {
 				"ctrl+x": CmdExit,
 			},
 			"Esc": CmdExit,
+			"Space": KeyMap{
+				"b": CmdGotoLine0,
+			},
 		},
 
 		MODE_VISUAL: KeyMap{
@@ -124,6 +127,8 @@ func (k *KeyHandler) Fallback(fn func(e *Editor, ev *tcell.EventKey)) {
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	key := k.normalizeKeyName(ev)
 
+	editor.BufferGetByName("* Logs *").AppendStringLine("Pressed key: " + key)
+
 	var keySet KeyMap
 	switch v := k.waitingForInput.(type) {
 	case func(e *Editor, ch string):
@@ -134,6 +139,10 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 		keySet = v
 	default:
 		keySet = k.keymap[mode]
+	}
+
+	if key == " " {
+		key = "Space"
 	}
 
 	if action, ok := keySet[key]; ok {
