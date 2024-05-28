@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/sahilm/fuzzy"
 
 	"github.com/firstrow/mcwig"
 )
@@ -18,12 +19,14 @@ type PickerItem[T any] struct {
 type PickerAction[T any] func(i PickerItem[T])
 
 type uiPicker[T any] struct {
-	e          *mcwig.Editor
-	keymap     *mcwig.KeyHandler
-	items      []PickerItem[T]
-	action     PickerAction[T]
-	chBuf      []rune
-	activeItem int
+	e           *mcwig.Editor
+	keymap      *mcwig.KeyHandler
+	items       []PickerItem[T]
+	filtered    []PickerItem[T]
+	action      PickerAction[T]
+	chBuf       []rune
+	activeItem  int
+	activeItemT PickerItem[T]
 }
 
 func PickerInit[T any](
@@ -35,6 +38,7 @@ func PickerInit[T any](
 		e:          e,
 		chBuf:      []rune{},
 		items:      items,
+		filtered:   items,
 		action:     action,
 		activeItem: 0,
 	}
@@ -54,7 +58,7 @@ func PickerInit[T any](
 				}
 			},
 			"Enter": func(e *mcwig.Editor) {
-				picker.action(picker.items[picker.activeItem])
+				picker.action(picker.activeItemT)
 			},
 		},
 	})
@@ -79,17 +83,38 @@ func (u *uiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 		if len(u.chBuf) > 0 {
 			u.chBuf = u.chBuf[:len(u.chBuf)-1]
+			u.filterUpdate()
 		}
 		return
 	}
 	if ev.Key() == tcell.KeyEnter {
-		// text := strings.TrimSpace(string(u.chBuf))
-
 		e.PopUi()
 		return
 	}
 
 	u.chBuf = append(u.chBuf, ev.Rune())
+	u.filterUpdate()
+}
+
+func (u *uiPicker[T]) filterUpdate() {
+	pattern := string(u.chBuf)
+	if len(pattern) == 0 {
+		u.filtered = u.items
+		return
+	}
+
+	data := make([]string, 0, len(u.items))
+
+	for _, row := range u.items {
+		data = append(data, row.Name)
+	}
+
+	matches := fuzzy.Find(pattern, data)
+
+	u.filtered = make([]PickerItem[T], 0, len(matches))
+	for _, row := range matches {
+		u.filtered = append(u.filtered, u.items[row.Index])
+	}
 }
 
 func (u *uiPicker[T]) Mode() mcwig.Mode {
@@ -122,15 +147,16 @@ func (u *uiPicker[T]) Render(view mcwig.View, viewport mcwig.Viewport) {
 	pageNumber := math.Ceil(float64(u.activeItem+1)/float64(pageSize)) - 1
 	startIndex := int(pageNumber) * pageSize
 	endIndex := startIndex + pageSize
-	if endIndex > len(u.items) {
-		endIndex = len(u.items)
+	if endIndex > len(u.filtered) {
+		endIndex = len(u.filtered)
 	}
-	dataset := u.items[startIndex:endIndex]
+	dataset := u.filtered[startIndex:endIndex]
 
 	i := 0
 	for key, row := range dataset {
 		line := ""
 		if key+startIndex == u.activeItem {
+			u.activeItemT = row
 			line = fmt.Sprintf("> %s", truncate(row.Name, w-x-5))
 		} else {
 			line = fmt.Sprintf("  %s", truncate(row.Name, w-x-5))
