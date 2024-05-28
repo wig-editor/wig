@@ -37,6 +37,7 @@ func main() {
 		mcwig.NewKeyHandler(mcwig.DefaultKeyMap()),
 	)
 	editor.OpenFile("/home/andrew/code/mcwig/editor.go")
+	editor.OpenFile("/home/andrew/code/mcwig/cmd/main.go")
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
@@ -44,20 +45,36 @@ func main() {
 	})
 
 	items := []ui.PickerItem[*mcwig.Buffer]{}
-
 	for _, b := range editor.Buffers {
 		items = append(items, ui.PickerItem[*mcwig.Buffer]{
-			Name:  b.FilePath + b.FilePath,
+			Name:  b.FilePath,
 			Value: b,
 		})
 	}
-
 	ui.PickerInit(
 		editor,
 		func(i ui.PickerItem[*mcwig.Buffer]) {
+			editor.ActiveBuffer = i.Value
 		},
 		items,
 	)
+
+	// items := []ui.PickerItem[int]{}
+	// i := 0
+	// for i < 100 {
+	// 	items = append(items, ui.PickerItem[int]{
+	// 		Name:  fmt.Sprintf("%d", i),
+	// 		Value: i,
+	// 	})
+	// 	i++
+	// }
+	// ui.PickerInit(
+	// 	editor,
+	// 	func(i ui.PickerItem[int]) {
+
+	// 	},
+	// 	items,
+	// )
 
 	renderer := render.New(editor, tscreen)
 

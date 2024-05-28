@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -31,10 +32,11 @@ func PickerInit[T any](
 	items []PickerItem[T],
 ) {
 	picker := &uiPicker[T]{
-		e:      e,
-		chBuf:  []rune{},
-		items:  items,
-		action: action,
+		e:          e,
+		chBuf:      []rune{},
+		items:      items,
+		action:     action,
+		activeItem: 0,
 	}
 	picker.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
 		mcwig.MODE_NORMAL: mcwig.KeyMap{
@@ -42,10 +44,17 @@ func PickerInit[T any](
 				e.PopUi()
 			},
 			"Tab": func(e *mcwig.Editor) {
-				e.PopUi()
+				if picker.activeItem < len(picker.items)-1 {
+					picker.activeItem++
+				}
+			},
+			"Backtab": func(e *mcwig.Editor) {
+				if picker.activeItem > 0 {
+					picker.activeItem--
+				}
 			},
 			"Enter": func(e *mcwig.Editor) {
-
+				picker.action(picker.items[picker.activeItem])
 			},
 		},
 	})
@@ -98,6 +107,7 @@ func (u *uiPicker[T]) Render(view mcwig.View, viewport mcwig.Viewport) {
 	h := vh - 5
 	x := vw/2 - w/2
 	y := 3
+	pageSize := h - 6
 
 	drawBox(view, x, y, w, h, mcwig.Color("default"))
 
@@ -109,12 +119,26 @@ func (u *uiPicker[T]) Render(view mcwig.View, viewport mcwig.Viewport) {
 	line := strings.Repeat(string(tcell.RuneHLine), w-x-3)
 	view.SetContent(x+2, y+2, line, mcwig.Color("default"))
 
-	i := 3
+	pageNumber := math.Ceil(float64(u.activeItem+1)/float64(pageSize)) - 1
+	startIndex := int(pageNumber) * pageSize
+	endIndex := startIndex + pageSize
 
-	// TODO: handle 100s of items
-	for _, row := range u.items {
-		line = fmt.Sprintf("> %s", truncate(row.Name, w-x-5))
-		view.SetContent(x+2, y+i, line, mcwig.Color("default"))
+	if endIndex > len(u.items) {
+		endIndex = len(u.items)
+	}
+
+	dataset := u.items[startIndex:endIndex]
+
+	i := 0
+	for key, row := range dataset {
+		line := ""
+		if key+startIndex == u.activeItem {
+			line = fmt.Sprintf("> %s", truncate(row.Name, w-x-5))
+		} else {
+			line = fmt.Sprintf("  %s", truncate(row.Name, w-x-5))
+		}
+		view.SetContent(x+2, y+i+3, line, mcwig.Color("default"))
+		i++
 	}
 }
 
