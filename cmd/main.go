@@ -55,6 +55,7 @@ func main() {
 		editor,
 		func(i ui.PickerItem[*mcwig.Buffer]) {
 			editor.ActiveBuffer = i.Value
+			editor.PopUi()
 		},
 		items,
 	)

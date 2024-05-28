@@ -122,11 +122,9 @@ func (u *uiPicker[T]) Render(view mcwig.View, viewport mcwig.Viewport) {
 	pageNumber := math.Ceil(float64(u.activeItem+1)/float64(pageSize)) - 1
 	startIndex := int(pageNumber) * pageSize
 	endIndex := startIndex + pageSize
-
 	if endIndex > len(u.items) {
 		endIndex = len(u.items)
 	}
-
 	dataset := u.items[startIndex:endIndex]
 
 	i := 0
