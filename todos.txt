@@ -1,2 +1,2 @@
 Bugs:
-- word movements adjust cursor preserved position
+- word movements adjust cursor preserved position. count tabs as spaces?
