@@ -21,8 +21,11 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 	}
 	ui.PickerInit(
 		editor,
-		func(i ui.PickerItem[*mcwig.Buffer]) {
-			editor.ActiveBuffer = i.Value
+		func(i *ui.PickerItem[*mcwig.Buffer]) {
+			if i != nil {
+				editor.ActiveBuffer = i.Value
+			}
+
 			editor.PopUi()
 		},
 		items,

@@ -16,7 +16,7 @@ type PickerItem[T any] struct {
 	Value T
 }
 
-type PickerAction[T any] func(i PickerItem[T])
+type PickerAction[T any] func(i *PickerItem[T])
 
 type uiPicker[T any] struct {
 	e           *mcwig.Editor
@@ -26,7 +26,7 @@ type uiPicker[T any] struct {
 	action      PickerAction[T]
 	chBuf       []rune
 	activeItem  int
-	activeItemT PickerItem[T]
+	activeItemT *PickerItem[T]
 }
 
 func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) {
@@ -150,10 +150,12 @@ func (u *uiPicker[T]) Render(view mcwig.View, viewport mcwig.Viewport) {
 
 	dataset := u.filtered[startIndex:endIndex]
 
+	u.activeItemT = nil
+
 	i := 0
 	for key, row := range dataset {
 		if key+startIndex == u.activeItem {
-			u.activeItemT = row
+			u.activeItemT = &row
 			line = fmt.Sprintf("> %s", truncate(row.Name, w-x-5))
 		} else {
 			line = fmt.Sprintf("  %s", truncate(row.Name, w-x-5))
