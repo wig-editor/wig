@@ -111,12 +111,10 @@ func mergeKeyMaps(k1 KeyMap, k2 KeyMap) {
 			rval, rok := k2[rkey].(KeyMap)
 			if lok && rok {
 				mergeKeyMaps(lval, rval)
-			} else {
-				k1[rkey] = k2[rkey]
+				continue
 			}
-		} else {
-			k1[rkey] = k2[rkey]
 		}
+		k1[rkey] = k2[rkey]
 	}
 }
 
