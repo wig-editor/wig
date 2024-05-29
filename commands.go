@@ -463,6 +463,10 @@ func CmdChangeLine(e *Editor) {
 }
 
 func CmdSelectinDelete(e *Editor) {
+	defer func() {
+		CmdNormalMode(e)
+	}()
+
 	buf := e.ActiveBuffer
 	if buf.Selection == nil {
 		return
@@ -470,7 +474,6 @@ func CmdSelectinDelete(e *Editor) {
 
 	curStart := buf.Selection.Start
 	curEnd := buf.Selection.End
-
 	if curStart.Line > curEnd.Line {
 		curStart, curEnd = curEnd, curStart
 	}
@@ -484,6 +487,11 @@ func CmdSelectinDelete(e *Editor) {
 			curStart, curEnd = curEnd, curStart
 		}
 		lineStart.Value = append(lineStart.Value[:curStart.Char], lineStart.Value[curEnd.Char+1:]...)
+
+		if len(lineStart.Value) == 0 {
+			buf.Lines.Remove(lineStart)
+			CmdCursorBeginningOfTheLine(e)
+		}
 	} else {
 		// delete all lines between start and end line
 		for lineStart.Next() != lineEnd {
@@ -501,16 +509,14 @@ func CmdSelectinDelete(e *Editor) {
 		}
 
 		lineJoinNext(buf, lineStart)
-	}
 
-	buf.Cursor.Line = curStart.Line
-	if lineStart != nil && curStart.Char < len(lineStart.Value) {
-		cursorGotoChar(buf, curStart.Char)
-	} else {
-		CmdGotoLineEnd(e)
+		buf.Cursor.Line = curStart.Line
+		if lineStart != nil && curStart.Char < len(lineStart.Value) {
+			cursorGotoChar(buf, curStart.Char)
+		} else {
+			CmdGotoLineEnd(e)
+		}
 	}
-
-	CmdNormalMode(e)
 }
 
 func CmdSaveFile(e *Editor) {
