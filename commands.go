@@ -351,6 +351,8 @@ func CmdDeleteCharForward(e *Editor) {
 	buf := e.ActiveBuffer
 	line := cursorToLine(buf)
 	if len(line.Value) == 0 {
+		CmdJoinNextLine(e)
+		CmdCursorBeginningOfTheLine(e)
 		return
 	}
 	line.Value = append(line.Value[:buf.Cursor.Char], line.Value[buf.Cursor.Char+1:]...)
@@ -491,7 +493,10 @@ func CmdSelectinDelete(e *Editor) {
 		if len(lineStart.Value) == 0 {
 			buf.Lines.Remove(lineStart)
 			CmdCursorBeginningOfTheLine(e)
+			return
 		}
+
+		cursorGotoChar(buf, curStart.Char)
 	} else {
 		// delete all lines between start and end line
 		for lineStart.Next() != lineEnd {
@@ -520,7 +525,6 @@ func CmdSelectinDelete(e *Editor) {
 }
 
 func CmdSaveFile(e *Editor) {
-	// e.ActiveBuffer
 }
 
 func CmdExit(e *Editor) {
