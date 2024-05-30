@@ -3,6 +3,7 @@ package render
 import (
 	"github.com/gdamore/tcell/v2"
 	_ "github.com/gdamore/tcell/v2/encoding"
+	"github.com/gdamore/tcell/v2/views"
 	"github.com/mattn/go-runewidth"
 
 	"github.com/firstrow/mcwig"
@@ -98,13 +99,45 @@ func (r *Renderer) Render() {
 		lineNum++
 	}
 
-	ui.StatuslineRender(r.e, r, r.screen)
+	tview := NewMView(r.screen, 10, 3, 100, 100)
+
+	ui.StatuslineRender(r.e, tview)
 
 	for _, c := range r.e.UiComponents {
-		c.Render(r, r.screen)
+		c.Render(tview)
 	}
 
 	r.screen.Show()
+}
+
+type mview struct {
+	viewport *views.ViewPort
+}
+
+func NewMView(view views.View, x, y, width, height int) *mview {
+	return &mview{
+		viewport: views.NewViewPort(view, 10, 10, 100, 100),
+	}
+}
+
+func (t *mview) Size() (int, int) {
+	return t.viewport.Size()
+}
+
+func (t *mview) SetContent(x, y int, str string, st tcell.Style) {
+	xx := x
+	for _, ch := range str {
+		var comb []rune
+		w := runewidth.RuneWidth(ch)
+		if w == 0 {
+			comb = []rune{ch}
+			ch = ' '
+			w = 1
+		}
+
+		t.viewport.SetContent(xx, y, ch, comb, st)
+		xx += w
+	}
 }
 
 func getRenderChar(ch rune) string {

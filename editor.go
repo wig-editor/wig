@@ -2,22 +2,19 @@ package mcwig
 
 import "github.com/gdamore/tcell/v2"
 
-type Viewport interface {
-	Size() (width, height int)
-}
-
 type View interface {
 	SetContent(x, y int, str string, st tcell.Style)
+	Size() (width, height int)
 }
 
 type UiComponent interface {
 	Mode() Mode
 	Keymap() *KeyHandler
-	Render(view View, viewport Viewport)
+	Render(view View)
 }
 
 type Editor struct {
-	Viewport     Viewport
+	View         View
 	Keys         *KeyHandler
 	Buffers      []*Buffer
 	Windows      []*Window
@@ -28,7 +25,7 @@ type Editor struct {
 }
 
 func NewEditor(
-	viewport Viewport,
+	view View,
 	keys *KeyHandler,
 ) *Editor {
 	windows := []*Window{
@@ -36,7 +33,7 @@ func NewEditor(
 	}
 
 	return &Editor{
-		Viewport:     viewport,
+		View:         view,
 		Keys:         keys,
 		Buffers:      []*Buffer{},
 		Windows:      windows,

@@ -81,9 +81,9 @@ func (u *uiCommandLine) Keymap() *mcwig.KeyHandler {
 	return u.keymap
 }
 
-func (u *uiCommandLine) Render(view mcwig.View, viewport mcwig.Viewport) {
+func (u *uiCommandLine) Render(view mcwig.View) {
 	st := mcwig.Color("statusline")
-	w, h := viewport.Size()
+	w, h := view.Size()
 	h -= 1
 
 	bg := strings.Repeat(" ", w)

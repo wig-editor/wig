@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,6 +15,9 @@ var viewport = &testViewport{}
 
 func (v *testViewport) Size() (int, int) {
 	return 100, 100
+}
+
+func (v *testViewport) SetContent(x, y int, str string, st tcell.Style) {
 }
 
 func TestBuffer(t *testing.T) {

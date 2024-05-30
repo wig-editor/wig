@@ -120,8 +120,8 @@ func (u *uiPicker[T]) filterUpdate() {
 	}
 }
 
-func (u *uiPicker[T]) Render(view mcwig.View, viewport mcwig.Viewport) {
-	vw, vh := viewport.Size()
+func (u *uiPicker[T]) Render(view mcwig.View) {
+	vw, vh := view.Size()
 
 	w := int(float32(vw) * 0.86)
 	h := vh - 5

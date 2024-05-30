@@ -7,9 +7,8 @@ import (
 )
 
 func TestKeyHandler(t *testing.T) {
-	tscreen, _ := tcell.NewScreen()
 	editor := NewEditor(
-		tscreen,
+		viewport,
 		nil,
 	)
 
@@ -66,9 +65,8 @@ func TestKeyHandler(t *testing.T) {
 }
 
 func TestKeyHandlerMap(t *testing.T) {
-	tscreen, _ := tcell.NewScreen()
 	editor := NewEditor(
-		tscreen,
+		viewport,
 		nil,
 	)
 

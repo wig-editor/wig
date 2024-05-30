@@ -40,8 +40,10 @@ func main() {
 	}
 	tscreen.Sync()
 
+	w, h := tscreen.Size()
+
 	editor := mcwig.NewEditor(
-		tscreen,
+		render.NewMView(tscreen, 0, 0, w, h),
 		mcwig.NewKeyHandler(mcwig.DefaultKeyMap()),
 	)
 

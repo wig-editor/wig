@@ -94,7 +94,7 @@ func CmdScrollUp(e *Editor) {
 		if buf.ScrollOffset > 0 {
 			buf.ScrollOffset--
 
-			_, h := e.Viewport.Size()
+			_, h := e.View.Size()
 			if buf.Cursor.Line > buf.ScrollOffset+h-3 {
 				CmdCursorLineUp(e)
 			}
@@ -151,7 +151,7 @@ func CmdCursorLineDown(e *Editor) {
 			buf.Cursor.Line++
 			restoreCharPosition(buf)
 
-			_, h := e.Viewport.Size()
+			_, h := e.View.Size()
 			if buf.Cursor.Line-buf.ScrollOffset > h-3 {
 				CmdScrollDown(e)
 			}
