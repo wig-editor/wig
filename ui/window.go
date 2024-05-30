@@ -16,6 +16,8 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 	lineNum := 0
 	y := 0
 
+	isActiveWin := win == e.ActiveWindow()
+
 	skip := 0
 	if buf.Cursor.Char > width {
 		skip = buf.Cursor.Char - width
@@ -25,11 +27,6 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 		if lineNum >= offset {
 			// render each character in the line separately
 			x := 0
-
-			// render cursor on empty line
-			if len(currentLine.Value) == 0 && lineNum == buf.Cursor.Line {
-				view.SetContent(x, y, " ", mcwig.Color("cursor"))
-			}
 
 			// render line
 			for i := skip; i < len(currentLine.Value); i++ {
@@ -45,15 +42,17 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				view.SetContent(x, y, string(ch), textStyle)
 
 				// render cursor
-				if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {
-					view.SetContent(x, y, string(ch[0]), mcwig.Color("cursor"))
+				if isActiveWin {
+					if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {
+						view.SetContent(x, y, string(ch[0]), mcwig.Color("cursor"))
+					}
 				}
 
 				x += len(ch)
 			}
 
 			// render cursor after the end of the line in insert mode
-			if lineNum == buf.Cursor.Line && buf.Cursor.Char >= len(currentLine.Value) {
+			if lineNum == buf.Cursor.Line && buf.Cursor.Char >= len(currentLine.Value) && isActiveWin {
 				view.SetContent(x, y, " ", mcwig.Color("cursor"))
 			}
 
