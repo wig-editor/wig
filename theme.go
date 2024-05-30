@@ -14,7 +14,8 @@ import (
 var defaultColors = `
 color default "#ABB2BF,#21252C"
 color cursor "#21252C,#ABB2BF"
-color statusline "#282828,#ABB2BF"
+color statusline "#0f0f0f,#768298"
+color statusline.active "#282828,#ABB2BF"
 `
 
 var DefStyle tcell.Style = tcell.StyleDefault

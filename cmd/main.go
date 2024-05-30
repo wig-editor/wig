@@ -48,7 +48,7 @@ func main() {
 	)
 
 	editor.OpenFile("/home/andrew/code/mcwig/editor.go")
-	// editor.OpenFile("/home/andrew/code/mcwig/cmd/main.go")
+	editor.OpenFile("/home/andrew/code/mcwig/cmd/main.go")
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,

@@ -44,14 +44,19 @@ func (r *Renderer) Render() {
 	r.screen.Fill(' ', mcwig.Color("bg"))
 
 	w, h := r.screen.Size()
+	winWidth := w / len(r.e.Windows)
 
-	tview := NewMView(r.screen, 0, 0, w/2, h)
+	// windows
+	for i, win := range r.e.Windows {
+		winView := NewMView(r.screen, winWidth*i, 0, winWidth, h)
+		ui.WindowRender(r.e, winView, win)
+		ui.StatuslineRender(r.e, winView, win)
+	}
 
-	ui.WindowRender(r.e, tview, r.e.Windows[0])
-	ui.StatuslineRender(r.e, tview, r.e.Windows[0])
-
+	// widgets
+	mainView := NewMView(r.screen, 0, 0, w, h)
 	for _, c := range r.e.UiComponents {
-		c.Render(tview)
+		c.Render(mainView)
 	}
 
 	r.screen.Show()

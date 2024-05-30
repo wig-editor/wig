@@ -543,6 +543,29 @@ func CmdSelectinDelete(e *Editor) {
 func CmdSaveFile(e *Editor) {
 }
 
+func CmdWindowVSplit(e *Editor) {
+	do(e, func(buf *Buffer, _ *Element[Line]) {
+		e.Windows = append(e.Windows, &Window{Buffer: buf})
+	})
+}
+
+func CmdWindowNext(e *Editor) {
+	curWin := e.activeWindow
+	idx := 0
+	for i, w := range e.Windows {
+		if w == curWin {
+			idx = i + 1
+			break
+		}
+	}
+
+	if idx >= len(e.Windows) {
+		idx = 0
+	}
+
+	e.activeWindow = e.Windows[idx]
+}
+
 func CmdExit(e *Editor) {
 	e.ExitCh <- 1
 }

@@ -65,6 +65,11 @@ func DefaultKeyMap() ModeKeyMap {
 			"ctrl+c": KeyMap{
 				"ctrl+x": CmdExit,
 			},
+			"ctrl+w": KeyMap{
+				"v":      CmdWindowVSplit,
+				"w":      CmdWindowNext,
+				"ctrl+w": CmdWindowNext,
+			},
 			"Esc": CmdExit,
 			"Space": KeyMap{
 				"b": CmdGotoLine0,

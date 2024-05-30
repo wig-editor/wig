@@ -8,10 +8,18 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 		return
 	}
 
+	width, _ := view.Size()
+	width -= 2
+
 	currentLine := buf.Lines.First()
 	offset := buf.ScrollOffset
 	lineNum := 0
 	y := 0
+
+	skip := 0
+	if buf.Cursor.Char > width {
+		skip = buf.Cursor.Char - width
+	}
 
 	for currentLine != nil {
 		if lineNum >= offset {
@@ -23,7 +31,8 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				view.SetContent(x, y, " ", mcwig.Color("cursor"))
 			}
 
-			for i := 0; i < len(currentLine.Value); i++ {
+			// render line
+			for i := skip; i < len(currentLine.Value); i++ {
 				// render selection
 				textStyle := mcwig.Color("default")
 				if buf.Selection != nil {
