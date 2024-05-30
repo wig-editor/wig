@@ -18,9 +18,9 @@ func (v *testViewport) Size() (int, int) {
 
 func TestBuffer(t *testing.T) {
 	buf := NewBuffer()
-	assert.Equal(t, 0, buf.Lines.Len)
-	buf.Lines.PushFront(Line{})
 	assert.Equal(t, 1, buf.Lines.Len)
+	buf.Lines.PushFront(Line{})
+	assert.Equal(t, 2, buf.Lines.Len)
 }
 
 func TestBufferReadFile(t *testing.T) {
