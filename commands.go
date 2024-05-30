@@ -219,8 +219,8 @@ func CmdNormalMode(e *Editor) {
 			}
 		}
 
-		buf.Selection = nil
 		buf.Mode = MODE_NORMAL
+		buf.Selection = nil
 	})
 }
 
@@ -234,7 +234,11 @@ func CmdGotoLine0(e *Editor) {
 
 func CmdGotoLineEnd(e *Editor) {
 	do(e, func(buf *Buffer, line *Element[Line]) {
-		buf.Cursor.Char = len(line.Value) - 1
+		if len(line.Value) > 0 {
+			buf.Cursor.Char = len(line.Value) - 1
+		} else {
+			buf.Cursor.Char = 0
+		}
 	})
 }
 
@@ -550,6 +554,23 @@ func CmdWindowVSplit(e *Editor) {
 }
 
 func CmdWindowNext(e *Editor) {
+	curWin := e.activeWindow
+	idx := 0
+	for i, w := range e.Windows {
+		if w == curWin {
+			idx = i + 1
+			break
+		}
+	}
+
+	if idx >= len(e.Windows) {
+		idx = 0
+	}
+
+	e.activeWindow = e.Windows[idx]
+}
+
+func CmdWindowClose(e *Editor) {
 	curWin := e.activeWindow
 	idx := 0
 	for i, w := range e.Windows {
