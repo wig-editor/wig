@@ -47,8 +47,7 @@ func main() {
 		mcwig.NewKeyHandler(mcwig.DefaultKeyMap()),
 	)
 
-	// editor.OpenFile("/home/andrew/code/mcwig/editor.go")
-	// editor.OpenFile("/home/andrew/code/mcwig/keys.go")
+	editor.OpenFile("/home/andrew/code/mcwig/editor.go")
 	// editor.OpenFile("/home/andrew/code/mcwig/cmd/main.go")
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
