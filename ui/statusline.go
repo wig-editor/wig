@@ -12,7 +12,7 @@ func StatuslineRender(
 	view mcwig.View,
 	viewport mcwig.Viewport,
 ) {
-	buf := e.ActiveBuffer
+	buf := e.ActiveBuffer()
 	w, h := viewport.Size()
 	h = h - 1
 	st := mcwig.Color("statusline")

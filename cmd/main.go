@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"runtime/debug"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -22,10 +21,7 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 	ui.PickerInit(
 		editor,
 		func(i *ui.PickerItem[*mcwig.Buffer]) {
-			if i != nil {
-				editor.ActiveBuffer = i.Value
-			}
-
+			editor.ActiveWindow().Buffer = i.Value
 			editor.PopUi()
 		},
 		items,
@@ -44,22 +40,14 @@ func main() {
 	}
 	tscreen.Sync()
 
-	// catch panics
-	defer func() {
-		if r := recover(); r != nil {
-			tscreen.Clear()
-			tscreen.Fini()
-			debug.PrintStack()
-		}
-	}()
-
 	editor := mcwig.NewEditor(
 		tscreen,
 		mcwig.NewKeyHandler(mcwig.DefaultKeyMap()),
 	)
-	editor.OpenFile("/home/andrew/code/mcwig/editor.go")
-	editor.OpenFile("/home/andrew/code/mcwig/keys.go")
-	editor.OpenFile("/home/andrew/code/mcwig/cmd/main.go")
+
+	// editor.OpenFile("/home/andrew/code/mcwig/editor.go")
+	// editor.OpenFile("/home/andrew/code/mcwig/keys.go")
+	// editor.OpenFile("/home/andrew/code/mcwig/cmd/main.go")
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
@@ -67,23 +55,6 @@ func main() {
 			"b": CmdBufferPicker,
 		},
 	})
-
-	// items := []ui.PickerItem[int]{}
-	// i := 0
-	// for i < 100 {
-	// 	items = append(items, ui.PickerItem[int]{
-	// 		Name:  fmt.Sprintf("%d", i),
-	// 		Value: i,
-	// 	})
-	// 	i++
-	// }
-	// ui.PickerInit(
-	// 	editor,
-	// 	func(i ui.PickerItem[int]) {
-
-	// 	},
-	// 	items,
-	// )
 
 	renderer := render.New(editor, tscreen)
 
@@ -105,7 +76,6 @@ func main() {
 	}()
 
 	<-editor.ExitCh
-
 	tscreen.Clear()
 	tscreen.Fini()
 }

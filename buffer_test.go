@@ -7,6 +7,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type testViewport struct {
+}
+
+var viewport = &testViewport{}
+
+func (v *testViewport) Size() (int, int) {
+	return 100, 100
+}
+
 func TestBuffer(t *testing.T) {
 	buf := NewBuffer()
 	assert.Equal(t, 0, buf.Lines.Len)
@@ -19,7 +28,6 @@ func TestBufferReadFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
-
 	assert.Equal(t, 6, buf.Lines.Len)
 }
 
@@ -30,21 +38,18 @@ func TestLineByNum(t *testing.T) {
 	}
 
 	line := lineByNum(buf, 1)
-
 	assert.Equal(t, "line two", string(line.Value))
 }
 
 func TestSelectionDelete(t *testing.T) {
-	buf, err := BufferReadFile("/home/andrew/code/mcwig/buffer_test.txt")
-	if err != nil {
-		t.Errorf("expected nil, got %v", err)
-	}
-
+	e := NewEditor(viewport, nil)
+	e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.ActiveBuffer()
 	buf.Selection = &Selection{
 		Start: Cursor{Line: 0, Char: 0},
 		End:   Cursor{Line: 1, Char: 0},
 	}
-	CmdSelectinDelete(&Editor{ActiveBuffer: buf})
+	CmdSelectinDelete(e)
 	line := lineByNum(buf, 0)
 	assert.Equal(t, "ine two", string(line.Value))
 }

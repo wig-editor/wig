@@ -20,20 +20,27 @@ type Editor struct {
 	Viewport     Viewport
 	Keys         *KeyHandler
 	Buffers      []*Buffer
-	ActiveBuffer *Buffer
+	Windows      []*Window
 	UiComponents []UiComponent
 	ExitCh       chan int
+
+	activeWindow *Window
 }
 
 func NewEditor(
 	viewport Viewport,
 	keys *KeyHandler,
 ) *Editor {
+	windows := []*Window{
+		&Window{},
+	}
+
 	return &Editor{
 		Viewport:     viewport,
 		Keys:         keys,
 		Buffers:      []*Buffer{},
-		ActiveBuffer: nil,
+		Windows:      windows,
+		activeWindow: windows[0],
 		ExitCh:       make(chan int),
 	}
 }
@@ -44,7 +51,22 @@ func (e *Editor) OpenFile(path string) {
 		panic(err)
 	}
 	e.Buffers = append(e.Buffers, buf)
-	e.ActiveBuffer = buf
+	e.activeWindow.Buffer = buf
+}
+
+func (e *Editor) ActiveBuffer() *Buffer {
+	if len(e.Buffers) == 0 {
+		buf := NewBuffer()
+		buf.Name = "[No Name]"
+		e.Buffers = append(e.Buffers, buf)
+		e.activeWindow.Buffer = buf
+	}
+
+	return e.activeWindow.Buffer
+}
+
+func (e *Editor) ActiveWindow() *Window {
+	return e.activeWindow
 }
 
 func (e *Editor) PushUi(c UiComponent) {
@@ -58,7 +80,7 @@ func (e *Editor) PopUi() {
 }
 
 func (e *Editor) HandleInput(ev *tcell.EventKey) {
-	mode := e.ActiveBuffer.Mode
+	mode := e.ActiveBuffer().Mode
 	h := e.Keys.HandleKey
 
 	if len(e.UiComponents) > 0 {

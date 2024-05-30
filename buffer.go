@@ -41,8 +41,10 @@ type Buffer struct {
 }
 
 func NewBuffer() *Buffer {
+	lines := List[Line]{}
+	lines.PushFront(Line{})
 	return &Buffer{
-		Lines:     List[Line]{},
+		Lines:     lines,
 		Cursor:    Cursor{0, 0, 0},
 		Selection: nil,
 	}
@@ -59,6 +61,7 @@ func BufferReadFile(path string) (*Buffer, error) {
 	buf.Name = path
 	buf.Cursor = Cursor{0, 0, 0}
 	buf.Selection = nil
+	buf.Lines = List[Line]{}
 
 	for _, line := range bytes.Split(data, []byte("\n")) {
 		buf.Lines.PushBack([]rune(string(line)))

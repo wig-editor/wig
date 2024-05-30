@@ -42,7 +42,13 @@ func (r *Renderer) Render() {
 	r.screen.Clear()
 	r.screen.Fill(' ', mcwig.Color("bg"))
 
-	buf := r.e.ActiveBuffer
+	// get all windows
+	// render window as a plane
+
+	buf := r.e.ActiveBuffer()
+	if buf == nil {
+		return
+	}
 
 	currentLine := buf.Lines.First()
 	offset := buf.ScrollOffset
