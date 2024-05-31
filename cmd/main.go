@@ -67,7 +67,6 @@ func main() {
 				renderer.Render()
 			case *tcell.EventKey:
 				editor.HandleInput(ev)
-				tscreen.Sync()
 				renderer.Render()
 			case *tcell.EventError:
 				fmt.Println("error:", ev)

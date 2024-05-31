@@ -28,9 +28,7 @@ func NewEditor(
 	view View,
 	keys *KeyHandler,
 ) *Editor {
-	windows := []*Window{
-		&Window{},
-	}
+	windows := []*Window{{}}
 
 	return &Editor{
 		View:         view,
