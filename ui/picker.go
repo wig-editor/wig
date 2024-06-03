@@ -207,3 +207,7 @@ func drawBox(s mcwig.View, x1, y1, x2, y2 int, style tcell.Style) {
 		}
 	}
 }
+
+func drawBox2(s mcwig.View, x, y, width, height int, style tcell.Style) {
+	drawBox(s, x, y, x+width, y+height, style)
+}
