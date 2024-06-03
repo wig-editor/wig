@@ -17,8 +17,9 @@ type Options struct {
 }
 
 type pipeDrv struct {
-	e      *mcwig.Editor
-	opts   Options
+	e    *mcwig.Editor
+	opts Options
+	// TODO: store cmds per-command. so it will be possible to keep many long running commands in same buffer
 	cmd    *exec.Cmd
 	stdin  io.WriteCloser
 	outBuf *mcwig.Buffer
