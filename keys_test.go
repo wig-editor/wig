@@ -3,12 +3,13 @@ package mcwig
 import (
 	"testing"
 
+	"github.com/firstrow/mcwig/testutils"
 	"github.com/gdamore/tcell/v2"
 )
 
 func TestKeyHandler(t *testing.T) {
 	editor := NewEditor(
-		viewport,
+		testutils.Viewport,
 		nil,
 	)
 
@@ -66,7 +67,7 @@ func TestKeyHandler(t *testing.T) {
 
 func TestKeyHandlerMap(t *testing.T) {
 	editor := NewEditor(
-		viewport,
+		testutils.Viewport,
 		nil,
 	)
 

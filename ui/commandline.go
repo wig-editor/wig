@@ -65,7 +65,9 @@ func (u *uiCommandLine) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 }
 
 func (u *uiCommandLine) execute(cmd string) {
-	switch cmd {
+	parts := strings.Split(cmd, " ")
+
+	switch parts[0] {
 	case "q":
 		mcwig.CmdExit(u.e)
 	case "w":

@@ -70,7 +70,6 @@ func DefaultKeyMap() ModeKeyMap {
 				"w":      CmdWindowNext,
 				"ctrl+w": CmdWindowNext,
 			},
-			"Esc": CmdExit,
 			"Space": KeyMap{
 				"b": CmdGotoLine0,
 			},

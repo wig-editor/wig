@@ -74,7 +74,7 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	buf.Lines.Remove(next)
 }
 
-func do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
+func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 	buf := e.ActiveBuffer()
 	if buf != nil {
 		line := cursorToLine(buf)
@@ -83,14 +83,14 @@ func do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 }
 
 func CmdJoinNextLine(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		CmdGotoLineEnd(e)
 		lineJoinNext(buf, line)
 	})
 }
 
 func CmdScrollUp(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.ScrollOffset > 0 {
 			buf.ScrollOffset--
 
@@ -103,7 +103,7 @@ func CmdScrollUp(e *Editor) {
 }
 
 func CmdScrollDown(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.ScrollOffset < buf.Lines.Len-3 {
 			buf.ScrollOffset++
 
@@ -115,7 +115,7 @@ func CmdScrollDown(e *Editor) {
 }
 
 func CmdCursorLeft(e *Editor) {
-	do(e, func(buf *Buffer, _ *Element[Line]) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		if buf.Cursor.Char > 0 {
 			buf.Cursor.Char--
 			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
@@ -124,7 +124,7 @@ func CmdCursorLeft(e *Editor) {
 }
 
 func CmdCursorRight(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.Cursor.Char < len(line.Value)-1 {
 			buf.Cursor.Char++
 			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
@@ -133,7 +133,7 @@ func CmdCursorRight(e *Editor) {
 }
 
 func CmdCursorLineUp(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.Cursor.Line > 0 {
 			buf.Cursor.Line--
 			restoreCharPosition(buf)
@@ -146,7 +146,7 @@ func CmdCursorLineUp(e *Editor) {
 }
 
 func CmdCursorLineDown(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.Cursor.Line < buf.Lines.Len-1 {
 			buf.Cursor.Line++
 			restoreCharPosition(buf)
@@ -160,14 +160,14 @@ func CmdCursorLineDown(e *Editor) {
 }
 
 func CmdCursorBeginningOfTheLine(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		buf.Cursor.Char = 0
 		buf.Cursor.PreserveCharPosition = 0
 	})
 }
 
 func CmdCursorFirstNonBlank(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		CmdCursorBeginningOfTheLine(e)
 		if len(line.Value) == 0 {
 			return
@@ -183,7 +183,7 @@ func CmdCursorFirstNonBlank(e *Editor) {
 }
 
 func CmdInsertMode(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if len(line.Value) == 0 {
 			CmdInsertModeAfter(e)
 			return
@@ -194,7 +194,7 @@ func CmdInsertMode(e *Editor) {
 }
 
 func CmdVisualMode(e *Editor) {
-	do(e, func(buf *Buffer, _ *Element[Line]) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		buf.Selection = &Selection{
 			Start: buf.Cursor,
 			End:   buf.Cursor,
@@ -204,14 +204,14 @@ func CmdVisualMode(e *Editor) {
 }
 
 func CmdInsertModeAfter(e *Editor) {
-	do(e, func(buf *Buffer, _ *Element[Line]) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		buf.Cursor.Char++
 		buf.Mode = MODE_INSERT
 	})
 }
 
 func CmdNormalMode(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.Mode == MODE_INSERT {
 			CmdCursorLeft(e)
 			if buf.Cursor.Char >= len(line.Value) {
@@ -225,7 +225,7 @@ func CmdNormalMode(e *Editor) {
 }
 
 func CmdGotoLine0(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		buf.Cursor.Line = 0
 		buf.ScrollOffset = 0
 		restoreCharPosition(buf)
@@ -233,7 +233,7 @@ func CmdGotoLine0(e *Editor) {
 }
 
 func CmdGotoLineEnd(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if len(line.Value) > 0 {
 			buf.Cursor.Char = len(line.Value) - 1
 		} else {
@@ -243,7 +243,7 @@ func CmdGotoLineEnd(e *Editor) {
 }
 
 func CmdForwardWord(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		checkEOF := func(line *Element[Line]) bool {
 			if buf.Cursor.Char >= len(line.Value) || line.Value.IsEmpty() {
 				CmdCursorLineDown(e)
@@ -293,7 +293,7 @@ func CmdForwardWord(e *Editor) {
 }
 
 func CmdBackwardWord(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.Cursor.Char == 0 && buf.Cursor.Line == 0 {
 			return
 		}
@@ -338,7 +338,7 @@ func CmdBackwardWord(e *Editor) {
 }
 
 func CmdForwardChar(e *Editor, ch string) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if len(line.Value) == 0 {
 			return
 		}
@@ -354,7 +354,7 @@ func CmdForwardChar(e *Editor, ch string) {
 }
 
 func CmdBackwardChar(e *Editor, ch string) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if len(line.Value) == 0 {
 			return
 		}
@@ -370,7 +370,7 @@ func CmdBackwardChar(e *Editor, ch string) {
 }
 
 func CmdDeleteCharForward(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if len(line.Value) == 0 {
 			CmdJoinNextLine(e)
 			CmdCursorBeginningOfTheLine(e)
@@ -384,7 +384,7 @@ func CmdDeleteCharForward(e *Editor) {
 }
 
 func CmdDeleteCharBackward(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if len(line.Value) == 0 {
 			buf.Lines.Remove(line)
 			CmdCursorLineUp(e)
@@ -418,7 +418,7 @@ func CmdAppendLine(e *Editor) {
 }
 
 func CmdNewLine(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		// EOL
 		if (buf.Cursor.Char) >= len(line.Value) {
 			buf.Lines.insertValueAfter(Line{}, line)
@@ -445,7 +445,7 @@ func CmdLineOpenBelow(e *Editor) {
 }
 
 func CmdLineOpenAbove(e *Editor) {
-	do(e, func(buf *Buffer, _ *Element[Line]) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		if buf.Cursor.Line == 0 {
 			buf.Lines.PushFront(Line{})
 			CmdCursorBeginningOfTheLine(e)
@@ -458,7 +458,7 @@ func CmdLineOpenAbove(e *Editor) {
 }
 
 func CmdDeleteLine(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if line == nil {
 			return
 		}
@@ -478,14 +478,14 @@ func CmdDeleteLine(e *Editor) {
 }
 
 func CmdChangeLine(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		line.Value = nil
 		CmdInsertModeAfter(e)
 	})
 }
 
 func CmdSelectinDelete(e *Editor) {
-	do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		defer func() {
 			CmdNormalMode(e)
 		}()
@@ -548,7 +548,7 @@ func CmdSaveFile(e *Editor) {
 }
 
 func CmdWindowVSplit(e *Editor) {
-	do(e, func(buf *Buffer, _ *Element[Line]) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		e.Windows = append(e.Windows, &Window{Buffer: buf})
 	})
 }
@@ -571,20 +571,6 @@ func CmdWindowNext(e *Editor) {
 }
 
 func CmdWindowClose(e *Editor) {
-	curWin := e.activeWindow
-	idx := 0
-	for i, w := range e.Windows {
-		if w == curWin {
-			idx = i + 1
-			break
-		}
-	}
-
-	if idx >= len(e.Windows) {
-		idx = 0
-	}
-
-	e.activeWindow = e.Windows[idx]
 }
 
 func CmdExit(e *Editor) {

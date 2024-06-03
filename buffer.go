@@ -3,6 +3,7 @@ package mcwig
 import (
 	"bytes"
 	"os"
+	"strings"
 )
 
 type Mode int
@@ -29,6 +30,15 @@ type Cursor struct {
 	PreserveCharPosition int
 }
 
+// Driver represents anything that can run selected text. it can be sql conncetion,
+// or rest client.
+type Driver interface {
+	// Execute thing under cursor: line or seleciton
+	Exec(*Editor, *Buffer, *Element[Line])
+	// Execute whole buffer
+	ExecBuffer()
+}
+
 type Buffer struct {
 	Mode         Mode
 	FilePath     string
@@ -36,17 +46,19 @@ type Buffer struct {
 	Lines        List[Line]
 	Cursor       Cursor
 	Selection    *Selection
+	Driver       Driver
 
 	Name string
 }
 
 func NewBuffer() *Buffer {
 	lines := List[Line]{}
-	lines.PushFront(Line{})
+	lines.PushBack(Line{})
 	return &Buffer{
 		Lines:     lines,
 		Cursor:    Cursor{0, 0, 0},
 		Selection: nil,
+		Driver:    nil,
 	}
 }
 
@@ -75,10 +87,6 @@ func (b *Buffer) GetName() string {
 		return b.Name
 	}
 	return b.FilePath
-}
-
-func (b *Buffer) AppendStringLine(s string) {
-	b.Lines.PushBack([]rune(string(s)))
 }
 
 func (b *Buffer) Save() error {
@@ -110,6 +118,30 @@ func (e *Editor) BufferGetByName(name string) *Buffer {
 
 	b := NewBuffer()
 	b.Name = name
+	b.Lines = List[Line]{}
 	e.Buffers = append(e.Buffers, b)
 	return b
+}
+
+func (b *Buffer) AppendStringLine(s string) {
+	for _, line := range strings.Split(s, "\n") {
+		b.Lines.PushBack([]rune(line))
+	}
+
+}
+
+func (b *Buffer) String() string {
+	buf := bytes.NewBuffer(nil)
+
+	line := b.Lines.First()
+	sep := "\n"
+	for line != nil {
+		if line.Next() == nil {
+			sep = ""
+		}
+		buf.WriteString(string(line.Value) + sep)
+		line = line.Next()
+	}
+
+	return buf.String()
 }

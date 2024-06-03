@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/firstrow/mcwig"
+	"github.com/firstrow/mcwig/drivers/pipe"
 	"github.com/firstrow/mcwig/render"
 	"github.com/firstrow/mcwig/ui"
 )
@@ -28,6 +29,17 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 	)
 }
 
+func CmdExecute(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
+		if buf.Driver == nil {
+			buf.Driver = pipe.New(e, pipe.Options{
+				IsPrompt: true,
+			})
+		}
+		buf.Driver.Exec(e, buf, line)
+	})
+}
+
 func main() {
 	tscreen, err := tcell.NewScreen()
 	if err != nil {
@@ -47,13 +59,15 @@ func main() {
 		mcwig.NewKeyHandler(mcwig.DefaultKeyMap()),
 	)
 
-	editor.OpenFile("/home/andrew/code/mcwig/editor.go")
-	editor.OpenFile("/home/andrew/code/mcwig/cmd/main.go")
+	editor.OpenFile("/home/andrew/test.txt")
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
 		"Space": mcwig.KeyMap{
 			"b": CmdBufferPicker,
+		},
+		"ctrl+c": mcwig.KeyMap{
+			"ctrl+c": CmdExecute,
 		},
 	})
 
@@ -72,6 +86,13 @@ func main() {
 				fmt.Println("error:", ev)
 				return
 			}
+		}
+	}()
+
+	go func() {
+		for {
+			<-editor.RedrawCh
+			renderer.Render()
 		}
 	}()
 

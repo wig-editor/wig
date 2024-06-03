@@ -4,21 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/firstrow/mcwig/testutils"
 	"github.com/stretchr/testify/assert"
 )
-
-type testViewport struct {
-}
-
-var viewport = &testViewport{}
-
-func (v *testViewport) Size() (int, int) {
-	return 100, 100
-}
-
-func (v *testViewport) SetContent(x, y int, str string, st tcell.Style) {
-}
 
 func TestBuffer(t *testing.T) {
 	buf := NewBuffer()
@@ -46,7 +34,7 @@ func TestLineByNum(t *testing.T) {
 }
 
 func TestSelectionDelete(t *testing.T) {
-	e := NewEditor(viewport, nil)
+	e := NewEditor(testutils.Viewport, nil)
 	e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
 	buf := e.ActiveBuffer()
 	buf.Selection = &Selection{

@@ -20,6 +20,7 @@ type Editor struct {
 	Windows      []*Window
 	UiComponents []UiComponent
 	ExitCh       chan int
+	RedrawCh     chan int
 
 	activeWindow *Window
 }
@@ -37,6 +38,7 @@ func NewEditor(
 		Windows:      windows,
 		activeWindow: windows[0],
 		ExitCh:       make(chan int),
+		RedrawCh:     make(chan int, 10),
 	}
 }
 
@@ -83,4 +85,8 @@ func (e *Editor) HandleInput(ev *tcell.EventKey) {
 	}
 
 	h(e, ev, mode)
+}
+
+func (e *Editor) Redraw() {
+	e.RedrawCh <- 1
 }

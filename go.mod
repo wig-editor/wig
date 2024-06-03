@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/gdamore/tcell/v2 v2.7.4
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/sahilm/fuzzy v0.1.1
 	github.com/stretchr/testify v1.9.0
