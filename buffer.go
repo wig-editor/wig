@@ -127,7 +127,6 @@ func (b *Buffer) AppendStringLine(s string) {
 	for _, line := range strings.Split(s, "\n") {
 		b.Lines.PushBack([]rune(line))
 	}
-
 }
 
 func (b *Buffer) String() string {

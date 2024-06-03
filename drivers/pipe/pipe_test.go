@@ -17,17 +17,18 @@ func TestPipe(t *testing.T) {
 	)
 
 	buf := e.BufferGetByName("test-1")
+	outBuf := e.BufferGetByName("output")
+
 	e.ActiveWindow().Buffer = buf
 	e.ActiveBuffer().AppendStringLine(`echo "%s"`)
 
 	p := New(e, Options{IsPrompt: false})
 	assert.Equal(t, "echo", p.getCommand())
 
-	p.send(`ping pong`)
+	p.send(outBuf, `ping pong`)
 	p.cmd.Wait()
 
-	outBuffer := e.BufferGetByName("[output]")
-	assert.Equal(t, "ping pong", outBuffer.String())
+	assert.Equal(t, "ping pong", outBuf.String())
 
 	args := p.buildArgs("ping pong")
 	assert.Equal(t, 1, len(args))
@@ -41,16 +42,16 @@ func TestPipeLongRunningProcess(t *testing.T) {
 	)
 
 	buf := e.BufferGetByName("test-1")
+	outBuf := e.BufferGetByName("output")
 	e.ActiveWindow().Buffer = buf
 	e.ActiveBuffer().AppendStringLine(`python -i`)
 
 	p := New(e, Options{IsPrompt: true})
 	assert.Equal(t, "python", p.getCommand())
 
-	p.send(`help`)
+	p.send(outBuf, `help`)
 	// TODO: figure out how to Wait properly
 	time.Sleep(100 * time.Millisecond)
 
-	outBuffer := e.BufferGetByName("[output]")
-	assert.Contains(t, outBuffer.String(), "Type help() for interactive help, or help(object) for help about object.")
+	assert.Contains(t, outBuf.String(), "Type help() for interactive help, or help(object) for help about object.")
 }

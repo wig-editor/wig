@@ -2,3 +2,4 @@ Bugs:
 - word movements adjust cursor preserved position. count tabs as spaces?
 - delete all chars. start typing. cursor misplaced.
 - scroll offset wrong after windows resize.
+- indicate that query is in progress of execution
