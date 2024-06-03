@@ -47,6 +47,8 @@ func (r *Renderer) Render() {
 	winWidth := w / len(r.e.Windows)
 
 	// windows
+	// TODO: rendering must be optimized.
+	// - do not creste view every cycle. cache+reuse as much as possible.
 	for i, win := range r.e.Windows {
 		winView := NewMView(r.screen, winWidth*i, 0, winWidth, h)
 		ui.WindowRender(r.e, winView, win)
@@ -74,6 +76,10 @@ func NewMView(view views.View, x, y, w, h int) *mview {
 
 func (t *mview) Size() (int, int) {
 	return t.viewport.Size()
+}
+
+func (t *mview) Resize(x, y, width, height int) {
+	t.viewport.Resize(x, y, width, height)
 }
 
 func (t *mview) SetContent(x, y int, str string, st tcell.Style) {

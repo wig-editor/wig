@@ -77,6 +77,8 @@ func main() {
 			switch ev := tscreen.PollEvent().(type) {
 			case *tcell.EventResize:
 				tscreen.Sync()
+				w, h := tscreen.Size()
+				editor.View.Resize(0, 0, w, h)
 				renderer.Render()
 			case *tcell.EventKey:
 				editor.HandleInput(ev)
