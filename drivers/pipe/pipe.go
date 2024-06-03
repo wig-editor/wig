@@ -17,10 +17,11 @@ type Options struct {
 }
 
 type pipeDrv struct {
-	opts  Options
-	stdin io.WriteCloser
-	cmd   *exec.Cmd
-	e     *mcwig.Editor
+	e      *mcwig.Editor
+	opts   Options
+	cmd    *exec.Cmd
+	stdin  io.WriteCloser
+	outBuf *mcwig.Buffer
 }
 
 func New(e *mcwig.Editor, opts Options) *pipeDrv {
@@ -57,7 +58,15 @@ func (p *pipeDrv) buildArgs(input string) []string {
 	return []string{}
 }
 
-func (p *pipeDrv) send(input string) {
+func (p *pipeDrv) outBufferFor(buf *mcwig.Buffer) *mcwig.Buffer {
+	if p.outBuf != nil {
+		return p.outBuf
+	}
+	p.outBuf = p.e.BufferGetByName(fmt.Sprintf("[output] %s", buf.GetName()))
+	return p.outBuf
+}
+
+func (p *pipeDrv) send(outBuf *mcwig.Buffer, input string) {
 	if p.cmd != nil && p.opts.IsPrompt {
 		io.WriteString(p.stdin, input+"\n")
 		return
@@ -77,14 +86,14 @@ func (p *pipeDrv) send(input string) {
 
 	err := p.cmd.Start()
 	if err != nil {
-		p.e.BufferGetByName("[output]").AppendStringLine(err.Error())
+		outBuf.AppendStringLine(err.Error())
 		p.e.Redraw()
 	}
 
 	go func() {
 		scanner := bufio.NewScanner(pout)
 		for scanner.Scan() {
-			p.e.BufferGetByName("[output]").AppendStringLine(scanner.Text())
+			outBuf.AppendStringLine(scanner.Text())
 			p.e.Redraw()
 		}
 	}()
@@ -92,7 +101,7 @@ func (p *pipeDrv) send(input string) {
 	go func() {
 		scanner := bufio.NewScanner(perr)
 		for scanner.Scan() {
-			p.e.BufferGetByName("[output]").AppendStringLine(scanner.Text())
+			outBuf.AppendStringLine(scanner.Text())
 			p.e.Redraw()
 		}
 	}()
@@ -100,7 +109,7 @@ func (p *pipeDrv) send(input string) {
 	go func() {
 		err := p.cmd.Wait()
 		if err != nil {
-			p.e.BufferGetByName("[output]").AppendStringLine(err.Error())
+			outBuf.AppendStringLine(err.Error())
 			p.e.Redraw()
 		}
 		p.cmd = nil
@@ -109,7 +118,9 @@ func (p *pipeDrv) send(input string) {
 }
 
 func (p *pipeDrv) Exec(e *mcwig.Editor, buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-	p.send(string(line.Value))
+	outBuf := p.outBufferFor(buf)
+	p.send(outBuf, string(line.Value))
+	p.e.EnsureBufferIsVisible(outBuf)
 }
 
 func (p *pipeDrv) ExecBuffer() {

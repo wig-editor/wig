@@ -70,6 +70,8 @@ func (u *uiCommandLine) execute(cmd string) {
 	switch parts[0] {
 	case "q":
 		mcwig.CmdExit(u.e)
+	case "q!":
+		mcwig.CmdExit(u.e)
 	case "w":
 		mcwig.CmdSaveFile(u.e)
 	}

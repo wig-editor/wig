@@ -76,6 +76,23 @@ func (e *Editor) PopUi() {
 	}
 }
 
+func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
+	found := false
+	for _, win := range e.Windows {
+		if win.Buffer == b {
+			found = true
+		}
+	}
+	if found {
+		return
+	}
+	if len(e.Windows) > 1 {
+		e.Windows[len(e.Windows)-1].Buffer = b
+		return
+	}
+	e.Windows = append(e.Windows, &Window{Buffer: b})
+}
+
 func (e *Editor) HandleInput(ev *tcell.EventKey) {
 	mode := e.ActiveBuffer().Mode
 	h := e.Keys.HandleKey

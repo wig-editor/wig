@@ -33,7 +33,7 @@ func CmdExecute(e *mcwig.Editor) {
 	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
 		if buf.Driver == nil {
 			buf.Driver = pipe.New(e, pipe.Options{
-				IsPrompt: true,
+				IsPrompt: false,
 			})
 		}
 		buf.Driver.Exec(e, buf, line)
@@ -51,7 +51,6 @@ func main() {
 		panic(err)
 	}
 	tscreen.Sync()
-
 	w, h := tscreen.Size()
 
 	editor := mcwig.NewEditor(
