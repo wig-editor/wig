@@ -49,6 +49,7 @@ func (r *Renderer) Render() {
 	// windows
 	// TODO: rendering must be optimized.
 	// - do not creste view every cycle. cache+reuse as much as possible.
+	// - do not call Size(), instead use resize event
 	for i, win := range r.e.Windows {
 		winView := NewMView(r.screen, winWidth*i, 0, winWidth, h)
 		ui.WindowRender(r.e, winView, win)
