@@ -62,7 +62,7 @@ func (r *Renderer) Render() {
 		c.Render(mainView)
 	}
 
-	ui.NotificationsRender(r.e, mainView)
+	// ui.NotificationsRender(r.e, mainView)
 
 	r.screen.Show()
 }
