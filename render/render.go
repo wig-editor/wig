@@ -23,22 +23,6 @@ func New(e *mcwig.Editor, screen tcell.Screen) *Renderer {
 	return r
 }
 
-func (r *Renderer) SetContent(x, y int, str string, st tcell.Style) {
-	xx := x
-	for _, ch := range str {
-		var comb []rune
-		w := runewidth.RuneWidth(ch)
-		if w == 0 {
-			comb = []rune{ch}
-			ch = ' '
-			w = 1
-		}
-
-		r.screen.SetContent(xx, y, ch, comb, st)
-		xx += w
-	}
-}
-
 func (r *Renderer) Render() {
 	r.screen.Clear()
 	r.screen.Fill(' ', mcwig.Color("bg"))
@@ -65,6 +49,22 @@ func (r *Renderer) Render() {
 	// ui.NotificationsRender(r.e, mainView)
 
 	r.screen.Show()
+}
+
+func (r *Renderer) SetContent(x, y int, str string, st tcell.Style) {
+	xx := x
+	for _, ch := range str {
+		var comb []rune
+		w := runewidth.RuneWidth(ch)
+		if w == 0 {
+			comb = []rune{ch}
+			ch = ' '
+			w = 1
+		}
+
+		r.screen.SetContent(xx, y, ch, comb, st)
+		xx += w
+	}
 }
 
 type mview struct {
