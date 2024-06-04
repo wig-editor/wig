@@ -32,9 +32,7 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 func CmdExecute(e *mcwig.Editor) {
 	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
 		if buf.Driver == nil {
-			buf.Driver = pipe.New(e, pipe.Options{
-				IsPrompt: false,
-			})
+			buf.Driver = pipe.New(e)
 		}
 		buf.Driver.Exec(e, buf, line)
 	})

@@ -5,7 +5,6 @@ import (
 )
 
 func NotificationsRender(e *mcwig.Editor, view mcwig.View) {
-	return
 	vw, vh := view.Size()
 
 	x := vw - 53
