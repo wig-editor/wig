@@ -28,19 +28,33 @@ func (r *Renderer) Render() {
 	r.screen.Fill(' ', mcwig.Color("bg"))
 
 	w, h := r.screen.Size()
-	winWidth := w / len(r.e.Windows)
+
+	var winW, winH int
+	if r.e.Layout == mcwig.LayoutVertical {
+		winW = w / len(r.e.Windows)
+		winH = h
+	} else {
+		winW = w
+		winH = h / len(r.e.Windows)
+	}
 
 	// windows
 	// TODO: rendering must be optimized.
-	// - do not creste view every cycle. cache+reuse as much as possible.
+	// - do not create view every cycle. cache+reuse as much as possible.
 	// - do not call Size(), instead use resize event
+	var winView *mview
 	for i, win := range r.e.Windows {
-		winView := NewMView(r.screen, winWidth*i, 0, winWidth, h)
+		if r.e.Layout == mcwig.LayoutVertical {
+			winView = NewMView(r.screen, winW*i, 0, winW, h)
+		} else {
+			winView = NewMView(r.screen, 0, winH*i, w, winH)
+		}
+
 		ui.WindowRender(r.e, winView, win)
 		ui.StatuslineRender(r.e, winView, win)
 	}
 
-	// widgets
+	// widgets: pickers, etc...
 	mainView := NewMView(r.screen, 0, 0, w, h)
 	for _, c := range r.e.UiComponents {
 		c.Render(mainView)

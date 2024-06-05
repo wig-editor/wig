@@ -34,17 +34,9 @@ func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 			return
 		}
 
-		if len(line.Value) == 0 {
+		if buf.Cursor.Char >= len(line.Value) {
 			line.Value = append(line.Value, ch)
 			CmdCursorRight(e)
-			return
-		}
-
-		if buf.Cursor.Char >= len(line.Value) {
-			// insert at the end of the line
-			line.Value = append(line.Value, ch)
-			buf.Cursor.Char++
-			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
 		} else {
 			tmp := []rune{ch}
 			tmp = append(tmp, line.Value[buf.Cursor.Char:]...)

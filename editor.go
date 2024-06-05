@@ -14,6 +14,13 @@ type UiComponent interface {
 	Render(view View)
 }
 
+type Layout int
+
+const (
+	LayoutHorizontal Layout = 0
+	LayoutVertical   Layout = 1
+)
+
 type Editor struct {
 	View         View
 	Keys         *KeyHandler
@@ -22,6 +29,7 @@ type Editor struct {
 	UiComponents []UiComponent
 	ExitCh       chan int
 	RedrawCh     chan int
+	Layout       Layout
 
 	activeWindow *Window
 }

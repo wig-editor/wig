@@ -125,7 +125,7 @@ func CmdCursorLeft(e *Editor) {
 
 func CmdCursorRight(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.Cursor.Char < len(line.Value)-1 {
+		if buf.Cursor.Char < len(line.Value) {
 			buf.Cursor.Char++
 			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
 		}
@@ -568,6 +568,14 @@ func CmdWindowNext(e *Editor) {
 	}
 
 	e.activeWindow = e.Windows[idx]
+}
+
+func CmdWindowToggleLayout(e *Editor) {
+	if e.Layout == LayoutHorizontal {
+		e.Layout = LayoutVertical
+	} else {
+		e.Layout = LayoutHorizontal
+	}
 }
 
 func CmdWindowClose(e *Editor) {

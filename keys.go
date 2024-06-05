@@ -69,6 +69,7 @@ func DefaultKeyMap() ModeKeyMap {
 				"v":      CmdWindowVSplit,
 				"w":      CmdWindowNext,
 				"ctrl+w": CmdWindowNext,
+				"t":      CmdWindowToggleLayout,
 			},
 			"Space": KeyMap{
 				"b": CmdGotoLine0,
