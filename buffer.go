@@ -9,9 +9,10 @@ import (
 type Mode int
 
 const (
-	MODE_NORMAL Mode = 0
-	MODE_INSERT Mode = 1
-	MODE_VISUAL Mode = 2
+	MODE_NORMAL      Mode = 0
+	MODE_INSERT      Mode = 1
+	MODE_VISUAL      Mode = 2
+	MODE_VISUAL_LINE Mode = 3
 )
 
 func (m Mode) String() string {
@@ -20,6 +21,9 @@ func (m Mode) String() string {
 	}
 	if m == MODE_INSERT {
 		return "INS"
+	}
+	if m == MODE_VISUAL_LINE {
+		return "VIS LINE"
 	}
 	return "VIS"
 }

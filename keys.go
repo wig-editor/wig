@@ -42,6 +42,7 @@ func DefaultKeyMap() ModeKeyMap {
 			"k":      CmdCursorLineUp,
 			"i":      CmdInsertMode,
 			"v":      CmdVisualMode,
+			"V":      CmdVisualLineMode,
 			"a":      CmdInsertModeAfter,
 			"A":      CmdAppendLine,
 			"w":      CmdForwardWord,
@@ -97,6 +98,16 @@ func DefaultKeyMap() ModeKeyMap {
 			"g": KeyMap{
 				"g": WithSelection(CmdGotoLine0),
 			},
+		},
+
+		MODE_VISUAL_LINE: KeyMap{
+			"j":   WithSelection(CmdCursorLineDown),
+			"k":   WithSelection(CmdCursorLineUp),
+			"h":   CmdCursorLeft,
+			"l":   CmdCursorRight,
+			"Esc": CmdNormalMode,
+			"x":   CmdSelectinDelete,
+			"d":   CmdSelectinDelete,
 		},
 
 		MODE_INSERT: KeyMap{

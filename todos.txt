@@ -1,6 +1,5 @@
 Bugs:
 - fix ScrollOffset in horilontal layout
-- visual line mode
 - send many lines selected to pipe
 - word movements adjust cursor preserved position. count tabs as spaces?
 - indicate that query is in progress of execution
