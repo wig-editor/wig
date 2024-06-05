@@ -603,13 +603,12 @@ func WithSelection(fn func(*Editor)) func(*Editor) {
 		buf := e.ActiveBuffer()
 		buf.Selection.End = buf.Cursor
 		if buf.Mode == MODE_VISUAL_LINE {
-			lineStart := lineByNum(buf, buf.Selection.Start.Line)
-			lineEnd := lineByNum(buf, buf.Selection.End.Line)
-
 			if buf.Selection.Start.Line > buf.Selection.End.Line {
+				lineStart := lineByNum(buf, buf.Selection.Start.Line)
 				buf.Selection.Start.Char = len(lineStart.Value) - 1
 				buf.Selection.End.Char = 0
 			} else {
+				lineEnd := lineByNum(buf, buf.Selection.End.Line)
 				buf.Selection.Start.Char = 0
 				buf.Selection.End.Char = len(lineEnd.Value) - 1
 			}
