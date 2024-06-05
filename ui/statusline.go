@@ -28,5 +28,10 @@ func StatuslineRender(
 	view.SetContent(2, h, leftSide, st)
 
 	rightSide := fmt.Sprintf("%d:%d", buf.Cursor.Line+1, buf.Cursor.Char)
+
+	if e.Keys.GetTimes() > 1 {
+		rightSide = fmt.Sprintf("%d   %s", e.Keys.GetTimes(), rightSide)
+	}
+
 	view.SetContent(w-len(rightSide)-1, h, rightSide, st)
 }

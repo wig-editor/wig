@@ -2,6 +2,7 @@ package mcwig
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -18,6 +19,7 @@ type KeyHandler struct {
 
 	// KeyMap or func(*Editor) or func(*Editor, string)
 	waitingForInput interface{}
+	times           []string
 }
 
 func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
@@ -25,6 +27,7 @@ func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
 		keymap:          mkeymap,
 		fallback:        HandleInsertKey,
 		waitingForInput: nil,
+		times:           []string{},
 	}
 }
 
@@ -130,13 +133,20 @@ func (k *KeyHandler) Fallback(fn func(e *Editor, ev *tcell.EventKey)) {
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	key := k.normalizeKeyName(ev)
 
-	editor.BufferGetByName("* Logs *").AppendStringLine("Pressed key: " + key)
+	if mode == MODE_NORMAL {
+		if isNumeric(key) {
+			k.times = append(k.times, key)
+			return
+		}
+	}
 
 	var keySet KeyMap
 	switch v := k.waitingForInput.(type) {
 	case func(e *Editor, ch string):
-		k.waitingForInput = nil
-		v(editor, key)
+		for i := 0; i < k.GetTimes(); i++ {
+			v(editor, key)
+		}
+		k.resetState()
 		return
 	case KeyMap:
 		keySet = v
@@ -155,17 +165,18 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 		case func(e *Editor, ch string):
 			k.waitingForInput = action
 		case func(*Editor):
-			k.waitingForInput = nil
-			action(editor)
+			for i := 0; i < k.GetTimes(); i++ {
+				action(editor)
+			}
+			k.resetState()
 		default:
-			k.waitingForInput = nil
+			k.resetState()
 		}
 		return
 	}
 
 	k.fallback(editor, ev)
-
-	k.waitingForInput = nil
+	k.resetState()
 }
 
 func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {
@@ -199,4 +210,27 @@ func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {
 		return fmt.Sprintf("%s+%s", strings.Join(m, "+"), s)
 	}
 	return s
+}
+
+func (k *KeyHandler) resetState() {
+	k.times = k.times[:0]
+	k.waitingForInput = nil
+}
+
+func (k *KeyHandler) GetTimes() int {
+	const max = 1000000
+	val := strings.Join(k.times, "")
+	if isNumeric(val) {
+		v, _ := strconv.ParseInt(val, 10, 64)
+		if v > max {
+			return max
+		}
+		return int(v)
+	}
+	return 1
+}
+
+func isNumeric(s string) bool {
+	_, err := strconv.ParseInt(s, 10, 64)
+	return err == nil
 }
