@@ -133,7 +133,7 @@ func (k *KeyHandler) Fallback(fn func(e *Editor, ev *tcell.EventKey)) {
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	key := k.normalizeKeyName(ev)
 
-	if mode == MODE_NORMAL {
+	if mode == MODE_NORMAL || mode == MODE_VISUAL {
 		if isNumeric(key) {
 			k.times = append(k.times, key)
 			return
