@@ -33,8 +33,8 @@ func TestSelectionToString(t *testing.T) {
 		t.Errorf("expected nil, got %v", err)
 	}
 
-	// buf.Selection = &Selection{Start: Cursor{Line: 2, Char: 1}, End: Cursor{Line: 2, Char: 8}}
-	// assert.Equal(t, "ine thre", SelectionToString(buf))
+	buf.Selection = &Selection{Start: Cursor{Line: 2, Char: 1}, End: Cursor{Line: 2, Char: 8}}
+	assert.Equal(t, "ine thre", SelectionToString(buf))
 
 	buf.Selection = &Selection{Start: Cursor{Line: 1, Char: 0}, End: Cursor{Line: 2, Char: 3}}
 	assert.Equal(t, "line two\nline", SelectionToString(buf))
