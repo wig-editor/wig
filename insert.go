@@ -41,6 +41,7 @@ func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 			tmp := []rune{ch}
 			tmp = append(tmp, line.Value[buf.Cursor.Char:]...)
 			line.Value = append(line.Value[:buf.Cursor.Char], tmp...)
+			tmp = nil
 			CmdCursorRight(e)
 		}
 	})

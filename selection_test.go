@@ -2,6 +2,8 @@ package mcwig
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSelectionCursorInRange(t *testing.T) {
@@ -23,4 +25,17 @@ func TestSelectionCursorInRange(t *testing.T) {
 			t.Errorf("SelectionCursorInRange(%v, %v) = %t, want %t", tt.sel, tt.c, got, tt.want)
 		}
 	}
+}
+
+func TestSelectionToString(t *testing.T) {
+	buf, err := BufferReadFile("/home/andrew/code/mcwig/buffer_test.txt")
+	if err != nil {
+		t.Errorf("expected nil, got %v", err)
+	}
+
+	// buf.Selection = &Selection{Start: Cursor{Line: 2, Char: 1}, End: Cursor{Line: 2, Char: 8}}
+	// assert.Equal(t, "ine thre", SelectionToString(buf))
+
+	buf.Selection = &Selection{Start: Cursor{Line: 1, Char: 0}, End: Cursor{Line: 2, Char: 3}}
+	assert.Equal(t, "line two\nline", SelectionToString(buf))
 }
