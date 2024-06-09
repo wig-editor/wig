@@ -497,7 +497,7 @@ func CmdChangeLine(e *Editor) {
 }
 
 func CmdSelectinDelete(e *Editor) {
-	Do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		defer func() {
 			CmdNormalMode(e)
 		}()
@@ -511,11 +511,10 @@ func CmdSelectinDelete(e *Editor) {
 			curStart, curEnd = curEnd, curStart
 		}
 
-		lineNum := curStart.Line
 		lineStart := lineByNum(buf, curStart.Line)
 		lineEnd := lineByNum(buf, curEnd.Line)
 
-		if lineNum == curStart.Line && lineNum == curEnd.Line {
+		if  curStart.Line == curEnd.Line {
 			if curStart.Char > curEnd.Char {
 				curStart, curEnd = curEnd, curStart
 			}
@@ -602,6 +601,7 @@ func WithSelection(fn func(*Editor)) func(*Editor) {
 		fn(e)
 		buf := e.ActiveBuffer()
 		buf.Selection.End = buf.Cursor
+
 		if buf.Mode == MODE_VISUAL_LINE {
 			if buf.Selection.Start.Line > buf.Selection.End.Line {
 				lineStart := lineByNum(buf, buf.Selection.Start.Line)
