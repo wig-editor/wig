@@ -5,6 +5,7 @@ import (
 
 	"github.com/firstrow/mcwig/testutils"
 	"github.com/gdamore/tcell/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestKeyHandler(t *testing.T) {
@@ -131,6 +132,43 @@ func TestKeyHandlerMap(t *testing.T) {
 
 	})
 
+}
+
+func TestKeyTimes(t *testing.T) {
+	editor := NewEditor(
+		testutils.Viewport,
+		nil,
+	)
+
+	editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+
+	count := 0
+
+	testKeyMap := func() ModeKeyMap {
+		return ModeKeyMap{
+			MODE_NORMAL: KeyMap{
+				"d": KeyMap{
+					"d": func(e *Editor) {
+						count++
+					},
+				},
+			},
+		}
+	}
+
+	// test remap sinle key
+	t.Run("f", func(t *testing.T) {
+		h := NewKeyHandler(testKeyMap())
+
+		h.HandleKey(editor, key('1'), MODE_NORMAL)
+		h.HandleKey(editor, key('1'), MODE_NORMAL)
+		assert.Equal(t, []string{"1", "1"}, h.times)
+		h.HandleKey(editor, key('d'), MODE_NORMAL)
+		h.HandleKey(editor, key('d'), MODE_NORMAL)
+		if count != 11 {
+			t.Error("count failed")
+		}
+	})
 }
 
 func key(ch rune) *tcell.EventKey {
