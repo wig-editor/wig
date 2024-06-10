@@ -48,6 +48,7 @@ type Buffer struct {
 	FilePath     string
 	ScrollOffset int
 	Lines        List[Line]
+	Yanks        List[yank]
 	Cursor       Cursor
 	Selection    *Selection
 	Driver       Driver
@@ -60,6 +61,7 @@ func NewBuffer() *Buffer {
 	lines.PushBack(Line{})
 	return &Buffer{
 		Lines:     lines,
+		Yanks:     List[yank]{},
 		Cursor:    Cursor{0, 0, 0},
 		Selection: nil,
 		Driver:    nil,

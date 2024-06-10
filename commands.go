@@ -230,7 +230,6 @@ func CmdNormalMode(e *Editor) {
 				CmdGotoLineEnd(e)
 			}
 		}
-
 		buf.Mode = MODE_NORMAL
 		buf.Selection = nil
 	})
@@ -397,8 +396,14 @@ func CmdDeleteCharForward(e *Editor) {
 
 func CmdDeleteCharBackward(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if buf.Cursor.Line == 0 && buf.Cursor.Char == 0 {
+			return
+		}
+
 		if len(line.Value) == 0 {
-			buf.Lines.Remove(line)
+			if buf.Lines.Len > 1 {
+				buf.Lines.Remove(line)
+			}
 			CmdCursorLineUp(e)
 			CmdAppendLine(e)
 			return
@@ -475,6 +480,8 @@ func CmdDeleteLine(e *Editor) {
 			return
 		}
 
+		CmdYank(e)
+
 		buf.Lines.Remove(line)
 		if buf.Cursor.Line >= buf.Lines.Len {
 			CmdCursorLineUp(e)
@@ -497,13 +504,15 @@ func CmdChangeLine(e *Editor) {
 }
 
 func CmdSelectinDelete(e *Editor) {
-	Do(e, func(buf *Buffer, _ *Element[Line]) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
 		defer func() {
 			CmdNormalMode(e)
 		}()
 		if buf.Selection == nil {
 			return
 		}
+
+		yankSave(buf, line)
 
 		curStart := buf.Selection.Start
 		curEnd := buf.Selection.End
@@ -514,11 +523,15 @@ func CmdSelectinDelete(e *Editor) {
 		lineStart := lineByNum(buf, curStart.Line)
 		lineEnd := lineByNum(buf, curEnd.Line)
 
-		if  curStart.Line == curEnd.Line {
+		if curStart.Line == curEnd.Line {
 			if curStart.Char > curEnd.Char {
 				curStart, curEnd = curEnd, curStart
 			}
-			lineStart.Value = append(lineStart.Value[:curStart.Char], lineStart.Value[curEnd.Char+1:]...)
+			if curEnd.Char < len(lineStart.Value) {
+				lineStart.Value = append(lineStart.Value[:curStart.Char], lineStart.Value[curEnd.Char+1:]...)
+			} else {
+				lineStart.Value = lineStart.Value[:curStart.Char]
+			}
 
 			if len(lineStart.Value) == 0 {
 				buf.Lines.Remove(lineStart)
@@ -596,6 +609,56 @@ func CmdExit(e *Editor) {
 	e.ExitCh <- 1
 }
 
+func CmdYank(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		defer func() {
+			if buf.Selection != nil {
+				buf.Cursor = buf.Selection.Start
+			}
+			CmdNormalMode(e)
+		}()
+		yankSave(buf, line)
+	})
+}
+
+func CmdYankPut(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if buf.Yanks.Len == 0 {
+			return
+		}
+
+		CmdCursorRight(e)
+		v := buf.Yanks.Last()
+
+		if v.Value.isLine {
+			CmdGotoLineEnd(e)
+			CmdCursorRight(e)
+			CmdNewLine(e)
+			defer CmdCursorBeginningOfTheLine(e)
+		}
+
+		yankPut(e, buf)
+	})
+}
+
+func CmdYankPutBefore(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if buf.Yanks.Len == 0 {
+			return
+		}
+
+		v := buf.Yanks.Last()
+		if v.Value.isLine {
+			CmdLineOpenAbove(e)
+			CmdNormalMode(e)
+			yankPut(e, buf)
+			CmdCursorBeginningOfTheLine(e)
+		} else {
+			yankPut(e, buf)
+		}
+	})
+}
+
 func WithSelection(fn func(*Editor)) func(*Editor) {
 	return func(e *Editor) {
 		fn(e)
@@ -613,7 +676,6 @@ func WithSelection(fn func(*Editor)) func(*Editor) {
 				buf.Selection.End.Char = len(lineEnd.Value) - 1
 			}
 		}
-
 	}
 }
 

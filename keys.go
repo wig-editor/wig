@@ -55,8 +55,15 @@ func DefaultKeyMap() ModeKeyMap {
 			"o":      CmdLineOpenBelow,
 			"O":      CmdLineOpenAbove,
 			"J":      CmdJoinNextLine,
+			"p":      CmdYankPut,
+			"P":      CmdYankPutBefore,
+			"f":      CmdForwardChar,
+			"F":      CmdBackwardChar,
 			"c": KeyMap{
 				"c": CmdChangeLine,
+			},
+			"y": KeyMap{
+				"y": CmdYank,
 			},
 			"g": KeyMap{
 				"g": CmdGotoLine0,
@@ -64,8 +71,6 @@ func DefaultKeyMap() ModeKeyMap {
 			"d": KeyMap{
 				"d": CmdDeleteLine,
 			},
-			"f": CmdForwardChar,
-			"F": CmdBackwardChar,
 			"ctrl+c": KeyMap{
 				"ctrl+x": CmdExit,
 			},
@@ -94,6 +99,7 @@ func DefaultKeyMap() ModeKeyMap {
 			"0":      WithSelection(CmdCursorBeginningOfTheLine),
 			"x":      CmdSelectinDelete,
 			"d":      CmdSelectinDelete,
+			"y":      CmdYank,
 			"Esc":    CmdNormalMode,
 			"g": KeyMap{
 				"g": WithSelection(CmdGotoLine0),
@@ -108,12 +114,15 @@ func DefaultKeyMap() ModeKeyMap {
 			"Esc": CmdNormalMode,
 			"x":   CmdSelectinDelete,
 			"d":   CmdSelectinDelete,
+			"y":   CmdYank,
 		},
 
 		MODE_INSERT: KeyMap{
 			"Esc":    CmdNormalMode,
 			"ctrl+f": CmdCursorRight,
 			"ctrl+b": CmdCursorLeft,
+			"ctrl+j": CmdCursorLineDown,
+			"ctrl+k": CmdCursorLineUp,
 		},
 	}
 }
@@ -144,7 +153,7 @@ func (k *KeyHandler) Fallback(fn func(e *Editor, ev *tcell.EventKey)) {
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	key := k.normalizeKeyName(ev)
 
-	if mode != MODE_INSERT{
+	if mode != MODE_INSERT {
 		if isNumeric(key) {
 			k.times = append(k.times, key)
 			return
