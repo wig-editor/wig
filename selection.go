@@ -37,7 +37,6 @@ func SelectionCursorInRange(sel *Selection, c Cursor) bool {
 	return true
 }
 
-// FIXME: make it right. dammit.
 func SelectionToString(buf *Buffer) string {
 	if buf.Selection == nil {
 		return ""
@@ -62,35 +61,26 @@ func SelectionToString(buf *Buffer) string {
 		return ""
 	}
 
-	if s.Start.Line == s.End.Line {
-		chLen := s.End.Char + 1
-		if chLen > len(lineStart.Value) {
-			chLen = len(lineStart.Value) - 1
-		}
-		if chLen <= 0 {
-			return ""
-		}
-		return string(lineStart.Value[s.Start.Char:chLen])
+	endCh := s.End.Char + 1
+	if endCh > len(lineEnd.Value) {
+		endCh = len(lineEnd.Value)
 	}
 
-	result := string(lineStart.Value[s.Start.Char:])
+	if s.Start.Line == s.End.Line {
+		return string(lineStart.Value[s.Start.Char:endCh])
+	}
+
+	acc := string(lineStart.Value[s.Start.Char:])
 	currentLine := lineStart.Next()
 	for currentLine != nil {
 		if currentLine != lineEnd {
-			result += "\n" + string(currentLine.Value)
+			acc += "\n" + string(currentLine.Value)
 		} else {
-			chLen := s.End.Char + 1
-			if chLen > len(currentLine.Value) {
-				chLen = len(currentLine.Value) - 1
-			}
-			if chLen <= 0 {
-				return result
-			}
-			result += "\n" + string(currentLine.Value[:chLen])
+			acc += "\n" + string(currentLine.Value[:endCh])
 			break
 		}
 		currentLine = currentLine.Next()
 	}
 
-	return result
+	return acc
 }
