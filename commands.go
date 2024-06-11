@@ -226,6 +226,9 @@ func CmdBackwardWord(e *Editor) {
 
 		if cls != chWhitespace && CursorChClass(buf) == cls {
 			for {
+				if buf.Cursor.Char == 0 {
+					return
+				}
 				if CursorChClass(buf) != cls {
 					CursorInc(buf)
 					return
