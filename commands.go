@@ -4,80 +4,10 @@ import (
 	"unicode"
 )
 
-func cursorToLine(buf *Buffer) *Element[Line] {
-	num := 0
-	currentLine := buf.Lines.First()
-	for currentLine != nil {
-		if buf.Cursor.Line == num {
-			return currentLine
-		}
-		currentLine = currentLine.Next()
-		num++
-	}
-	return currentLine
-}
-
-func lineByNum(buf *Buffer, num int) *Element[Line] {
-	i := 0
-	currentLine := buf.Lines.First()
-	for currentLine != nil {
-		if i == num {
-			return currentLine
-		}
-		currentLine = currentLine.Next()
-		i++
-	}
-	return currentLine
-}
-
-func restoreCharPosition(buf *Buffer) {
-	line := cursorToLine(buf)
-	if line == nil {
-		buf.Cursor.Char = 0
-		return
-	}
-
-	if len(line.Value) == 0 {
-		buf.Cursor.Char = 0
-		return
-	}
-
-	if buf.Cursor.PreserveCharPosition >= len(line.Value) {
-		buf.Cursor.Char = len(line.Value) - 1
-	} else {
-		buf.Cursor.Char = buf.Cursor.PreserveCharPosition
-	}
-}
-
-func isSpecialChar(c rune) bool {
-	specialChars := []rune(",.()[]{}<>:;+*/-=~!@#$%^&|?`\"")
-	for _, char := range specialChars {
-		if c == char {
-			return true
-		}
-	}
-	return false
-}
-
-func cursorGotoChar(buf *Buffer, ch int) {
-	buf.Cursor.Char = ch
-	buf.Cursor.PreserveCharPosition = buf.Cursor.Char
-}
-
-func lineJoinNext(buf *Buffer, line *Element[Line]) {
-	next := line.Next()
-	if next == nil {
-		return
-	}
-
-	line.Value = append(line.Value, next.Value...)
-	buf.Lines.Remove(next)
-}
-
 func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 	buf := e.ActiveBuffer()
 	if buf != nil {
-		line := cursorToLine(buf)
+		line := CursorLine(buf)
 		fn(buf, line)
 	}
 }
@@ -255,49 +185,30 @@ func CmdGotoLineEnd(e *Editor) {
 
 func CmdForwardWord(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		checkEOF := func(line *Element[Line]) bool {
-			if buf.Cursor.Char >= len(line.Value) || line.Value.IsEmpty() {
-				CmdCursorLineDown(e)
-				CmdCursorFirstNonBlank(e)
-				return true
-			}
-			return false
-		}
-		if checkEOF(line) {
+		cls := CursorChClass(buf)
+		CursorInc(buf)
+
+		// return on line change
+		if line != CursorLine(buf) {
 			return
 		}
 
-		exitOn := isSpecialChar
+		if cls != chWhitespace {
+			for CursorChClass(buf) == cls {
+				if !CursorInc(buf) {
+					return
+				}
+			}
+		}
 
-		ch := line.Value[buf.Cursor.Char]
-
-		for {
-			if checkEOF(line) {
+		// skip whitespace
+		line = CursorLine(buf)
+		for CursorChClass(buf) == chWhitespace {
+			if !CursorInc(buf) {
 				return
 			}
-
-			if buf.Cursor.Char >= len(line.Value)-1 {
-				CmdCursorLineDown(e)
-				CmdCursorFirstNonBlank(e)
-				line = cursorToLine(buf)
-				if line.Value.IsEmpty() {
-					continue
-				}
-				break
-			}
-
-			if unicode.IsSpace(ch) || isSpecialChar(ch) {
-				exitOn = func(ch rune) bool {
-					return !unicode.IsSpace(ch)
-				}
-			}
-
-			CmdCursorRight(e)
-
-			ch = line.Value[buf.Cursor.Char]
-
-			if exitOn(ch) {
-				break
+			if line != CursorLine(buf) {
+				return
 			}
 		}
 	})
@@ -305,45 +216,47 @@ func CmdForwardWord(e *Editor) {
 
 func CmdBackwardWord(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.Cursor.Char == 0 && buf.Cursor.Line == 0 {
+		cls := CursorChClass(buf)
+		CursorDec(buf)
+
+		// return on line change
+		if line != CursorLine(buf) {
 			return
 		}
 
-		if buf.Cursor.Char == 0 || line.Value.IsEmpty() {
-			CmdCursorLineUp(e)
-			CmdGotoLineEnd(e)
-			return
-		}
-
-		CmdCursorLeft(e)
-
-		for {
-			line = cursorToLine(buf)
-			ch := line.Value[buf.Cursor.Char]
-
-			if buf.Cursor.Char == 0 {
-				if unicode.IsSpace(ch) {
-					CmdCursorLineUp(e)
-					CmdGotoLineEnd(e)
+		if cls != chWhitespace && CursorChClass(buf) == cls {
+			for {
+				if CursorChClass(buf) != cls {
+					CursorInc(buf)
+					return
 				}
-				break
-			}
 
-			if unicode.IsSpace(ch) {
-				CmdCursorLeft(e)
+				if !CursorDec(buf) {
+					return
+				}
+			}
+		}
+
+		// skip !=cls and whitespace
+		for CursorChClass(buf) == chWhitespace {
+			if !CursorDec(buf) {
+				return
+			}
+		}
+
+		cls = CursorChClass(buf)
+		for {
+			if buf.Cursor.Char == 0 {
+				return
+			}
+			if CursorChClass(buf) == cls {
+				if !CursorDec(buf) {
+					return
+				}
 				continue
 			}
-
-			if isSpecialChar(ch) {
-				break
-			}
-
-			prevCh := line.Value[buf.Cursor.Char-1]
-			if unicode.IsSpace(prevCh) || isSpecialChar(prevCh) {
-				break
-			}
-
-			CmdCursorLeft(e)
+			CursorInc(buf)
+			break
 		}
 	})
 }
@@ -411,7 +324,7 @@ func CmdDeleteCharBackward(e *Editor) {
 
 		if buf.Cursor.Char == 0 {
 			CmdCursorLineUp(e)
-			line = cursorToLine(buf)
+			line = CursorLine(buf)
 			pos := len(line.Value)
 			lineJoinNext(buf, line)
 			cursorGotoChar(buf, pos)
@@ -520,8 +433,8 @@ func CmdSelectinDelete(e *Editor) {
 			curStart, curEnd = curEnd, curStart
 		}
 
-		lineStart := lineByNum(buf, curStart.Line)
-		lineEnd := lineByNum(buf, curEnd.Line)
+		lineStart := CursorLineByNum(buf, curStart.Line)
+		lineEnd := CursorLineByNum(buf, curEnd.Line)
 
 		if curStart.Line == curEnd.Line {
 			if curStart.Char > curEnd.Char {
@@ -667,11 +580,11 @@ func WithSelection(fn func(*Editor)) func(*Editor) {
 
 		if buf.Mode == MODE_VISUAL_LINE {
 			if buf.Selection.Start.Line > buf.Selection.End.Line {
-				lineStart := lineByNum(buf, buf.Selection.Start.Line)
+				lineStart := CursorLineByNum(buf, buf.Selection.Start.Line)
 				buf.Selection.Start.Char = len(lineStart.Value) - 1
 				buf.Selection.End.Char = 0
 			} else {
-				lineEnd := lineByNum(buf, buf.Selection.End.Line)
+				lineEnd := CursorLineByNum(buf, buf.Selection.End.Line)
 				buf.Selection.Start.Char = 0
 				buf.Selection.End.Char = len(lineEnd.Value) - 1
 			}

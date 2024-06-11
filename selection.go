@@ -54,8 +54,8 @@ func SelectionToString(buf *Buffer) string {
 		}
 	}
 
-	lineStart := lineByNum(buf, s.Start.Line)
-	lineEnd := lineByNum(buf, s.End.Line)
+	lineStart := CursorLineByNum(buf, s.Start.Line)
+	lineEnd := CursorLineByNum(buf, s.End.Line)
 
 	if lineStart == nil {
 		return ""

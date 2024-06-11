@@ -29,7 +29,7 @@ func TestLineByNum(t *testing.T) {
 		t.Errorf("expected nil, got %v", err)
 	}
 
-	line := lineByNum(buf, 1)
+	line := CursorLineByNum(buf, 1)
 	assert.Equal(t, "line two", string(line.Value))
 }
 
@@ -42,7 +42,7 @@ func TestSelectionDelete(t *testing.T) {
 		End:   Cursor{Line: 1, Char: 0},
 	}
 	CmdSelectinDelete(e)
-	line := lineByNum(buf, 0)
+	line := CursorLineByNum(buf, 0)
 	assert.Equal(t, "ine two", string(line.Value))
 }
 
