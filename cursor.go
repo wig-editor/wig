@@ -124,8 +124,10 @@ func CursorChClass(buf *Buffer) chClass {
 		chLen = len(line.Value) - 1
 	}
 
-	r := line.Value[chLen]
+	return getChClass(line.Value[chLen])
+}
 
+func getChClass(r rune) chClass {
 	if unicode.IsSpace(r) {
 		return chWhitespace
 	}
@@ -133,6 +135,54 @@ func CursorChClass(buf *Buffer) chClass {
 	if unicode.IsPunct(r) || unicode.IsSymbol(r) {
 		return chPunct
 	}
-
 	return chWord
+}
+
+func WordUnderCursor(buf *Buffer, bigword bool) (start, end int) {
+	start = buf.Cursor.Char
+	end = start
+
+	line := CursorLine(buf)
+	cls := CursorChClass(buf)
+
+	if bigword {
+		for start > 0 {
+			if line.Value.IsEmpty() {
+				break
+			}
+			if getChClass(line.Value[start-1]) == cls {
+				start--
+			} else {
+				break
+			}
+		}
+	}
+
+	// if cls == chWhitespace {
+	// 	for i, r := range line.Value {
+	// 		if i < start {
+	// 			continue
+	// 		}
+	// 		if getChClass(r) != chWhitespace {
+	// 			cls = getChClass(r)
+	// 			break
+	// 		}
+	// 	}
+	// }
+
+	end = start
+
+	for i, r := range line.Value {
+		if i < start {
+			continue
+		}
+		if getChClass(r) == cls {
+			end = i
+			continue
+		}
+
+		break
+	}
+
+	return start, end
 }

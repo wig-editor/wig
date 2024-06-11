@@ -30,7 +30,6 @@ type Editor struct {
 	ExitCh       chan int
 	RedrawCh     chan int
 	Layout       Layout
-
 	activeWindow *Window
 }
 

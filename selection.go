@@ -84,3 +84,10 @@ func SelectionToString(buf *Buffer) string {
 
 	return acc
 }
+
+func SelectionStart(buf *Buffer) {
+	buf.Selection = &Selection{
+		Start: buf.Cursor,
+		End:   buf.Cursor,
+	}
+}

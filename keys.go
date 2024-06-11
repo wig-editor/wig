@@ -57,19 +57,26 @@ func DefaultKeyMap() ModeKeyMap {
 			"J":      CmdJoinNextLine,
 			"p":      CmdYankPut,
 			"P":      CmdYankPutBefore,
-			"f":      CmdForwardChar,
+			"f":      CmdForwardToChar,
+			"t":      CmdForwardBeforeChar,
 			"F":      CmdBackwardChar,
 			"c": KeyMap{
 				"c": CmdChangeLine,
+				"w": CmdChangeWord,
+				"f": CmdChangeTo,
+				"t": CmdChangeBefore,
+			},
+			"d": KeyMap{
+				"d": CmdDeleteLine,
+				"w": CmdDeleteWord,
+				"f": CmdDeleteTo,
+				"t": CmdDeleteBefore,
 			},
 			"y": KeyMap{
 				"y": CmdYank,
 			},
 			"g": KeyMap{
 				"g": CmdGotoLine0,
-			},
-			"d": KeyMap{
-				"d": CmdDeleteLine,
 			},
 			"ctrl+c": KeyMap{
 				"ctrl+x": CmdExit,
@@ -94,12 +101,14 @@ func DefaultKeyMap() ModeKeyMap {
 			"l":      WithSelection(CmdCursorRight),
 			"j":      WithSelection(CmdCursorLineDown),
 			"k":      WithSelection(CmdCursorLineUp),
-			"f":      WithSelectionToChar(CmdForwardChar),
+			"f":      WithSelectionToChar(CmdForwardToChar),
+			"t":      WithSelectionToChar(CmdForwardBeforeChar),
 			"$":      WithSelection(CmdGotoLineEnd),
 			"0":      WithSelection(CmdCursorBeginningOfTheLine),
 			"x":      CmdSelectinDelete,
 			"d":      CmdSelectinDelete,
 			"y":      CmdYank,
+			"c":      CmdSelectionChange,
 			"Esc":    CmdNormalMode,
 			"g": KeyMap{
 				"g": WithSelection(CmdGotoLine0),
@@ -153,13 +162,6 @@ func (k *KeyHandler) Fallback(fn func(e *Editor, ev *tcell.EventKey)) {
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	key := k.normalizeKeyName(ev)
 
-	if mode != MODE_INSERT {
-		if isNumeric(key) {
-			k.times = append(k.times, key)
-			return
-		}
-	}
-
 	var keySet KeyMap
 	switch v := k.waitingForInput.(type) {
 	case func(e *Editor, ch string):
@@ -171,6 +173,14 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	case KeyMap:
 		keySet = v
 	default:
+
+		if mode != MODE_INSERT {
+			if isNumeric(key) {
+				k.times = append(k.times, key)
+				return
+			}
+		}
+
 		keySet = k.keymap[mode]
 	}
 

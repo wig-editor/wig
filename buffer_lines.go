@@ -8,6 +8,20 @@ func (l Line) IsEmpty() bool {
 	return len(l) == 0
 }
 
+func (l Line) Range(from, to int) []rune {
+	if l.IsEmpty() {
+		return []rune{}
+	}
+	if from < 0 {
+		return []rune{}
+	}
+	if to > len(l) {
+		return []rune{}
+	}
+
+	return l[from:to]
+}
+
 // the zero value is ready to use.
 type List[T any] struct {
 	root Element[T]

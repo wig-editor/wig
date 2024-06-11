@@ -1,6 +1,7 @@
 package mcwig
 
 import (
+	"strings"
 	"unicode"
 )
 
@@ -125,20 +126,14 @@ func CmdInsertMode(e *Editor) {
 
 func CmdVisualMode(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
-		buf.Selection = &Selection{
-			Start: buf.Cursor,
-			End:   buf.Cursor,
-		}
+		SelectionStart(buf)
 		buf.Mode = MODE_VISUAL
 	})
 }
 
 func CmdVisualLineMode(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		buf.Selection = &Selection{
-			Start: buf.Cursor,
-			End:   buf.Cursor,
-		}
+		SelectionStart(buf)
 		buf.Selection.Start.Char = 0
 		buf.Selection.End.Char = len(line.Value) - 1
 		buf.Mode = MODE_VISUAL_LINE
@@ -170,6 +165,11 @@ func CmdGotoLine0(e *Editor) {
 		buf.Cursor.Line = 0
 		buf.ScrollOffset = 0
 		restoreCharPosition(buf)
+
+		if e.Keys.GetTimes() > 1 {
+			buf.Cursor.Line = e.Keys.GetTimes() - 1
+			e.Keys.resetState()
+		}
 	})
 }
 
@@ -264,16 +264,30 @@ func CmdBackwardWord(e *Editor) {
 	})
 }
 
-func CmdForwardChar(e *Editor, ch string) {
+func CmdForwardToChar(e *Editor, ch string) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if len(line.Value) == 0 {
+		if line.Value.IsEmpty() {
 			return
 		}
-
 		for i := buf.Cursor.Char + 1; i < len(line.Value); i++ {
-			if string(line.Value[i]) == ch {
+			if strings.EqualFold(string(line.Value[i]), ch) {
 				buf.Cursor.Char = i
 				buf.Cursor.PreserveCharPosition = i
+				break
+			}
+		}
+	})
+}
+
+func CmdForwardBeforeChar(e *Editor, ch string) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if line.Value.IsEmpty() {
+			return
+		}
+		for i := buf.Cursor.Char + 1; i < len(line.Value); i++ {
+			if strings.EqualFold(string(line.Value[i]), ch) {
+				buf.Cursor.Char = i - 1
+				buf.Cursor.PreserveCharPosition = i - 1
 				break
 			}
 		}
@@ -412,10 +426,72 @@ func CmdDeleteLine(e *Editor) {
 	})
 }
 
+func CmdDeleteWord(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		_, end := WordUnderCursor(buf, false)
+		buf.Selection = &Selection{
+			Start: buf.Cursor,
+			End:   Cursor{Line: buf.Cursor.Line, Char: end},
+		}
+		CmdSelectinDelete(e)
+	})
+}
+
+func CmdChangeWord(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		_, end := WordUnderCursor(buf, false)
+		buf.Selection = &Selection{
+			Start: buf.Cursor,
+			End:   Cursor{Line: buf.Cursor.Line, Char: end},
+		}
+		CmdSelectinDelete(e)
+		CmdInsertMode(e)
+	})
+}
+
+func CmdChangeTo(e *Editor, ch string) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		SelectionStart(buf)
+		WithSelectionToChar(CmdForwardToChar)(e, ch)
+		CmdSelectionChange(e)
+	})
+}
+
+func CmdChangeBefore(e *Editor, ch string) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		SelectionStart(buf)
+		WithSelectionToChar(CmdForwardBeforeChar)(e, ch)
+		CmdSelectionChange(e)
+	})
+}
+
 func CmdChangeLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		line.Value = nil
 		CmdInsertModeAfter(e)
+	})
+}
+
+func CmdDeleteTo(e *Editor, ch string) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		SelectionStart(buf)
+		WithSelectionToChar(CmdForwardToChar)(e, ch)
+		CmdSelectinDelete(e)
+	})
+}
+
+func CmdDeleteBefore(e *Editor, ch string) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		SelectionStart(buf)
+		WithSelectionToChar(CmdForwardBeforeChar)(e, ch)
+		CmdSelectinDelete(e)
+	})
+}
+
+func CmdSelectionChange(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		CmdSelectinDelete(e)
+		CmdInsertMode(e)
 	})
 }
 

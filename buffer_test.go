@@ -67,6 +67,19 @@ func TestSaveFile(t *testing.T) {
 	assert.Equal(t, 6, buf.Lines.Len)
 }
 
+func TestWordUnderCusor(t *testing.T) {
+	e := NewEditor(testutils.Viewport, nil)
+	e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.ActiveBuffer()
+	buf.Selection = &Selection{
+		Start: Cursor{Line: 0, Char: 0},
+		End:   Cursor{Line: 1, Char: 0},
+	}
+	CmdSelectinDelete(e)
+	line := CursorLineByNum(buf, 0)
+	assert.Equal(t, "ine two", string(line.Value))
+}
+
 func copyFile(src string, dst string) error {
 	data, err := os.ReadFile(src)
 	if err != nil {

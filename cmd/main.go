@@ -57,6 +57,7 @@ func main() {
 	)
 
 	editor.OpenFile("/home/andrew/test.txt")
+	editor.OpenFile("/home/andrew/cgroup.c")
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
