@@ -2,6 +2,12 @@ package mcwig
 
 import "unicode"
 
+type Cursor struct {
+	Line                 int
+	Char                 int
+	PreserveCharPosition int
+}
+
 func restoreCharPosition(buf *Buffer) {
 	line := CursorLine(buf)
 	if line == nil {
@@ -24,16 +30,6 @@ func restoreCharPosition(buf *Buffer) {
 func cursorGotoChar(buf *Buffer, ch int) {
 	buf.Cursor.Char = ch
 	buf.Cursor.PreserveCharPosition = buf.Cursor.Char
-}
-
-func lineJoinNext(buf *Buffer, line *Element[Line]) {
-	next := line.Next()
-	if next == nil {
-		return
-	}
-
-	line.Value = append(line.Value, next.Value...)
-	buf.Lines.Remove(next)
 }
 
 func CursorInc(buf *Buffer) (moved bool) {

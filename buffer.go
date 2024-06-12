@@ -28,12 +28,6 @@ func (m Mode) String() string {
 	return "VIS"
 }
 
-type Cursor struct {
-	Line                 int
-	Char                 int
-	PreserveCharPosition int
-}
-
 // Driver represents anything that can run selected text. it can be sql conncetion,
 // or rest client.
 type Driver interface {
