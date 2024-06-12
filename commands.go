@@ -571,6 +571,12 @@ func CmdSelectinDelete(e *Editor) {
 }
 
 func CmdSaveFile(e *Editor) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
+		err := buf.Save()
+		if err != nil {
+
+		}
+	})
 }
 
 func CmdWindowVSplit(e *Editor) {

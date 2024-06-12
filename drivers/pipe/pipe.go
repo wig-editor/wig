@@ -103,7 +103,7 @@ func (p *pipeDrv) outBufferFor(buf *mcwig.Buffer) *mcwig.Buffer {
 	if p.outBuf != nil {
 		return p.outBuf
 	}
-	p.outBuf = p.e.BufferGetByName(fmt.Sprintf("[output] %s", buf.GetName()))
+	p.outBuf = p.e.BufferFindByFilePath(fmt.Sprintf("[output] %s", buf.GetName()))
 	return p.outBuf
 }
 

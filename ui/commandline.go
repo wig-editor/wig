@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
-
 	"github.com/firstrow/mcwig"
 )
 
@@ -21,6 +20,7 @@ func CommandLineInit(e *mcwig.Editor) {
 		e:     e,
 		chBuf: []rune{},
 	}
+
 	cmdLine.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
 		mcwig.MODE_NORMAL: mcwig.KeyMap{
 			"Esc": func(e *mcwig.Editor) {
@@ -77,13 +77,10 @@ func (u *uiCommandLine) execute(cmd string) {
 	}
 }
 
-func (u *uiCommandLine) Mode() mcwig.Mode {
-	return mcwig.MODE_NORMAL
-}
-
 func (u *uiCommandLine) Keymap() *mcwig.KeyHandler {
 	return u.keymap
 }
+
 
 func (u *uiCommandLine) Render(view mcwig.View) {
 	st := mcwig.Color("statusline")
@@ -95,4 +92,8 @@ func (u *uiCommandLine) Render(view mcwig.View) {
 
 	msg := fmt.Sprintf(":%s%s", string(u.chBuf), string(tcell.RuneBlock))
 	view.SetContent(0, h, msg, st)
+}
+
+func (u *uiCommandLine) Mode() mcwig.Mode {
+	return mcwig.MODE_NORMAL
 }

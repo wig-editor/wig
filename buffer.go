@@ -45,8 +45,6 @@ type Buffer struct {
 	Cursor       Cursor
 	Selection    *Selection
 	Driver       Driver
-
-	Name string
 }
 
 func NewBuffer() *Buffer {
@@ -68,7 +66,6 @@ func BufferReadFile(path string) (*Buffer, error) {
 
 	buf := NewBuffer()
 	buf.FilePath = path
-	buf.Name = path
 	buf.Cursor = Cursor{0, 0, 0}
 	buf.Selection = nil
 	buf.Lines = List[Line]{}
@@ -81,10 +78,10 @@ func BufferReadFile(path string) (*Buffer, error) {
 }
 
 func (b *Buffer) GetName() string {
-	if len(b.Name) > 0 {
-		return b.Name
+	if len(b.FilePath) > 0 {
+		return b.FilePath
 	}
-	return b.FilePath
+	return "[No Name]"
 }
 
 func (b *Buffer) Save() error {
@@ -107,15 +104,15 @@ func (b *Buffer) Save() error {
 }
 
 // Find or create new buffer
-func (e *Editor) BufferGetByName(name string) *Buffer {
+func (e *Editor) BufferFindByFilePath(fp string) *Buffer {
 	for _, b := range e.Buffers {
-		if b.Name == name {
+		if b.FilePath == fp {
 			return b
 		}
 	}
 
 	b := NewBuffer()
-	b.Name = name
+	b.FilePath = fp
 	b.Lines = List[Line]{}
 	e.Buffers = append(e.Buffers, b)
 	return b

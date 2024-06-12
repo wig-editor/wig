@@ -65,7 +65,7 @@ func (e *Editor) OpenFile(path string) {
 func (e *Editor) ActiveBuffer() *Buffer {
 	if len(e.Buffers) == 0 {
 		buf := NewBuffer()
-		buf.Name = "[No Name]"
+		buf.FilePath = "[No Name]"
 		e.Buffers = append(e.Buffers, buf)
 		e.activeWindow.Buffer = buf
 	}

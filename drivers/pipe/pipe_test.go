@@ -17,7 +17,7 @@ func TestPipe(t *testing.T) {
 		nil,
 	)
 
-	buf := e.BufferGetByName("test-1")
+	buf := e.BufferFindByFilePath("test-1")
 	lines := `#
 #  cmd: echo "%s"
 #
@@ -30,7 +30,7 @@ func TestPipe(t *testing.T) {
 	h := p.parseHeader(buf)
 	assert.Equal(t, "echo", p.getCommand(h.cmd))
 
-	outBuf := e.BufferGetByName("output")
+	outBuf := e.BufferFindByFilePath("output")
 	p.send(h, outBuf, `ping pong`)
 	p.cmd.Wait()
 
@@ -47,7 +47,7 @@ func Test_LongRunningProcess(t *testing.T) {
 		nil,
 	)
 
-	buf := e.BufferGetByName("test-1")
+	buf := e.BufferFindByFilePath("test-1")
 	lines := `#
 # cmd: python -i
 # interactive: 1
@@ -62,7 +62,7 @@ func Test_LongRunningProcess(t *testing.T) {
 	h := p.parseHeader(buf)
 
 	assert.Equal(t, "python", p.getCommand(h.cmd))
-	outBuf := e.BufferGetByName("output")
+	outBuf := e.BufferFindByFilePath("output")
 	p.send(h, outBuf, `help`)
 	// TODO: figure out how to Wait properly
 	time.Sleep(100 * time.Millisecond)
@@ -85,7 +85,7 @@ func Test_ParseHeader(t *testing.T) {
 hello world
 `
 
-	buf := e.BufferGetByName("test-1")
+	buf := e.BufferFindByFilePath("test-1")
 	for _, l := range strings.Split(lines, "\n") {
 		buf.AppendStringLine(l)
 	}
