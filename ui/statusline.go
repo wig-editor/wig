@@ -24,11 +24,7 @@ func StatuslineRender(
 	bg := strings.Repeat(" ", w)
 	view.SetContent(0, h, bg, st)
 
-	start, end := mcwig.WordUnderCursor(buf, true)
-	line := mcwig.CursorLine(buf)
-	word := string(line.Value.Range(start, end+1))
-
-	leftSide := fmt.Sprintf("%s %s |%s| %d-%d", buf.Mode.String(), buf.GetName(), word, start, end)
+	leftSide := fmt.Sprintf("%s %s", buf.Mode.String(), buf.GetName())
 	view.SetContent(2, h, leftSide, st)
 
 	rightSide := fmt.Sprintf("%d:%d", buf.Cursor.Line+1, buf.Cursor.Char)
