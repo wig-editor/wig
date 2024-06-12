@@ -84,6 +84,7 @@ func DefaultKeyMap() ModeKeyMap {
 			"ctrl+w": KeyMap{
 				"v":      CmdWindowVSplit,
 				"w":      CmdWindowNext,
+				"c":      CmdWindowClose,
 				"ctrl+w": CmdWindowNext,
 				"t":      CmdWindowToggleLayout,
 			},

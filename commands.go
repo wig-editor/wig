@@ -611,6 +611,18 @@ func CmdWindowToggleLayout(e *Editor) {
 }
 
 func CmdWindowClose(e *Editor) {
+	if len(e.Windows) == 1 {
+		return
+	}
+
+	curWin := e.activeWindow
+	for i, w := range e.Windows {
+		if w == curWin {
+			e.Windows = append(e.Windows[:i], e.Windows[i+1:]...)
+			e.activeWindow = e.Windows[i-1]
+		}
+	}
+
 }
 
 func CmdExit(e *Editor) {
