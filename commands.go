@@ -504,7 +504,7 @@ func CmdSelectinDelete(e *Editor) {
 			return
 		}
 
-		yankSave(buf, line)
+		yankSave(e, buf, line)
 
 		curStart := buf.Selection.Start
 		curEnd := buf.Selection.End
@@ -609,18 +609,18 @@ func CmdYank(e *Editor) {
 			}
 			CmdNormalMode(e)
 		}()
-		yankSave(buf, line)
+		yankSave(e, buf, line)
 	})
 }
 
 func CmdYankPut(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.Yanks.Len == 0 {
+		if e.Yanks.Len == 0 {
 			return
 		}
 
 		CmdCursorRight(e)
-		v := buf.Yanks.Last()
+		v := e.Yanks.Last()
 
 		if v.Value.isLine {
 			CmdGotoLineEnd(e)
@@ -635,11 +635,11 @@ func CmdYankPut(e *Editor) {
 
 func CmdYankPutBefore(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.Yanks.Len == 0 {
+		if e.Yanks.Len == 0 {
 			return
 		}
 
-		v := buf.Yanks.Last()
+		v := e.Yanks.Last()
 		if v.Value.isLine {
 			CmdLineOpenAbove(e)
 			CmdNormalMode(e)

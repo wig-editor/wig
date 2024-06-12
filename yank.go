@@ -11,7 +11,7 @@ type Yanks struct {
 	items List[yank]
 }
 
-func yankSave(buf *Buffer, line *Element[Line]) {
+func yankSave(e *Editor, buf *Buffer, line *Element[Line]) {
 	var y yank
 	if buf.Selection == nil {
 		y = yank{string(line.Value), true}
@@ -22,18 +22,18 @@ func yankSave(buf *Buffer, line *Element[Line]) {
 		y.isLine = true
 	}
 
-	if buf.Yanks.Len == 0 {
-		buf.Yanks.PushBack(y)
+	if e.Yanks.Len == 0 {
+		e.Yanks.PushBack(y)
 		return
 	}
 
-	if buf.Yanks.Last().Value != y {
-		buf.Yanks.PushBack(y)
+	if e.Yanks.Last().Value != y {
+		e.Yanks.PushBack(y)
 	}
 }
 
 func yankPut(e *Editor, buf *Buffer) {
-	v := buf.Yanks.Last()
+	v := e.Yanks.Last()
 
 	oldMode := buf.Mode
 	buf.Mode = MODE_INSERT

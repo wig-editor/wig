@@ -30,6 +30,8 @@ type Editor struct {
 	ExitCh       chan int
 	RedrawCh     chan int
 	Layout       Layout
+	Yanks        List[yank]
+
 	activeWindow *Window
 }
 
@@ -43,6 +45,7 @@ func NewEditor(
 		View:         view,
 		Keys:         keys,
 		Buffers:      []*Buffer{},
+		Yanks:        List[yank]{},
 		Windows:      windows,
 		activeWindow: windows[0],
 		ExitCh:       make(chan int),

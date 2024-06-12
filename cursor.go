@@ -158,18 +158,6 @@ func WordUnderCursor(buf *Buffer, bigword bool) (start, end int) {
 		}
 	}
 
-	// if cls == chWhitespace {
-	// 	for i, r := range line.Value {
-	// 		if i < start {
-	// 			continue
-	// 		}
-	// 		if getChClass(r) != chWhitespace {
-	// 			cls = getChClass(r)
-	// 			break
-	// 		}
-	// 	}
-	// }
-
 	end = start
 
 	for i, r := range line.Value {

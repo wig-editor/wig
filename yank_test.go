@@ -16,7 +16,7 @@ func TestYankSingleLine(t *testing.T) {
 	CmdYank(e)
 	CmdYank(e)
 
-	assert.Equal(t, 1, buf.Yanks.Len)
+	assert.Equal(t, 1, e.Yanks.Len)
 
 	CmdYankPut(e)
 
@@ -39,7 +39,7 @@ func TestYankSelection(t *testing.T) {
 	CmdYank(e)
 	buf.Cursor = Cursor{Line: 0, Char: 3}
 
-	assert.Equal(t, 1, buf.Yanks.Len)
+	assert.Equal(t, 1, e.Yanks.Len)
 
 	CmdYankPut(e)
 
