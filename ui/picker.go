@@ -12,8 +12,9 @@ import (
 )
 
 type PickerItem[T any] struct {
-	Name  string
-	Value T
+	Name   string
+	Value  T
+	Active bool
 }
 
 type PickerAction[T any] func(i *PickerItem[T])
@@ -154,11 +155,16 @@ func (u *uiPicker[T]) Render(view mcwig.View) {
 
 	i := 0
 	for key, row := range dataset {
+		isCurrent := " "
+		if row.Active {
+			isCurrent = "*"
+		}
+
 		if key+startIndex == u.activeItem {
 			u.activeItemT = &row
-			line = fmt.Sprintf("> %s", truncate(row.Name, w-x-5))
+			line = fmt.Sprintf("> %s %s", isCurrent, truncate(row.Name, w-x-5))
 		} else {
-			line = fmt.Sprintf("  %s", truncate(row.Name, w-x-5))
+			line = fmt.Sprintf("  %s %s", isCurrent, truncate(row.Name, w-x-5))
 		}
 		view.SetContent(x+2, y+i+3, line, mcwig.Color("default"))
 		i++

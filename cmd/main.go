@@ -15,8 +15,9 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 	items := []ui.PickerItem[*mcwig.Buffer]{}
 	for _, b := range editor.Buffers {
 		items = append(items, ui.PickerItem[*mcwig.Buffer]{
-			Name:  b.GetName(),
-			Value: b,
+			Name:   b.GetName(),
+			Value:  b,
+			Active: b == editor.ActiveBuffer(),
 		})
 	}
 	ui.PickerInit(

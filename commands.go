@@ -619,7 +619,7 @@ func CmdWindowClose(e *Editor) {
 	for i, w := range e.Windows {
 		if w == curWin {
 			e.Windows = append(e.Windows[:i], e.Windows[i+1:]...)
-			e.activeWindow = e.Windows[i-1]
+			e.activeWindow = e.Windows[0]
 		}
 	}
 

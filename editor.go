@@ -50,6 +50,7 @@ func NewEditor(
 		activeWindow: windows[0],
 		ExitCh:       make(chan int),
 		RedrawCh:     make(chan int, 10),
+		Layout:       LayoutVertical,
 	}
 }
 
