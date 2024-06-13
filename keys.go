@@ -65,6 +65,7 @@ func DefaultKeyMap() ModeKeyMap {
 				"w": CmdChangeWord,
 				"f": CmdChangeTo,
 				"t": CmdChangeBefore,
+				"$": CmdChangeEndOfLine,
 			},
 			"d": KeyMap{
 				"d": CmdDeleteLine,

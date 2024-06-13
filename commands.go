@@ -475,6 +475,14 @@ func CmdChangeBefore(e *Editor, ch string) {
 	})
 }
 
+func CmdChangeEndOfLine(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		SelectionStart(buf)
+		buf.Selection.End.Char = len(line.Value) - 1
+		CmdSelectionChange(e)
+	})
+}
+
 func CmdChangeLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		line.Value = nil
