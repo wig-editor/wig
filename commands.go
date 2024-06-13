@@ -691,7 +691,11 @@ func CmdKillBuffer(e *Editor) {
 			if b == buf {
 				e.Buffers = append(e.Buffers[:i], e.Buffers[i+1:]...)
 				if len(e.Buffers) > 0 {
-					e.activeWindow.Buffer = e.Buffers[i-1]
+					idx := i - 1
+					if i < 0 {
+						idx = 0
+					}
+					e.activeWindow.Buffer = e.Buffers[idx]
 				}
 			}
 		}

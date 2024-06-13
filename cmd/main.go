@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -39,6 +41,45 @@ func CmdExecute(e *mcwig.Editor) {
 	})
 }
 
+// TODO: show errors
+func CmdFindFilePicker(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
+		rootDir, err := e.Projects.FindRoot(buf)
+		if err != nil {
+			return
+		}
+
+		cmd := exec.Command("git", "ls-tree", "-r", "--name-only", "HEAD")
+		cmd.Dir = rootDir
+		stdout, err := cmd.Output()
+		if err != nil {
+			return
+		}
+
+		items := []ui.PickerItem[string]{}
+
+		for _, row := range strings.Split(string(stdout), "\n") {
+			row = strings.TrimSpace(row)
+			if len(row) == 0 {
+				continue
+			}
+			items = append(items, ui.PickerItem[string]{
+				Name:  row,
+				Value: row,
+			})
+		}
+
+		ui.PickerInit(
+			e,
+			func(i *ui.PickerItem[string]) {
+				e.OpenFile(rootDir + "/" + i.Value)
+				e.PopUi()
+			},
+			items,
+		)
+	})
+}
+
 func main() {
 	tscreen, err := tcell.NewScreen()
 	if err != nil {
@@ -67,6 +108,7 @@ func main() {
 			"b": mcwig.KeyMap{
 				"b": CmdBufferPicker,
 			},
+			"f": CmdFindFilePicker,
 		},
 		"ctrl+c": mcwig.KeyMap{
 			"ctrl+c": CmdExecute,

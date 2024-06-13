@@ -31,6 +31,7 @@ type Editor struct {
 	RedrawCh     chan int
 	Layout       Layout
 	Yanks        List[yank]
+	Projects     ProjectManager
 
 	activeWindow *Window
 }
@@ -51,6 +52,7 @@ func NewEditor(
 		ExitCh:       make(chan int),
 		RedrawCh:     make(chan int, 10),
 		Layout:       LayoutVertical,
+		Projects:     NewProjectManager(),
 	}
 }
 
@@ -110,6 +112,7 @@ func (e *Editor) HandleInput(ev *tcell.EventKey) {
 	h := e.Keys.HandleKey
 
 	if len(e.UiComponents) > 0 {
+		h = e.UiComponents[len(e.UiComponents)-1].Keymap().HandleKey
 		h = e.UiComponents[len(e.UiComponents)-1].Keymap().HandleKey
 	}
 
