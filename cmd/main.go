@@ -42,13 +42,21 @@ func CmdExecute(e *mcwig.Editor) {
 }
 
 func CmdFindFilePicker(e *mcwig.Editor) {
+	defer e.ScreenSync()
+
 	rootDir, _ := e.Projects.FindRoot(e.Buffers[0])
-	c := exec.Command("bash", "-c", "git ls-tree -r --name-only HEAD | fzf")
-	c.Dir = rootDir
-	stdout, _ := c.Output()
+
+	cmd := exec.Command("bash", "-c", "git ls-tree -r --name-only HEAD | fzf")
+	cmd.Dir = rootDir
+	stdout, _ := cmd.Output()
+
 	result := strings.TrimSpace(string(stdout))
+	if result == "" {
+		return
+	}
+
 	e.OpenFile(rootDir + "/" + result)
-	e.ScreenSync()
+
 	// mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
 	// 	rootDir, err := e.Projects.FindRoot(buf)
 	// 	if err != nil {

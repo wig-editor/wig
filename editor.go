@@ -61,7 +61,8 @@ func NewEditor(
 func (e *Editor) OpenFile(path string) {
 	buf, err := BufferReadFile(path)
 	if err != nil {
-		panic(err)
+		// TODO: log error
+		return
 	}
 	e.Buffers = append(e.Buffers, buf)
 	e.activeWindow.Buffer = buf
