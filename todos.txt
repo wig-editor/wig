@@ -4,3 +4,4 @@ Bugs:
 - repeat latest Exec/ExecBuffer
 - word movements adjust cursor preserved position. count tabs as spaces?
 - indicate that query is in progress of execution
+- w/b keys need to adjust screen scroll. cursor goes out of screen.
