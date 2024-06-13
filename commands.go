@@ -274,6 +274,13 @@ func CmdBackwardWord(e *Editor) {
 	})
 }
 
+func CmdReplaceChar(e *Editor, ch string) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		c := []rune(ch)
+		line.Value[buf.Cursor.Char] = c[0]
+	})
+}
+
 func CmdForwardToChar(e *Editor, ch string) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if line.Value.IsEmpty() {

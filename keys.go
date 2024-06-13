@@ -57,6 +57,7 @@ func DefaultKeyMap() ModeKeyMap {
 			"J":      CmdJoinNextLine,
 			"p":      CmdYankPut,
 			"P":      CmdYankPutBefore,
+			"r":      CmdReplaceChar,
 			"f":      CmdForwardToChar,
 			"t":      CmdForwardBeforeChar,
 			"F":      CmdBackwardChar,
