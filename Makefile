@@ -5,3 +5,7 @@ run:
 
 test:
 	go test -v ./... -count=1
+
+build:
+	go build cmd/main.go
+	mv ./main ~/go/bin/mcwig
