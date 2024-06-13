@@ -64,7 +64,9 @@ func main() {
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
 		"Space": mcwig.KeyMap{
-			"b": CmdBufferPicker,
+			"b": mcwig.KeyMap{
+				"b": CmdBufferPicker,
+			},
 		},
 		"ctrl+c": mcwig.KeyMap{
 			"ctrl+c": CmdExecute,

@@ -622,7 +622,6 @@ func CmdWindowClose(e *Editor) {
 			e.activeWindow = e.Windows[0]
 		}
 	}
-
 }
 
 func CmdExit(e *Editor) {
@@ -675,6 +674,26 @@ func CmdYankPutBefore(e *Editor) {
 			CmdCursorBeginningOfTheLine(e)
 		} else {
 			yankPut(e, buf)
+		}
+	})
+}
+
+func CmdKillBuffer(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if len(e.Buffers) == 0 {
+			return
+		}
+
+		// create [No Name] buffer
+		defer e.ActiveBuffer()
+
+		for i, b := range e.Buffers {
+			if b == buf {
+				e.Buffers = append(e.Buffers[:i], e.Buffers[i+1:]...)
+				if len(e.Buffers) > 0 {
+					e.activeWindow.Buffer = e.Buffers[i-1]
+				}
+			}
 		}
 	})
 }

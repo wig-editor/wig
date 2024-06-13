@@ -89,7 +89,9 @@ func DefaultKeyMap() ModeKeyMap {
 				"t":      CmdWindowToggleLayout,
 			},
 			"Space": KeyMap{
-				"b": CmdGotoLine0,
+				"b": KeyMap{
+					"k": CmdKillBuffer,
+				},
 			},
 		},
 
