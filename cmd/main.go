@@ -41,43 +41,49 @@ func CmdExecute(e *mcwig.Editor) {
 	})
 }
 
-// TODO: show errors
 func CmdFindFilePicker(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
-		rootDir, err := e.Projects.FindRoot(buf)
-		if err != nil {
-			return
-		}
+	rootDir, _ := e.Projects.FindRoot(e.Buffers[0])
+	c := exec.Command("bash", "-c", "git ls-tree -r --name-only HEAD | fzf")
+	c.Dir = rootDir
+	stdout, _ := c.Output()
+	result := strings.TrimSpace(string(stdout))
+	e.OpenFile(rootDir + "/" + result)
+	e.ScreenSync()
+	// mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
+	// 	rootDir, err := e.Projects.FindRoot(buf)
+	// 	if err != nil {
+	// 		return
+	// 	}
 
-		cmd := exec.Command("git", "ls-tree", "-r", "--name-only", "HEAD")
-		cmd.Dir = rootDir
-		stdout, err := cmd.Output()
-		if err != nil {
-			return
-		}
+	// 	cmd := exec.Command("git", "ls-tree", "-r", "--name-only", "HEAD")
+	// 	cmd.Dir = rootDir
+	// 	stdout, err := cmd.Output()
+	// 	if err != nil {
+	// 		return
+	// 	}
 
-		items := []ui.PickerItem[string]{}
+	// 	items := []ui.PickerItem[string]{}
 
-		for _, row := range strings.Split(string(stdout), "\n") {
-			row = strings.TrimSpace(row)
-			if len(row) == 0 {
-				continue
-			}
-			items = append(items, ui.PickerItem[string]{
-				Name:  row,
-				Value: row,
-			})
-		}
+	// 	for _, row := range strings.Split(string(stdout), "\n") {
+	// 		row = strings.TrimSpace(row)
+	// 		if len(row) == 0 {
+	// 			continue
+	// 		}
+	// 		items = append(items, ui.PickerItem[string]{
+	// 			Name:  row,
+	// 			Value: row,
+	// 		})
+	// 	}
 
-		ui.PickerInit(
-			e,
-			func(i *ui.PickerItem[string]) {
-				e.OpenFile(rootDir + "/" + i.Value)
-				e.PopUi()
-			},
-			items,
-		)
-	})
+	// 	ui.PickerInit(
+	// 		e,
+	// 		func(i *ui.PickerItem[string]) {
+	// 			e.OpenFile(rootDir + "/" + i.Value)
+	// 			e.PopUi()
+	// 		},
+	// 		items,
+	// 	)
+	// })
 }
 
 func main() {
@@ -139,6 +145,13 @@ func main() {
 		for {
 			<-editor.RedrawCh
 			renderer.Render()
+		}
+	}()
+
+	go func() {
+		for {
+			<-editor.ScreenSyncCh
+			tscreen.Sync()
 		}
 	}()
 

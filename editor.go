@@ -29,6 +29,7 @@ type Editor struct {
 	UiComponents []UiComponent
 	ExitCh       chan int
 	RedrawCh     chan int
+	ScreenSyncCh chan int
 	Layout       Layout
 	Yanks        List[yank]
 	Projects     ProjectManager
@@ -51,6 +52,7 @@ func NewEditor(
 		activeWindow: windows[0],
 		ExitCh:       make(chan int),
 		RedrawCh:     make(chan int, 10),
+		ScreenSyncCh: make(chan int),
 		Layout:       LayoutVertical,
 		Projects:     NewProjectManager(),
 	}
@@ -121,4 +123,8 @@ func (e *Editor) HandleInput(ev *tcell.EventKey) {
 
 func (e *Editor) Redraw() {
 	e.RedrawCh <- 1
+}
+
+func (e *Editor) ScreenSync() {
+	e.ScreenSyncCh <- 1
 }
