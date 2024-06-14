@@ -32,7 +32,7 @@ func New(e *mcwig.Editor) *pipeDrv {
 }
 
 func (p *pipeDrv) parseHeader(buf *mcwig.Buffer) header {
-	input := ""
+	lines := make([]string, 0, 10)
 
 	currentLine := buf.Lines.First()
 	for currentLine != nil {
@@ -43,13 +43,11 @@ func (p *pipeDrv) parseHeader(buf *mcwig.Buffer) header {
 			break
 		}
 
-		input += string(currentLine.Value) + "\n"
+		lines = append(lines, string(currentLine.Value))
 		currentLine = currentLine.Next()
 	}
 
-	lines := strings.Split(input, "\n")
 	result := make(map[string]string, 10)
-
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "#") {
