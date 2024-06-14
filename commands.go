@@ -699,7 +699,7 @@ func CmdKillBuffer(e *Editor) {
 			return
 		}
 
-		// create [No Name] buffer
+		// creates [No Name] buffer
 		defer e.ActiveBuffer()
 
 		for i, b := range e.Buffers {
