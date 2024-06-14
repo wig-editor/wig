@@ -702,18 +702,31 @@ func CmdKillBuffer(e *Editor) {
 		// creates [No Name] buffer
 		defer e.ActiveBuffer()
 
+		// remove from buffers list
 		for i, b := range e.Buffers {
 			if b == buf {
 				e.Buffers = append(e.Buffers[:i], e.Buffers[i+1:]...)
 				if len(e.Buffers) > 0 {
 					idx := i - 1
-					if i < 0 {
+					if idx < 0 {
 						idx = 0
 					}
 					e.activeWindow.Buffer = e.Buffers[idx]
 				}
 			}
 		}
+
+		// cleanup all nodes
+		{
+			l := buf.Lines.First()
+			for l != nil {
+				next := l.Next()
+				l.Value = nil
+				buf.Lines.Remove(l)
+				l = next
+			}
+		}
+
 	})
 }
 
