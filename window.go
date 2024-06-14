@@ -1,5 +1,5 @@
 package mcwig
 
 type Window struct {
-	Buffer *Buffer
+	Buffer *Buffer // active buffers
 }

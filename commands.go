@@ -177,7 +177,21 @@ func CmdGotoLine0(e *Editor) {
 		restoreCharPosition(buf)
 
 		if e.Keys.GetTimes() > 1 {
-			buf.Cursor.Line = e.Keys.GetTimes() - 1
+			ln := e.Keys.GetTimes() - 1
+			if ln >= buf.Lines.Len {
+				ln = buf.Lines.Len - 1
+			}
+			buf.Cursor.Line = ln
+
+			_, h := e.View.Size()
+			if buf.Cursor.Line > buf.ScrollOffset+h-3 {
+				buf.ScrollOffset = buf.Cursor.Line - h/2
+			}
+
+			if buf.Cursor.Line <= buf.ScrollOffset+h+3 {
+				buf.ScrollOffset = buf.Cursor.Line - h/2
+			}
+
 			e.Keys.resetState()
 		}
 	})
