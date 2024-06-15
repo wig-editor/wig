@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/firstrow/mcwig"
+	"github.com/gdamore/tcell/v2"
 )
 
 type uiCommandLine struct {
@@ -74,6 +74,8 @@ func (u *uiCommandLine) execute(cmd string) {
 		mcwig.CmdExit(u.e)
 	case "w":
 		mcwig.CmdSaveFile(u.e)
+	case "bd":
+		mcwig.CmdKillBuffer(u.e)
 	}
 }
 
