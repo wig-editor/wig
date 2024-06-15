@@ -45,6 +45,8 @@ type Buffer struct {
 	Cursor       Cursor
 	Selection    *Selection
 	Driver       Driver
+
+	IndentCh []rune
 }
 
 func NewBuffer() *Buffer {
@@ -53,6 +55,7 @@ func NewBuffer() *Buffer {
 	return &Buffer{
 		Lines:     lines,
 		Cursor:    Cursor{0, 0, 0},
+		IndentCh:  []rune{'\t'},
 		Selection: nil,
 		Driver:    nil,
 	}

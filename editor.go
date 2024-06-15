@@ -1,6 +1,8 @@
 package mcwig
 
-import "github.com/gdamore/tcell/v2"
+import (
+	"github.com/gdamore/tcell/v2"
+)
 
 type View interface {
 	SetContent(x, y int, str string, st tcell.Style)
