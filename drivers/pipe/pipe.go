@@ -125,14 +125,14 @@ func (p *pipeDrv) send(opts header, outBuf *mcwig.Buffer, input string) {
 
 	err := p.cmd.Start()
 	if err != nil {
-		outBuf.AppendStringLine(err.Error())
+		outBuf.Append(err.Error())
 		p.e.Redraw()
 	}
 
 	go func() {
 		scanner := bufio.NewScanner(pout)
 		for scanner.Scan() {
-			outBuf.AppendStringLine(scanner.Text())
+			outBuf.Append(scanner.Text())
 			p.e.Redraw()
 		}
 	}()
@@ -140,7 +140,7 @@ func (p *pipeDrv) send(opts header, outBuf *mcwig.Buffer, input string) {
 	go func() {
 		scanner := bufio.NewScanner(perr)
 		for scanner.Scan() {
-			outBuf.AppendStringLine(scanner.Text())
+			outBuf.Append(scanner.Text())
 			p.e.Redraw()
 		}
 	}()
@@ -148,7 +148,7 @@ func (p *pipeDrv) send(opts header, outBuf *mcwig.Buffer, input string) {
 	go func() {
 		err := p.cmd.Wait()
 		if err != nil {
-			outBuf.AppendStringLine(err.Error())
+			outBuf.Append(err.Error())
 			p.e.Redraw()
 		}
 		p.cmd = nil

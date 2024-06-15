@@ -1,6 +1,7 @@
 package mcwig
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 )
@@ -603,8 +604,11 @@ func CmdSaveFile(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		err := buf.Save()
 		if err != nil {
-
+			e.LogError(err)
 		}
+		msg := fmt.Sprintf("saved file %s. Lines: %d.", buf.FilePath, buf.Lines.Len)
+		e.LogMessage(msg)
+		e.EchoMessage(msg)
 	})
 }
 

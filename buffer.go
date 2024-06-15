@@ -45,8 +45,7 @@ type Buffer struct {
 	Cursor       Cursor
 	Selection    *Selection
 	Driver       Driver
-
-	IndentCh []rune
+	IndentCh     []rune
 }
 
 func NewBuffer() *Buffer {
@@ -121,7 +120,7 @@ func (e *Editor) BufferFindByFilePath(fp string) *Buffer {
 	return b
 }
 
-func (b *Buffer) AppendStringLine(s string) {
+func (b *Buffer) Append(s string) {
 	for _, line := range strings.Split(s, "\n") {
 		b.Lines.PushBack([]rune(line))
 	}

@@ -35,6 +35,7 @@ type Editor struct {
 	Layout       Layout
 	Yanks        List[yank]
 	Projects     ProjectManager
+	Message      string // display in echo area
 
 	activeWindow *Window
 }
@@ -63,7 +64,7 @@ func NewEditor(
 func (e *Editor) OpenFile(path string) {
 	buf, err := BufferReadFile(path)
 	if err != nil {
-		// TODO: log error
+		e.LogError(err)
 		return
 	}
 	e.Buffers = append(e.Buffers, buf)
@@ -115,13 +116,29 @@ func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
 func (e *Editor) HandleInput(ev *tcell.EventKey) {
 	mode := e.ActiveBuffer().Mode
 	h := e.Keys.HandleKey
+	e.Message = ""
 
 	if len(e.UiComponents) > 0 {
-		h = e.UiComponents[len(e.UiComponents)-1].Keymap().HandleKey
 		h = e.UiComponents[len(e.UiComponents)-1].Keymap().HandleKey
 	}
 
 	h(e, ev, mode)
+}
+
+func (e *Editor) LogError(err error) {
+	buf := e.BufferFindByFilePath("[Messages]")
+	buf.Append("error: " + err.Error())
+}
+
+func (e *Editor) LogMessage(msg string) {
+	buf := e.BufferFindByFilePath("[Messages]")
+	buf.Append(msg)
+}
+
+func (e *Editor) EchoMessage(msg string) {
+	buf := e.BufferFindByFilePath("[Messages]")
+	buf.Append(msg)
+	e.Message = msg
 }
 
 func (e *Editor) Redraw() {
