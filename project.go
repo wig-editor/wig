@@ -8,18 +8,22 @@ import (
 )
 
 type ProjectManager struct {
+	root string
 }
 
 func NewProjectManager() ProjectManager {
-	return ProjectManager{}
+	root, _ := os.Getwd()
+
+	return ProjectManager{
+		root: root,
+	}
 }
 
 // Find project root by file path. Project root must contain .git directory in it.
 // otherwise "working directory" will be returned.
 func (p ProjectManager) FindRoot(buf *Buffer) (root string, err error) {
+	root = p.root
 	fp := filepath.Dir(buf.FilePath)
-
-	root, _ = os.Getwd()
 
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	cmd.Dir = fp

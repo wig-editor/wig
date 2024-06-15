@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -112,9 +113,12 @@ func main() {
 		mcwig.NewKeyHandler(mcwig.DefaultKeyMap()),
 	)
 
-	editor.OpenFile("/home/andrew/test.txt")
-	editor.OpenFile("/home/andrew/cgroup.c")
-	editor.OpenFile("/home/andrew/code/mcwig/ui/commandline.go")
+	args := os.Args
+	if len(args) > 1 {
+		editor.OpenFile(args[1])
+	} else {
+		editor.ActiveBuffer()
+	}
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
