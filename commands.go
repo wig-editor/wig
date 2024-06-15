@@ -543,26 +543,18 @@ func CmdSelectinDelete(e *Editor) {
 		if buf.Selection == nil {
 			return
 		}
+		sel := SelectionNormalize(buf.Selection)
 
 		yankSave(e, buf, line)
 
-		curStart := buf.Selection.Start
-		curEnd := buf.Selection.End
-		if curStart.Line > curEnd.Line {
-			curStart, curEnd = curEnd, curStart
-		}
+		lineStart := CursorLineByNum(buf, sel.Start.Line)
+		lineEnd := CursorLineByNum(buf, sel.End.Line)
 
-		lineStart := CursorLineByNum(buf, curStart.Line)
-		lineEnd := CursorLineByNum(buf, curEnd.Line)
-
-		if curStart.Line == curEnd.Line {
-			if curStart.Char > curEnd.Char {
-				curStart, curEnd = curEnd, curStart
-			}
-			if curEnd.Char < len(lineStart.Value) {
-				lineStart.Value = append(lineStart.Value[:curStart.Char], lineStart.Value[curEnd.Char+1:]...)
+		if sel.Start.Line == sel.End.Line {
+			if sel.End.Char < len(lineStart.Value) {
+				lineStart.Value = append(lineStart.Value[:sel.Start.Char], lineStart.Value[sel.End.Char+1:]...)
 			} else {
-				lineStart.Value = lineStart.Value[:curStart.Char]
+				lineStart.Value = lineStart.Value[:sel.Start.Char]
 			}
 
 			if len(lineStart.Value) == 0 {
@@ -571,17 +563,17 @@ func CmdSelectinDelete(e *Editor) {
 				return
 			}
 
-			cursorGotoChar(buf, curStart.Char)
+			cursorGotoChar(buf, sel.Start.Char)
 		} else {
 			// delete all lines between start and end line
 			for lineStart.Next() != lineEnd {
 				buf.Lines.Remove(lineStart.Next())
 			}
 
-			lineStart.Value = lineStart.Value[:curStart.Char]
+			lineStart.Value = lineStart.Value[:sel.Start.Char]
 
-			if curEnd.Char+1 <= len(lineEnd.Value) {
-				lineEnd.Value = lineEnd.Value[curEnd.Char+1:]
+			if sel.End.Char+1 <= len(lineEnd.Value) {
+				lineEnd.Value = lineEnd.Value[sel.End.Char+1:]
 			}
 
 			if len(lineEnd.Value) == 0 {
@@ -590,9 +582,9 @@ func CmdSelectinDelete(e *Editor) {
 
 			lineJoinNext(buf, lineStart)
 
-			buf.Cursor.Line = curStart.Line
-			if lineStart != nil && curStart.Char < len(lineStart.Value) {
-				cursorGotoChar(buf, curStart.Char)
+			buf.Cursor.Line = sel.Start.Line
+			if lineStart != nil && sel.Start.Char < len(lineStart.Value) {
+				cursorGotoChar(buf, sel.Start.Char)
 			} else {
 				CmdGotoLineEnd(e)
 			}

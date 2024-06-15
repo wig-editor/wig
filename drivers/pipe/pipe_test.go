@@ -23,7 +23,7 @@ func TestPipe(t *testing.T) {
 #
 `
 	for _, l := range strings.Split(lines, "\n") {
-		buf.AppendStringLine(l)
+		buf.Append(l)
 	}
 
 	p := New(e)
@@ -55,7 +55,7 @@ func Test_LongRunningProcess(t *testing.T) {
 #
 `
 	for _, l := range strings.Split(lines, "\n") {
-		buf.AppendStringLine(l)
+		buf.Append(l)
 	}
 
 	p := New(e)
@@ -87,7 +87,7 @@ hello world
 
 	buf := e.BufferFindByFilePath("test-1")
 	for _, l := range strings.Split(lines, "\n") {
-		buf.AppendStringLine(l)
+		buf.Append(l)
 	}
 
 	p := New(e)

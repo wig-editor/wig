@@ -6,17 +6,7 @@ type Selection struct {
 }
 
 func SelectionCursorInRange(sel *Selection, c Cursor) bool {
-	s := *sel
-
-	if s.Start.Line > s.End.Line {
-		s.Start, s.End = s.End, s.Start
-	}
-
-	if s.Start.Line == s.End.Line {
-		if s.Start.Char > s.End.Char {
-			s.Start, s.End = s.End, s.Start
-		}
-	}
+	s := SelectionNormalize(sel)
 
 	if c.Line < s.Start.Line || c.Line > s.End.Line {
 		return false
@@ -42,17 +32,7 @@ func SelectionToString(buf *Buffer) string {
 		return ""
 	}
 
-	s := *buf.Selection
-
-	if s.Start.Line > s.End.Line {
-		s.Start, s.End = s.End, s.Start
-	}
-
-	if s.Start.Line == s.End.Line {
-		if s.Start.Char > s.End.Char {
-			s.Start, s.End = s.End, s.Start
-		}
-	}
+	s := SelectionNormalize(buf.Selection)
 
 	lineStart := CursorLineByNum(buf, s.Start.Line)
 	lineEnd := CursorLineByNum(buf, s.End.Line)
@@ -83,6 +63,24 @@ func SelectionToString(buf *Buffer) string {
 	}
 
 	return acc
+}
+
+func SelectionNormalize(sel *Selection) Selection {
+	if sel == nil {
+		return Selection{}
+	}
+
+	s := *sel
+
+	if s.Start.Line > s.End.Line {
+		s.Start, s.End = s.End, s.Start
+	}
+
+	if s.Start.Line == s.End.Line && s.Start.Char > s.End.Char {
+		s.Start, s.End = s.End, s.Start
+	}
+
+	return s
 }
 
 func SelectionStart(buf *Buffer) {
