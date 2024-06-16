@@ -122,6 +122,7 @@ func main() {
 
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
+		";": CmdBufferPicker,
 		"Space": mcwig.KeyMap{
 			"b": mcwig.KeyMap{
 				"b": CmdBufferPicker,

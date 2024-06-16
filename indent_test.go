@@ -19,6 +19,16 @@ func TestGuessIndent(t *testing.T) {
 			indent: []rune("\t"),
 			want:   3,
 		},
+		{
+			line:   []rune("      1"),
+			indent: []rune("  "),
+			want:   3,
+		},
+		{
+			line:   []rune("       1"),
+			indent: []rune("  "),
+			want:   3,
+		},
 	}
 
 	for _, tc := range cases {
