@@ -43,56 +43,55 @@ func CmdExecute(e *mcwig.Editor) {
 }
 
 func CmdFindFilePicker(e *mcwig.Editor) {
-	defer e.ScreenSync()
+	// defer e.ScreenSync()
+	// rootDir, _ := e.Projects.FindRoot(e.Buffers[0])
 
-	rootDir, _ := e.Projects.FindRoot(e.Buffers[0])
+	// cmd := exec.Command("bash", "-c", "git ls-tree -r --name-only HEAD | fzf")
+	// cmd.Dir = rootDir
+	// stdout, _ := cmd.Output()
 
-	cmd := exec.Command("bash", "-c", "git ls-tree -r --name-only HEAD | fzf")
-	cmd.Dir = rootDir
-	stdout, _ := cmd.Output()
+	// result := strings.TrimSpace(string(stdout))
+	// if result == "" {
+	// 	return
+	// }
+	// e.OpenFile(rootDir + "/" + result)
 
-	result := strings.TrimSpace(string(stdout))
-	if result == "" {
-		return
-	}
+	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
+		rootDir, err := e.Projects.FindRoot(buf)
+		if err != nil {
+			return
+		}
 
-	e.OpenFile(rootDir + "/" + result)
+		cmd := exec.Command("git", "ls-tree", "-r", "--name-only", "HEAD")
+		cmd.Dir = rootDir
+		stdout, err := cmd.Output()
+		if err != nil {
+			e.LogError(err)
+			return
+		}
 
-	// mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
-	// 	rootDir, err := e.Projects.FindRoot(buf)
-	// 	if err != nil {
-	// 		return
-	// 	}
+		items := []ui.PickerItem[string]{}
 
-	// 	cmd := exec.Command("git", "ls-tree", "-r", "--name-only", "HEAD")
-	// 	cmd.Dir = rootDir
-	// 	stdout, err := cmd.Output()
-	// 	if err != nil {
-	// 		return
-	// 	}
+		for _, row := range strings.Split(string(stdout), "\n") {
+			row = strings.TrimSpace(row)
+			if len(row) == 0 {
+				continue
+			}
+			items = append(items, ui.PickerItem[string]{
+				Name:  row,
+				Value: row,
+			})
+		}
 
-	// 	items := []ui.PickerItem[string]{}
-
-	// 	for _, row := range strings.Split(string(stdout), "\n") {
-	// 		row = strings.TrimSpace(row)
-	// 		if len(row) == 0 {
-	// 			continue
-	// 		}
-	// 		items = append(items, ui.PickerItem[string]{
-	// 			Name:  row,
-	// 			Value: row,
-	// 		})
-	// 	}
-
-	// 	ui.PickerInit(
-	// 		e,
-	// 		func(i *ui.PickerItem[string]) {
-	// 			e.OpenFile(rootDir + "/" + i.Value)
-	// 			e.PopUi()
-	// 		},
-	// 		items,
-	// 	)
-	// })
+		ui.PickerInit(
+			e,
+			func(i *ui.PickerItem[string]) {
+				e.OpenFile(rootDir + "/" + i.Value)
+				e.PopUi()
+			},
+			items,
+		)
+	})
 }
 
 func main() {

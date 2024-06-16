@@ -125,9 +125,12 @@ func (e *Editor) HandleInput(ev *tcell.EventKey) {
 	h(e, ev, mode)
 }
 
-func (e *Editor) LogError(err error) {
+func (e *Editor) LogError(err error, echo ...bool) {
 	buf := e.BufferFindByFilePath("[Messages]")
 	buf.Append("error: " + err.Error())
+	if len(echo) > 0 {
+		e.EchoMessage(err.Error())
+	}
 }
 
 func (e *Editor) LogMessage(msg string) {
