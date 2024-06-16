@@ -66,6 +66,7 @@ func CmdFindFilePicker(e *mcwig.Editor) {
 		cmd.Dir = rootDir
 		stdout, err := cmd.Output()
 		if err != nil {
+			e.LogMessage(string(stdout))
 			e.LogError(err)
 			return
 		}
