@@ -1,8 +1,12 @@
 package mcwig
 
+import "math"
+
 // Thanks: https://gist.github.com/pje/90e727f80685c78a6c1cfff35f62155a
 
 type Line []rune
+
+var EOL int = math.MinInt32
 
 func (l Line) IsEmpty() bool {
 	return len(l) == 0
@@ -15,7 +19,16 @@ func (l Line) Range(from, to int) []rune {
 	if from < 0 {
 		return []rune{}
 	}
-	if to > len(l) {
+
+	if from > len(l) {
+		return []rune{}
+	}
+
+	if to > len(l) || to == EOL {
+		return l[from:len(l)]
+	}
+
+	if to < from {
 		return []rune{}
 	}
 

@@ -3,6 +3,7 @@ module github.com/firstrow/mcwig
 go 1.22.2
 
 require (
+	github.com/boyter/go-string v1.0.5
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/mattn/go-runewidth v0.0.15

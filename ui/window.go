@@ -1,6 +1,9 @@
 package ui
 
-import "github.com/firstrow/mcwig"
+import (
+	str "github.com/boyter/go-string"
+	"github.com/firstrow/mcwig"
+)
 
 func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 	buf := win.Buffer
@@ -28,10 +31,27 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 			// render each character in the line separately
 			x := 0
 
+			// highlight search
+			searchMatches := [][]int{}
+			if mcwig.LastSearchPattern != "" {
+				searchMatches = str.IndexAllIgnoreCase(string(currentLine.Value), mcwig.LastSearchPattern, -1)
+			}
+
 			// render line
 			for i := skip; i < len(currentLine.Value); i++ {
 				// render selection
 				textStyle := mcwig.Color("default")
+
+				// highlight search
+				if len(searchMatches) > 0 {
+					for _, m := range searchMatches {
+						if i >= m[0] && i < m[1] {
+							textStyle = mcwig.Color("statusline")
+						}
+					}
+				}
+
+				// selection
 				if buf.Selection != nil {
 					if mcwig.SelectionCursorInRange(buf.Selection, mcwig.Cursor{Line: lineNum, Char: i}) {
 						textStyle = mcwig.Color("statusline")

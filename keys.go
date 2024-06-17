@@ -61,6 +61,8 @@ func DefaultKeyMap() ModeKeyMap {
 			"f":      CmdForwardToChar,
 			"t":      CmdForwardBeforeChar,
 			"F":      CmdBackwardChar,
+			"n":      CmdSearchNext,
+			"N":      CmdSearchPrev,
 			"c": KeyMap{
 				"c": CmdChangeLine,
 				"w": CmdChangeWord,

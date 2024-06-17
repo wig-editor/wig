@@ -1,0 +1,92 @@
+package ui
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/firstrow/mcwig"
+	"github.com/gdamore/tcell/v2"
+)
+
+type uiSearchPrompt struct {
+	e      *mcwig.Editor
+	keymap *mcwig.KeyHandler
+
+	chBuf []rune
+}
+
+func SearchPromptInit(e *mcwig.Editor) {
+	cmdLine := &uiSearchPrompt{
+		e:     e,
+		chBuf: []rune{},
+	}
+
+	cmdLine.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
+		mcwig.MODE_NORMAL: mcwig.KeyMap{
+			"Esc": func(e *mcwig.Editor) {
+				e.PopUi()
+			},
+		},
+	})
+	cmdLine.keymap.Fallback(cmdLine.insertCh)
+	e.PushUi(cmdLine)
+}
+
+func (u *uiSearchPrompt) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
+	if ev.Modifiers()&tcell.ModCtrl != 0 {
+		return
+	}
+
+	if ev.Modifiers()&tcell.ModAlt != 0 {
+		return
+	}
+
+	if ev.Modifiers()&tcell.ModMeta != 0 {
+		return
+	}
+
+	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
+		if len(u.chBuf) > 0 {
+			u.chBuf = u.chBuf[:len(u.chBuf)-1]
+		} else {
+			e.PopUi()
+		}
+		return
+	}
+	if ev.Key() == tcell.KeyEnter {
+		cmd := strings.TrimSpace(string(u.chBuf))
+		u.execute(cmd)
+		e.PopUi()
+		return
+	}
+
+	u.chBuf = append(u.chBuf, ev.Rune())
+}
+
+func (u *uiSearchPrompt) execute(cmd string) {
+	mcwig.Do(u.e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
+		pat := strings.TrimSpace(cmd)
+		mcwig.LastSearchPattern = pat
+		mcwig.SearchNext(u.e, buf, line, pat)
+	})
+}
+
+func (u *uiSearchPrompt) Keymap() *mcwig.KeyHandler {
+	return u.keymap
+}
+
+func (u *uiSearchPrompt) Render(view mcwig.View) {
+	st := mcwig.Color("statusline")
+	w, h := view.Size()
+	h -= 1
+
+	bg := strings.Repeat(" ", w)
+	view.SetContent(0, h, bg, st)
+
+	msg := fmt.Sprintf("search: %s%s", string(u.chBuf), string(tcell.RuneBlock))
+	view.SetContent(0, h, msg, st)
+}
+
+func (u *uiSearchPrompt) Mode() mcwig.Mode {
+	return mcwig.MODE_NORMAL
+}

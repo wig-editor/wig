@@ -112,6 +112,7 @@ func main() {
 		render.NewMView(tscreen, 0, 0, w, h),
 		mcwig.NewKeyHandler(mcwig.DefaultKeyMap()),
 	)
+	editor.OpenFile("/home/andrew/code/mcwig/commands.go")
 
 	args := os.Args
 	if len(args) > 1 {
@@ -123,6 +124,7 @@ func main() {
 	editor.Keys.Map(editor, mcwig.MODE_NORMAL, mcwig.KeyMap{
 		":": ui.CommandLineInit,
 		";": CmdBufferPicker,
+		"/": ui.SearchPromptInit,
 		"Space": mcwig.KeyMap{
 			"b": mcwig.KeyMap{
 				"b": CmdBufferPicker,
