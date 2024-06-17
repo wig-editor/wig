@@ -45,6 +45,9 @@ func (p *pipeDrv) parseHeader(buf *mcwig.Buffer) header {
 				if _, ok := result[key]; !ok {
 					result[key] = value
 				}
+				if key == "cmd" {
+					break
+				}
 			}
 		}
 
