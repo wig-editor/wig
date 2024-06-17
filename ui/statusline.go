@@ -25,9 +25,9 @@ func StatuslineRender(
 	view.SetContent(0, h, bg, st)
 
 	leftSide := ""
-	if e.Message == "" {
-		leftSide = fmt.Sprintf("%s %s", buf.Mode.String(), buf.GetName())
-	} else {
+	leftSide = fmt.Sprintf("%s %s", buf.Mode.String(), buf.GetName())
+
+	if win.Buffer == e.ActiveWindow().Buffer && len(e.Message) > 0 {
 		leftSide = e.Message
 	}
 

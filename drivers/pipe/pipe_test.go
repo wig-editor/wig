@@ -114,7 +114,7 @@ hello world
 	result = p.parseHeader(buf)
 	expected = header{
 		cmd:         "uname",
-		interactive: true,
+		interactive: false,
 		append:      false,
 	}
 	assert.Equal(t, expected, result)
