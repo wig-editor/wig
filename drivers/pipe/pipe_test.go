@@ -26,6 +26,8 @@ func TestPipe(t *testing.T) {
 		buf.Append(l)
 	}
 
+	buf.Cursor.Line = 2
+
 	p := New(e)
 	h := p.parseHeader(buf)
 	assert.Equal(t, "echo", p.getCommand(h.cmd))
@@ -58,6 +60,7 @@ func Test_LongRunningProcess(t *testing.T) {
 		buf.Append(l)
 	}
 
+	buf.Cursor.Line = 4
 	p := New(e)
 	h := p.parseHeader(buf)
 
@@ -83,6 +86,10 @@ func Test_ParseHeader(t *testing.T) {
 #
 
 hello world
+
+#  cmd: uname
+
+-a
 `
 
 	buf := e.BufferFindByFilePath("test-1")
@@ -90,14 +97,26 @@ hello world
 		buf.Append(l)
 	}
 
+	buf.Cursor.Line = 5
 	p := New(e)
-	result := p.parseHeader(buf)
 
+	result := p.parseHeader(buf)
 	expected := header{
 		cmd:         "bin --arg=1 a:b",
 		interactive: true,
 		append:      false,
 	}
+	assert.Equal(t, expected, result)
 
+	// test "down-up" parsing
+	buf.Cursor.Line = 11
+
+	result = p.parseHeader(buf)
+	expected = header{
+		cmd:         "uname",
+		interactive: true,
+		append:      false,
+	}
+	assert.Equal(t, expected, result)
 	assert.Equal(t, expected, result)
 }

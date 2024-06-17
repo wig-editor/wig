@@ -32,32 +32,23 @@ func New(e *mcwig.Editor) *pipeDrv {
 }
 
 func (p *pipeDrv) parseHeader(buf *mcwig.Buffer) header {
-	lines := make([]string, 0, 10)
-
-	currentLine := buf.Lines.First()
-	for currentLine != nil {
-		if len(currentLine.Value) == 0 {
-			break
-		}
-		if currentLine.Value[0] != '#' {
-			break
-		}
-
-		lines = append(lines, string(currentLine.Value))
-		currentLine = currentLine.Next()
-	}
-
 	result := make(map[string]string, 10)
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "#") {
+
+	currentLine := mcwig.CursorLine(buf)
+	for currentLine != nil {
+		if len(currentLine.Value) > 0 && currentLine.Value[0] == '#' {
+			line := strings.TrimSpace(currentLine.Value.String())
 			parts := strings.SplitN(strings.TrimPrefix(line, "#"), ":", 2)
-			if len(parts) == 2 {
+			if len(parts) >= 2 {
 				key := strings.TrimSpace(parts[0])
 				value := strings.TrimSpace(parts[1])
-				result[key] = value
+				if _, ok := result[key]; !ok {
+					result[key] = value
+				}
 			}
 		}
+
+		currentLine = currentLine.Prev()
 	}
 
 	h := header{}
@@ -69,6 +60,10 @@ func (p *pipeDrv) parseHeader(buf *mcwig.Buffer) header {
 	}
 	if val, ok := result["append"]; ok {
 		h.append = isTrue(val)
+	}
+
+	if h.cmd == "" {
+		p.e.EchoMessage("not found `cmd` to run.")
 	}
 
 	return h

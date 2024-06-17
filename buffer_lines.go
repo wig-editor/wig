@@ -12,6 +12,10 @@ func (l Line) IsEmpty() bool {
 	return len(l) == 0
 }
 
+func (l Line) String() string {
+	return string(l)
+}
+
 func (l Line) Range(from, to int) []rune {
 	if l.IsEmpty() {
 		return []rune{}
