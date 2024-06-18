@@ -38,3 +38,10 @@ func (p ProjectManager) FindRoot(buf *Buffer) (root string, err error) {
 
 	return strings.TrimSpace(string(r)), nil
 }
+
+func (p ProjectManager) Dir(buf *Buffer) (dir string) {
+	if len(buf.FilePath) > 0 {
+		return filepath.Dir(buf.FilePath)
+	}
+	return p.root
+}
