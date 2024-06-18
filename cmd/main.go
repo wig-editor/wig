@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -15,7 +16,7 @@ import (
 )
 
 func CmdBufferPicker(editor *mcwig.Editor) {
-	items := []ui.PickerItem[*mcwig.Buffer]{}
+	items := make([]ui.PickerItem[*mcwig.Buffer], 0, 32)
 	for _, b := range editor.Buffers {
 		items = append(items, ui.PickerItem[*mcwig.Buffer]{
 			Name:   b.GetName(),
@@ -23,12 +24,15 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 			Active: b == editor.ActiveBuffer(),
 		})
 	}
+
+	action := func(i *ui.PickerItem[*mcwig.Buffer]) {
+		editor.ActiveWindow().Buffer = i.Value
+		editor.PopUi()
+	}
+
 	ui.PickerInit(
 		editor,
-		func(i *ui.PickerItem[*mcwig.Buffer]) {
-			editor.ActiveWindow().Buffer = i.Value
-			editor.PopUi()
-		},
+		action,
 		items,
 	)
 }
@@ -42,7 +46,7 @@ func CmdExecute(e *mcwig.Editor) {
 	})
 }
 
-func CmdFindFilePicker(e *mcwig.Editor) {
+func CmdFindProjectFilePicker(e *mcwig.Editor) {
 	// defer e.ScreenSync()
 	// rootDir, _ := e.Projects.FindRoot(e.Buffers[0])
 
@@ -95,6 +99,62 @@ func CmdFindFilePicker(e *mcwig.Editor) {
 	})
 }
 
+func CmdFilePickerCurrentBufferDir(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
+		rootDir, err := e.Projects.FindRoot(buf)
+		if err != nil {
+			return
+		}
+
+		getItems := func(dir string) []ui.PickerItem[string] {
+			cmd := exec.Command("ls", "-ap")
+			cmd.Dir = dir
+			stdout, err := cmd.Output()
+			if err != nil {
+				e.LogMessage(string(stdout))
+				e.LogError(err)
+				return nil
+			}
+
+			items := []ui.PickerItem[string]{}
+
+			for _, row := range strings.Split(string(stdout), "\n") {
+				row = strings.TrimSpace(row)
+				if len(row) == 0 {
+					continue
+				}
+				if row == "./" {
+					continue
+				}
+
+				items = append(items, ui.PickerItem[string]{
+					Name:  row,
+					Value: row,
+				})
+			}
+			return items
+		}
+
+		action := func(i *ui.PickerItem[string]) {
+			if strings.HasSuffix(i.Name, "/") {
+				fp := path.Join(rootDir, i.Value)
+				rootDir = fp
+				i.Picker.SetItems(getItems(rootDir))
+				return
+			}
+
+			e.OpenFile(rootDir + "/" + i.Value)
+			e.PopUi()
+		}
+
+		ui.PickerInit(
+			e,
+			action,
+			getItems(rootDir),
+		)
+	})
+}
+
 func main() {
 	tscreen, err := tcell.NewScreen()
 	if err != nil {
@@ -129,7 +189,8 @@ func main() {
 			"b": mcwig.KeyMap{
 				"b": CmdBufferPicker,
 			},
-			"f": CmdFindFilePicker,
+			"f": CmdFindProjectFilePicker,
+			"F": CmdFilePickerCurrentBufferDir,
 		},
 		"ctrl+c": mcwig.KeyMap{
 			"ctrl+c": CmdExecute,

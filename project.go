@@ -19,6 +19,10 @@ func NewProjectManager() ProjectManager {
 	}
 }
 
+func (p ProjectManager) GetRoot() (root string) {
+	return p.root
+}
+
 // Find project root by file path. Project root must contain .git directory in it.
 // otherwise "working directory" will be returned.
 func (p ProjectManager) FindRoot(buf *Buffer) (root string, err error) {
@@ -29,7 +33,7 @@ func (p ProjectManager) FindRoot(buf *Buffer) (root string, err error) {
 	cmd.Dir = fp
 	r, err := cmd.Output()
 	if err != nil {
-		return
+		return root, nil
 	}
 
 	return strings.TrimSpace(string(r)), nil

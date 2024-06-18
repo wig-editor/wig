@@ -15,6 +15,7 @@ type PickerItem[T any] struct {
 	Name   string
 	Value  T
 	Active bool
+	Picker *uiPicker[T]
 }
 
 type PickerAction[T any] func(i *PickerItem[T])
@@ -30,7 +31,7 @@ type uiPicker[T any] struct {
 	activeItemT *PickerItem[T]
 }
 
-func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) {
+func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) *uiPicker[T] {
 	picker := &uiPicker[T]{
 		e:          e,
 		chBuf:      []rune{},
@@ -45,7 +46,7 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 				e.PopUi()
 			},
 			"Tab": func(e *mcwig.Editor) {
-				if picker.activeItem < len(picker.items)-1 {
+				if picker.activeItem < len(picker.filtered)-1 {
 					picker.activeItem++
 				}
 			},
@@ -55,6 +56,7 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 				}
 			},
 			"Enter": func(e *mcwig.Editor) {
+				picker.activeItemT.Picker = picker
 				picker.action(picker.activeItemT)
 			},
 		},
@@ -62,6 +64,7 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 	picker.keymap.Fallback(picker.insertCh)
 
 	e.PushUi(picker)
+	return picker
 }
 
 func (u *uiPicker[T]) Mode() mcwig.Mode {
@@ -70,6 +73,13 @@ func (u *uiPicker[T]) Mode() mcwig.Mode {
 
 func (u *uiPicker[T]) Keymap() *mcwig.KeyHandler {
 	return u.keymap
+}
+
+func (u *uiPicker[T]) SetItems(items []PickerItem[T]) {
+	u.items = items
+	u.filtered = items
+	u.chBuf = u.chBuf[:0]
+	u.activeItem = 0
 }
 
 func (u *uiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
@@ -88,7 +98,7 @@ func (u *uiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 		if len(u.chBuf) > 0 {
 			u.chBuf = u.chBuf[:len(u.chBuf)-1]
-			u.filterUpdate()
+			u.filterItems()
 		}
 		return
 	}
@@ -98,10 +108,10 @@ func (u *uiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 	}
 
 	u.chBuf = append(u.chBuf, ev.Rune())
-	u.filterUpdate()
+	u.filterItems()
 }
 
-func (u *uiPicker[T]) filterUpdate() {
+func (u *uiPicker[T]) filterItems() {
 	pattern := string(u.chBuf)
 	if len(pattern) == 0 {
 		u.filtered = u.items
@@ -119,6 +129,8 @@ func (u *uiPicker[T]) filterUpdate() {
 	for _, row := range matches {
 		u.filtered = append(u.filtered, u.items[row.Index])
 	}
+
+	u.activeItem = 0
 }
 
 func (u *uiPicker[T]) Render(view mcwig.View) {

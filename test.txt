@@ -1,6 +1,6 @@
 #
 # cmd: psql -h localhost -d testdb
-# interactive: 0
+# interactive: 1
 # append: 1
 #
 
