@@ -42,7 +42,10 @@ func (p ProjectManager) FindRoot(buf *Buffer) (root string, err error) {
 // Returns Dir of current buffer or working directory if buffer has no valid file path.
 func (p ProjectManager) Dir(buf *Buffer) (dir string) {
 	if len(buf.FilePath) > 0 {
-		return filepath.Dir(buf.FilePath)
+		r := filepath.Dir(buf.FilePath)
+		if r != "." {
+			return r
+		}
 	}
 	return p.root
 }

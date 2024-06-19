@@ -20,7 +20,7 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 		})
 	}
 
-	action := func(i *ui.PickerItem[*mcwig.Buffer]) {
+	action := func(p *ui.UiPicker[*mcwig.Buffer], i *ui.PickerItem[*mcwig.Buffer]) {
 		editor.ActiveWindow().Buffer = i.Value
 		editor.PopUi()
 	}
@@ -42,19 +42,6 @@ func CmdExecute(e *mcwig.Editor) {
 }
 
 func CmdFindProjectFilePicker(e *mcwig.Editor) {
-	// defer e.ScreenSync()
-	// rootDir, _ := e.Projects.FindRoot(e.Buffers[0])
-
-	// cmd := exec.Command("bash", "-c", "git ls-tree -r --name-only HEAD | fzf")
-	// cmd.Dir = rootDir
-	// stdout, _ := cmd.Output()
-
-	// result := strings.TrimSpace(string(stdout))
-	// if result == "" {
-	// 	return
-	// }
-	// e.OpenFile(rootDir + "/" + result)
-
 	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
 		rootDir, err := e.Projects.FindRoot(buf)
 		if err != nil {
@@ -85,7 +72,7 @@ func CmdFindProjectFilePicker(e *mcwig.Editor) {
 
 		ui.PickerInit(
 			e,
-			func(i *ui.PickerItem[string]) {
+			func(_ *ui.UiPicker[string], i *ui.PickerItem[string]) {
 				e.OpenFile(rootDir + "/" + i.Value)
 				e.PopUi()
 			},
@@ -97,6 +84,7 @@ func CmdFindProjectFilePicker(e *mcwig.Editor) {
 func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
 		rootDir := e.Projects.Dir(buf)
+		e.EchoMessage("listing dir: " + rootDir)
 
 		getItems := func(dir string) []ui.PickerItem[string] {
 			cmd := exec.Command("ls", "-ap")
@@ -127,9 +115,10 @@ func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 			return items
 		}
 
-		action := func(i *ui.PickerItem[string]) {
+		action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
 			if strings.HasSuffix(i.Name, "/") {
 				fp := path.Join(rootDir, i.Value)
+				e.EchoMessage("listing dir: " + fp)
 				rootDir = fp
 				i.Picker.SetItems(getItems(rootDir))
 				return

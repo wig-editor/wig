@@ -15,12 +15,12 @@ type PickerItem[T any] struct {
 	Name   string
 	Value  T
 	Active bool
-	Picker *uiPicker[T]
+	Picker *UiPicker[T]
 }
 
-type PickerAction[T any] func(i *PickerItem[T])
+type PickerAction[T any] func(p *UiPicker[T], i *PickerItem[T])
 
-type uiPicker[T any] struct {
+type UiPicker[T any] struct {
 	e           *mcwig.Editor
 	keymap      *mcwig.KeyHandler
 	items       []PickerItem[T]
@@ -31,8 +31,8 @@ type uiPicker[T any] struct {
 	activeItemT *PickerItem[T]
 }
 
-func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) *uiPicker[T] {
-	picker := &uiPicker[T]{
+func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) *UiPicker[T] {
+	picker := &UiPicker[T]{
 		e:          e,
 		chBuf:      []rune{},
 		items:      items,
@@ -56,33 +56,31 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 				}
 			},
 			"Enter": func(e *mcwig.Editor) {
-				picker.activeItemT.Picker = picker
-				picker.action(picker.activeItemT)
+				picker.action(picker, picker.activeItemT)
 			},
 		},
 	})
 	picker.keymap.Fallback(picker.insertCh)
-
 	e.PushUi(picker)
 	return picker
 }
 
-func (u *uiPicker[T]) Mode() mcwig.Mode {
+func (u *UiPicker[T]) Mode() mcwig.Mode {
 	return mcwig.MODE_NORMAL
 }
 
-func (u *uiPicker[T]) Keymap() *mcwig.KeyHandler {
+func (u *UiPicker[T]) Keymap() *mcwig.KeyHandler {
 	return u.keymap
 }
 
-func (u *uiPicker[T]) SetItems(items []PickerItem[T]) {
+func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {
 	u.items = items
 	u.filtered = items
 	u.chBuf = u.chBuf[:0]
 	u.activeItem = 0
 }
 
-func (u *uiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
+func (u *UiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 	if ev.Modifiers()&tcell.ModCtrl != 0 {
 		return
 	}
@@ -111,7 +109,7 @@ func (u *uiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 	u.filterItems()
 }
 
-func (u *uiPicker[T]) filterItems() {
+func (u *UiPicker[T]) filterItems() {
 	pattern := string(u.chBuf)
 	if len(pattern) == 0 {
 		u.filtered = u.items
@@ -133,7 +131,7 @@ func (u *uiPicker[T]) filterItems() {
 	u.activeItem = 0
 }
 
-func (u *uiPicker[T]) Render(view mcwig.View) {
+func (u *UiPicker[T]) Render(view mcwig.View) {
 	vw, vh := view.Size()
 
 	w := int(float32(vw) * 0.86)
