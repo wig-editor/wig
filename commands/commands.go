@@ -116,6 +116,16 @@ func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 		}
 
 		action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
+			// create new file
+			if i == nil {
+				buf := mcwig.NewBuffer()
+				buf.FilePath = path.Join(rootDir, p.GetInput())
+				e.Buffers = append(e.Buffers, buf)
+				e.ActiveWindow().Buffer = buf
+				e.PopUi()
+				return
+			}
+
 			if strings.HasSuffix(i.Name, "/") {
 				fp := path.Join(rootDir, i.Value)
 				e.EchoMessage("listing dir: " + fp)

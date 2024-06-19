@@ -34,7 +34,7 @@ type UiPicker[T any] struct {
 func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) *UiPicker[T] {
 	picker := &UiPicker[T]{
 		e:          e,
-		chBuf:      []rune{},
+		chBuf:      make([]rune, 0, 32),
 		items:      items,
 		filtered:   items,
 		action:     action,
@@ -129,6 +129,10 @@ func (u *UiPicker[T]) filterItems() {
 	}
 
 	u.activeItem = 0
+}
+
+func (u *UiPicker[T]) GetInput() string {
+	return string(u.chBuf)
 }
 
 func (u *UiPicker[T]) Render(view mcwig.View) {

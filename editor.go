@@ -49,15 +49,15 @@ func NewEditor(
 	return &Editor{
 		View:         view,
 		Keys:         keys,
-		Buffers:      []*Buffer{},
+		Buffers:      make([]*Buffer, 0, 32),
 		Yanks:        List[yank]{},
 		Windows:      windows,
 		activeWindow: windows[0],
-		ExitCh:       make(chan int),
-		RedrawCh:     make(chan int, 10),
-		ScreenSyncCh: make(chan int),
 		Layout:       LayoutVertical,
 		Projects:     NewProjectManager(),
+		ExitCh:       make(chan int),
+		RedrawCh:     make(chan int),
+		ScreenSyncCh: make(chan int),
 	}
 }
 
