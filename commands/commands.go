@@ -130,7 +130,7 @@ func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 				fp := path.Join(rootDir, i.Value)
 				e.EchoMessage("listing dir: " + fp)
 				rootDir = fp
-				i.Picker.SetItems(getItems(rootDir))
+				p.SetItems(getItems(rootDir))
 				return
 			}
 

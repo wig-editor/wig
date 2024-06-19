@@ -15,7 +15,6 @@ type PickerItem[T any] struct {
 	Name   string
 	Value  T
 	Active bool
-	Picker *UiPicker[T]
 }
 
 type PickerAction[T any] func(p *UiPicker[T], i *PickerItem[T])
