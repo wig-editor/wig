@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/firstrow/mcwig"
+	"github.com/firstrow/mcwig/ui"
 )
 
 type CmdDefinition struct {
@@ -64,4 +65,6 @@ var AllCommands = map[string]CmdDefinition{
 	"CmdExecute":                    {Desc: "", Fn: CmdExecute},
 	"CmdFindProjectFilePicker":      {Desc: "", Fn: CmdFindProjectFilePicker},
 	"CmdCurrentBufferDirFilePicker": {Desc: "", Fn: CmdCurrentBufferDirFilePicker},
+	"CmdLineInit":                   {Desc: "", Fn: ui.CmdLineInit},
+	"CmdSearchPromptInit":           {Desc: "", Fn: ui.CmdSearchPromptInit},
 }

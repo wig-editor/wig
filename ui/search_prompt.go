@@ -15,7 +15,7 @@ type uiSearchPrompt struct {
 	chBuf []rune
 }
 
-func SearchPromptInit(e *mcwig.Editor) {
+func CmdSearchPromptInit(e *mcwig.Editor) {
 	cmdLine := &uiSearchPrompt{
 		e:     e,
 		chBuf: []rune{},

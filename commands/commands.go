@@ -45,7 +45,8 @@ func CmdCommandPalettePicker(editor *mcwig.Editor) {
 	}
 
 	action := func(p *ui.UiPicker[CmdDefinition], i *ui.PickerItem[CmdDefinition]) {
-		defer editor.PopUi()
+		editor.PopUi()
+
 		if i == nil {
 			return
 		}

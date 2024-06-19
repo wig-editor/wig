@@ -15,7 +15,7 @@ type uiCommandLine struct {
 	chBuf []rune
 }
 
-func CommandLineInit(e *mcwig.Editor) {
+func CmdLineInit(e *mcwig.Editor) {
 	cmdLine := &uiCommandLine{
 		e:     e,
 		chBuf: []rune{},
