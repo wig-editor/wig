@@ -9,6 +9,9 @@ import (
 func DefaultKeyMap() mcwig.ModeKeyMap {
 	return mcwig.ModeKeyMap{
 		mcwig.MODE_NORMAL: mcwig.KeyMap{
+			// personal config
+			"F2": mcwig.CmdSaveFile,
+
 			"ctrl+e": mcwig.CmdScrollDown,
 			"ctrl+y": mcwig.CmdScrollUp,
 			"h":      mcwig.CmdCursorLeft,
