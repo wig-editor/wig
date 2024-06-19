@@ -77,7 +77,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 					"k": mcwig.CmdKillBuffer,
 				},
 				"f": commands.CmdFindProjectFilePicker,
-				"F": commands.CmdFilePickerCurrentBufferDir,
+				"F": commands.CmdCurrentBufferDirFilePicker,
 			},
 		},
 		mcwig.MODE_VISUAL: mcwig.KeyMap{

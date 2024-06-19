@@ -94,7 +94,7 @@ func CmdFindProjectFilePicker(e *mcwig.Editor) {
 	})
 }
 
-func CmdFilePickerCurrentBufferDir(e *mcwig.Editor) {
+func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
 		rootDir := e.Projects.Dir(buf)
 
