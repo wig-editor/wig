@@ -70,7 +70,8 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	default:
 
 		if mode != MODE_INSERT {
-			if isNumeric(key) {
+			kv := isNumeric(key)
+			if kv && key != "0" {
 				k.times = append(k.times, key)
 				return
 			}

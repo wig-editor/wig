@@ -12,7 +12,7 @@ import (
 )
 
 var defaultColors = `
-color default "#ABB2BF,#21252C"
+color default "#c9c7cd,#0F1014"
 color cursor "#21252C,#ABB2BF"
 color search "#d89833,#ABB2BF"
 color statusline "#0f0f0f,#768298"

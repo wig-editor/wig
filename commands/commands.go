@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"os/exec"
 	"path"
 	"strings"
@@ -23,6 +24,38 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 	action := func(p *ui.UiPicker[*mcwig.Buffer], i *ui.PickerItem[*mcwig.Buffer]) {
 		editor.ActiveWindow().Buffer = i.Value
 		editor.PopUi()
+	}
+
+	ui.PickerInit(
+		editor,
+		action,
+		items,
+	)
+}
+
+func CmdCommandPalettePicker(editor *mcwig.Editor) {
+	items := make([]ui.PickerItem[CmdDefinition], 0, 128)
+
+	for k, v := range AllCommands {
+		name := fmt.Sprintf("%s [%s]", v.Desc, k)
+		items = append(items, ui.PickerItem[CmdDefinition]{
+			Name:  name,
+			Value: v,
+		})
+	}
+
+	action := func(p *ui.UiPicker[CmdDefinition], i *ui.PickerItem[CmdDefinition]) {
+		defer editor.PopUi()
+		if i == nil {
+			return
+		}
+
+		switch cmd := i.Value.Fn.(type) {
+		case func(e *mcwig.Editor, ch string):
+			editor.EchoMessage("unsupported")
+		case func(*mcwig.Editor):
+			cmd(editor)
+		}
 	}
 
 	ui.PickerInit(
@@ -126,6 +159,7 @@ func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 				return
 			}
 
+			// list directory
 			if strings.HasSuffix(i.Name, "/") {
 				fp := path.Join(rootDir, i.Value)
 				e.EchoMessage("listing dir: " + fp)
