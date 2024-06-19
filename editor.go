@@ -119,7 +119,9 @@ func (e *Editor) HandleInput(ev *tcell.EventKey) {
 	e.Message = ""
 
 	if len(e.UiComponents) > 0 {
-		h = e.UiComponents[len(e.UiComponents)-1].Keymap().HandleKey
+		comp := e.UiComponents[len(e.UiComponents)-1]
+		h = comp.Keymap().HandleKey
+		mode = comp.Mode()
 	}
 
 	h(e, ev, mode)

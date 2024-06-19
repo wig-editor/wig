@@ -41,7 +41,7 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 		activeItem: 0,
 	}
 	picker.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
-		mcwig.MODE_NORMAL: mcwig.KeyMap{
+		mcwig.MODE_INSERT: mcwig.KeyMap{
 			"Esc": func(e *mcwig.Editor) {
 				e.PopUi()
 			},
@@ -66,7 +66,7 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 }
 
 func (u *UiPicker[T]) Mode() mcwig.Mode {
-	return mcwig.MODE_NORMAL
+	return mcwig.MODE_INSERT
 }
 
 func (u *UiPicker[T]) Keymap() *mcwig.KeyHandler {
