@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"path"
@@ -115,6 +116,87 @@ func CmdFindProjectFilePicker(e *mcwig.Editor) {
 	})
 }
 
+func CmdSearchProject(e *mcwig.Editor) {
+	type RgJson struct {
+		Type string `json:"type"`
+		Data struct {
+			Path struct {
+				Text string `json:"text"`
+			} `json:"path"`
+			Lines struct {
+				Text string `json:"text"`
+			} `json:"lines"`
+			LineNumber     int `json:"line_number"`
+			AbsoluteOffset int `json:"absolute_offset"`
+			Submatches     []struct {
+				Match struct {
+					Text string `json:"text"`
+				} `json:"match"`
+				Start int `json:"start"`
+				End   int `json:"end"`
+			} `json:"submatches"`
+		} `json:"data"`
+	}
+	const tmatch = "match"
+
+	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
+		getItems := func(pat string) []ui.PickerItem[RgJson] {
+			pat = strings.TrimSpace(pat)
+			if pat == "" {
+				return nil
+			}
+
+			rootDir := e.Projects.GetRoot()
+
+			cmd := exec.Command("rg", "--json", "-S", pat)
+			cmd.Dir = rootDir
+			stdout, err := cmd.Output()
+			if err != nil {
+				e.LogMessage(string(stdout))
+				e.LogError(err)
+				return nil
+			}
+
+			items := []ui.PickerItem[RgJson]{}
+
+			for _, row := range strings.Split(string(stdout), "\n") {
+				row = strings.TrimSpace(row)
+				if len(row) == 0 {
+					continue
+				}
+
+				match := RgJson{}
+				json.Unmarshal([]byte(row), &match)
+				if match.Type != tmatch {
+					continue
+				}
+				trim := strings.TrimSpace
+
+				fname := fmt.Sprintf("%s:%d %s", trim(match.Data.Path.Text), match.Data.LineNumber, trim(match.Data.Lines.Text))
+				items = append(items, ui.PickerItem[RgJson]{
+					Name:  fname,
+					Value: match,
+				})
+			}
+
+			return items
+		}
+
+		action := func(p *ui.UiPicker[RgJson], i *ui.PickerItem[RgJson]) {
+			e.PopUi()
+		}
+
+		p := ui.PickerInit(
+			e,
+			action,
+			getItems(""),
+		)
+		p.OnChange(func() {
+			p.SetItems(getItems(p.GetInput()))
+		})
+	})
+}
+
 func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
 		rootDir := e.Projects.Dir(buf)
@@ -166,6 +248,7 @@ func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 				e.EchoMessage("listing dir: " + fp)
 				rootDir = fp
 				p.SetItems(getItems(rootDir))
+				p.ClearInput()
 				return
 			}
 

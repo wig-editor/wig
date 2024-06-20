@@ -75,6 +75,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"t":      mcwig.CmdWindowToggleLayout,
 			},
 			"Space": mcwig.KeyMap{
+				"/": commands.CmdSearchProject,
 				"?": commands.CmdCommandPalettePicker,
 				"b": mcwig.KeyMap{
 					"b": commands.CmdBufferPicker,

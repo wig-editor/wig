@@ -28,6 +28,7 @@ type UiPicker[T any] struct {
 	chBuf       []rune
 	activeItem  int
 	activeItemT *PickerItem[T]
+	onChange    func()
 }
 
 func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) *UiPicker[T] {
@@ -72,9 +73,17 @@ func (u *UiPicker[T]) Keymap() *mcwig.KeyHandler {
 	return u.keymap
 }
 
+func (u *UiPicker[T]) OnChange(callback func()) {
+	u.onChange = callback
+}
+
 func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {
 	u.items = items
 	u.filtered = items
+	u.activeItem = 0
+}
+
+func (u *UiPicker[T]) ClearInput() {
 	u.chBuf = u.chBuf[:0]
 	u.activeItem = 0
 }
@@ -105,6 +114,11 @@ func (u *UiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 	}
 
 	u.chBuf = append(u.chBuf, ev.Rune())
+
+	if u.onChange != nil {
+		u.onChange()
+	}
+
 	u.filterItems()
 }
 
