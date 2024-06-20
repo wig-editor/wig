@@ -83,7 +83,7 @@ func CmdFindProjectFilePicker(e *mcwig.Editor) {
 			return
 		}
 
-		cmd := exec.Command("git", "ls-tree", "-r", "--name-only", "HEAD")
+		cmd := exec.Command("rg", "--files")
 		cmd.Dir = rootDir
 		stdout, err := cmd.Output()
 		if err != nil {
