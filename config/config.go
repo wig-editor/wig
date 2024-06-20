@@ -44,9 +44,13 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			":":      ui.CmdLineInit,
 			";":      commands.CmdBufferPicker,
 			"/":      ui.CmdSearchPromptInit,
+			"*":      commands.CmdSearchWordUnderCursor,
 			"c": mcwig.KeyMap{
 				"c": mcwig.CmdChangeLine,
 				"w": mcwig.CmdChangeWord,
+				"a": mcwig.KeyMap{
+					"w": mcwig.CmdChangeWORD,
+				},
 				"f": mcwig.CmdChangeTo,
 				"t": mcwig.CmdChangeBefore,
 				"$": mcwig.CmdChangeEndOfLine,
@@ -103,6 +107,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"y":      mcwig.CmdYank,
 			"c":      mcwig.CmdSelectionChange,
 			"Esc":    mcwig.CmdNormalMode,
+			"*":      commands.CmdSearchWordUnderCursor,
 			"g": mcwig.KeyMap{
 				"g": mcwig.WithSelection(mcwig.CmdGotoLine0),
 			},

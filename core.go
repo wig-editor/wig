@@ -481,6 +481,19 @@ func CmdChangeWord(e *Editor) {
 	})
 }
 
+func CmdChangeWORD(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		start, end := WordUnderCursor(buf, true)
+		buf.Cursor.Char = start
+		buf.Selection = &Selection{
+			Start: buf.Cursor,
+			End:   Cursor{Line: buf.Cursor.Line, Char: end},
+		}
+		CmdSelectinDelete(e)
+		CmdInsertMode(e)
+	})
+}
+
 func CmdChangeTo(e *Editor, ch string) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		SelectionStart(buf)

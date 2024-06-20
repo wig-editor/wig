@@ -288,6 +288,31 @@ func CmdFormatBuffer(e *mcwig.Editor) {
 	})
 }
 
+func CmdSearchWordUnderCursor(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
+		pat := ""
+		defer func() {
+			mcwig.LastSearchPattern = pat
+			mcwig.SearchNext(e, buf, line, pat)
+		}()
+
+		if mcwig.CursorChClass(buf) == 0 {
+			mcwig.CmdBackwardWord(e)
+		}
+
+		if buf.Selection != nil {
+			pat = mcwig.SelectionToString(buf)
+			mcwig.CmdNormalMode(e)
+			return
+		}
+
+		start, end := mcwig.WordUnderCursor(buf, true)
+		if end+1 > start {
+			pat = string(line.Value.Range(start, end+1))
+		}
+	})
+}
+
 func CmdFormatBufferAndSave(e *mcwig.Editor) {
 	mcwig.CmdSaveFile(e)
 	CmdFormatBuffer(e)
