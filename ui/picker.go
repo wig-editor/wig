@@ -104,6 +104,9 @@ func (u *UiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 		if len(u.chBuf) > 0 {
 			u.chBuf = u.chBuf[:len(u.chBuf)-1]
+			if u.onChange != nil {
+				u.onChange()
+			}
 			u.filterItems()
 		}
 		return
@@ -189,9 +192,9 @@ func (u *UiPicker[T]) Render(view mcwig.View) {
 
 		if key+startIndex == u.activeItem {
 			u.activeItemT = &row
-			line = fmt.Sprintf("> %s %s", isCurrent, truncate(row.Name, w-x-5))
+			line = fmt.Sprintf("> %s %s", isCurrent, truncate(row.Name, w-x-8))
 		} else {
-			line = fmt.Sprintf("  %s %s", isCurrent, truncate(row.Name, w-x-5))
+			line = fmt.Sprintf("  %s %s", isCurrent, truncate(row.Name, w-x-8))
 		}
 		view.SetContent(x+2, y+i+3, line, mcwig.Color("default"))
 		i++

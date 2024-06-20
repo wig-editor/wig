@@ -183,7 +183,11 @@ func CmdSearchProject(e *mcwig.Editor) {
 		}
 
 		action := func(p *ui.UiPicker[RgJson], i *ui.PickerItem[RgJson]) {
-			e.PopUi()
+			defer e.PopUi()
+			e.OpenFile(i.Value.Data.Path.Text)
+			e.ActiveWindow().Buffer.Cursor.Line = i.Value.Data.LineNumber - 1
+			e.ActiveWindow().Buffer.Cursor.Char = i.Value.Data.Submatches[0].Start
+			mcwig.CmdEnsureCursorVisible(e)
 		}
 
 		p := ui.PickerInit(
