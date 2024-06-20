@@ -67,4 +67,5 @@ var AllCommands = map[string]CmdDefinition{
 	"CmdCurrentBufferDirFilePicker": {Desc: "", Fn: CmdCurrentBufferDirFilePicker},
 	"CmdLineInit":                   {Desc: "", Fn: ui.CmdLineInit},
 	"CmdSearchPromptInit":           {Desc: "", Fn: ui.CmdSearchPromptInit},
+	"CmdFormatBuffer":               {Desc: "", Fn: CmdFormatBuffer},
 }

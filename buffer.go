@@ -126,6 +126,17 @@ func (b *Buffer) Append(s string) {
 	}
 }
 
+// Remove all lines
+func (b *Buffer) ResetLines() {
+	l := b.Lines.First()
+	for l != nil {
+		next := l.Next()
+		l.Value = nil
+		b.Lines.Remove(l)
+		l = next
+	}
+}
+
 func (b *Buffer) String() string {
 	buf := bytes.NewBuffer(nil)
 

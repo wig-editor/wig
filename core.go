@@ -678,6 +678,7 @@ func CmdYankPut(e *Editor) {
 			CmdGotoLineEnd(e)
 			CmdCursorRight(e)
 			CmdNewLine(e)
+			CmdEnsureCursorVisible(e)
 			defer CmdCursorBeginningOfTheLine(e)
 		}
 

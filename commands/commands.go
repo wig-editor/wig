@@ -180,3 +180,22 @@ func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 		)
 	})
 }
+
+func CmdFormatBuffer(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
+		if strings.HasSuffix(buf.FilePath, ".go") {
+			formatcmd := fmt.Sprintf("cat %s | goimports", buf.FilePath)
+			cmd := exec.Command("bash", "-c", formatcmd)
+			stdout, err := cmd.Output()
+			if err != nil {
+				e.LogMessage(err.Error())
+				return
+			}
+			buf.ResetLines()
+			lines := strings.Split(string(stdout), "\n")
+			for _, line := range lines {
+				buf.Append(line)
+			}
+		}
+	})
+}
