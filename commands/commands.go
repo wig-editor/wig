@@ -189,6 +189,7 @@ func CmdFormatBuffer(e *mcwig.Editor) {
 			stdout, err := cmd.Output()
 			if err != nil {
 				e.LogMessage(err.Error())
+				e.LogMessage(string(stdout))
 				return
 			}
 			buf.ResetLines()
@@ -198,4 +199,10 @@ func CmdFormatBuffer(e *mcwig.Editor) {
 			}
 		}
 	})
+}
+
+func CmdFormatBufferAndSave(e *mcwig.Editor) {
+	mcwig.CmdSaveFile(e)
+	CmdFormatBuffer(e)
+	mcwig.CmdSaveFile(e)
 }
