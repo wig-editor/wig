@@ -128,9 +128,14 @@ func getChClass(r rune) chClass {
 		return chWhitespace
 	}
 
+	if r == '_' {
+		return chWord
+	}
+
 	if unicode.IsPunct(r) || unicode.IsSymbol(r) {
 		return chPunct
 	}
+
 	return chWord
 }
 
