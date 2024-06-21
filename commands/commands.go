@@ -306,7 +306,7 @@ func CmdSearchWordUnderCursor(e *mcwig.Editor) {
 			return
 		}
 
-		start, end := mcwig.WordUnderCursor(buf, true)
+		start, end := mcwig.TextObjectWord(buf, true)
 		if end+1 > start {
 			pat = string(line.Value.Range(start, end+1))
 		}

@@ -125,6 +125,7 @@ func (u *UiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 	u.filterItems()
 }
 
+// TODO: use RG for filtering
 func (u *UiPicker[T]) filterItems() {
 	pattern := string(u.chBuf)
 	if len(pattern) == 0 {

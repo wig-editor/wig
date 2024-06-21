@@ -103,7 +103,12 @@ func (p *pipeDrv) outBufferFor(buf *mcwig.Buffer) *mcwig.Buffer {
 	return p.outBuf
 }
 
+// TODO: add exit conditions to goroutines. handle buffer close.
 func (p *pipeDrv) send(opts header, outBuf *mcwig.Buffer, input string) {
+	if opts.append == false {
+		outBuf.ResetLines()
+	}
+
 	if p.cmd != nil && opts.interactive {
 		io.WriteString(p.stdin, input+"\n")
 		return

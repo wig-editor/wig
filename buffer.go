@@ -135,6 +135,7 @@ func (b *Buffer) ResetLines() {
 		b.Lines.Remove(l)
 		l = next
 	}
+	b.Lines = List[Line]{}
 }
 
 func (b *Buffer) String() string {

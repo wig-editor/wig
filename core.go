@@ -460,7 +460,7 @@ func CmdDeleteLine(e *Editor) {
 
 func CmdDeleteWord(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		_, end := WordUnderCursor(buf, false)
+		_, end := TextObjectWord(buf, false)
 		buf.Selection = &Selection{
 			Start: buf.Cursor,
 			End:   Cursor{Line: buf.Cursor.Line, Char: end},
@@ -471,7 +471,7 @@ func CmdDeleteWord(e *Editor) {
 
 func CmdChangeWord(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		_, end := WordUnderCursor(buf, false)
+		_, end := TextObjectWord(buf, false)
 		buf.Selection = &Selection{
 			Start: buf.Cursor,
 			End:   Cursor{Line: buf.Cursor.Line, Char: end},
@@ -483,7 +483,7 @@ func CmdChangeWord(e *Editor) {
 
 func CmdChangeWORD(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		start, end := WordUnderCursor(buf, true)
+		start, end := TextObjectWord(buf, true)
 		buf.Cursor.Char = start
 		buf.Selection = &Selection{
 			Start: buf.Cursor,
