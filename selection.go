@@ -12,16 +12,12 @@ func SelectionCursorInRange(sel *Selection, c Cursor) bool {
 		return false
 	}
 
-	if c.Line == s.Start.Line {
-		if c.Char < s.Start.Char {
-			return false
-		}
+	if c.Line == s.Start.Line && c.Char < s.Start.Char {
+		return false
 	}
 
-	if c.Line == s.End.Line {
-		if c.Char > s.End.Char {
-			return false
-		}
+	if c.Line == s.End.Line && c.Char > s.End.Char {
+		return false
 	}
 
 	return true
