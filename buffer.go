@@ -98,7 +98,10 @@ func (b *Buffer) Save() error {
 		if line.Next() == nil {
 			sep = ""
 		}
-		f.WriteString(string(line.Value) + sep)
+		_, err := f.WriteString(string(line.Value) + sep)
+		if err != nil {
+			return err
+		}
 		line = line.Next()
 	}
 

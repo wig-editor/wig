@@ -608,10 +608,13 @@ func CmdSelectinDelete(e *Editor) {
 func CmdSaveFile(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		err := buf.Save()
-		if err != nil {
-			e.LogError(err)
+		var msg string
+		if err == nil {
+			msg = fmt.Sprintf("Saved file %s. Lines: %d.", buf.FilePath, buf.Lines.Len)
+		} else {
+			msg = err.Error()
 		}
-		msg := fmt.Sprintf("saved file %s. Lines: %d.", buf.FilePath, buf.Lines.Len)
+
 		e.LogMessage(msg)
 		e.EchoMessage(msg)
 	})
