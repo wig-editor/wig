@@ -27,7 +27,7 @@ func TestTextObjects(t *testing.T) {
 		ch      rune
 		include bool
 		found   bool
-		sel     Selection
+		sel     *Selection
 	}
 
 	tcases := []test{
@@ -37,7 +37,7 @@ func TestTextObjects(t *testing.T) {
 			ch:      '(',
 			include: true,
 			found:   true,
-			sel: Selection{
+			sel: &Selection{
 				Start: Cursor{0, 0, 0},
 				End:   Cursor{0, 3, 0},
 			},
@@ -48,10 +48,26 @@ func TestTextObjects(t *testing.T) {
 			ch:      '(',
 			include: true,
 			found:   false,
-			sel: Selection{
+			sel:     nil,
+		},
+		{
+			cursor:  Cursor{Line: 0, Char: 0},
+			lines:   "()",
+			ch:      '(',
+			include: true,
+			found:   true,
+			sel: &Selection{
 				Start: Cursor{0, 0, 0},
-				End:   Cursor{0, 0, 0},
+				End:   Cursor{0, 1, 0},
 			},
+		},
+		{
+			cursor:  Cursor{Line: 0, Char: 0},
+			lines:   "()",
+			ch:      '(',
+			include: false,
+			found:   true,
+			sel:     nil,
 		},
 	}
 
@@ -64,12 +80,17 @@ func TestTextObjects(t *testing.T) {
 		}
 		require.Equal(t, c.lines, buf.String())
 
-		found, sel := TextObjectBlock(buf, c.ch, c.include)
+		found, sel, _ := TextObjectBlock(buf, c.ch, c.include)
 		require.Equal(t, c.found, found, c)
-		require.Equal(t, c.sel.Start.Line, sel.Start.Line, c)
-		require.Equal(t, c.sel.Start.Char, sel.Start.Char, c)
-		require.Equal(t, c.sel.End.Line, sel.End.Line, c)
-		require.Equal(t, c.sel.End.Char, sel.End.Char, c)
+		require.Equal(t, c.cursor.Char, buf.Cursor.Char)
+		require.Equal(t, c.cursor.Line, buf.Cursor.Line)
+
+		if found && c.sel != nil {
+			require.Equal(t, c.sel.Start.Line, sel.Start.Line, c)
+			require.Equal(t, c.sel.Start.Char, sel.Start.Char, c)
+			require.Equal(t, c.sel.End.Line, sel.End.Line, c)
+			require.Equal(t, c.sel.End.Char, sel.End.Char, c)
+		}
 	}
 
 }

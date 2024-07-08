@@ -39,12 +39,10 @@ func TextObjectWord(buf *Buffer, bigword bool) (start, end int) {
 
 // Returns text inside '(', '{', '[' as Selection range. This implementation is simple
 // and does not check if open/close symbols are "balanced".
-func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel Selection) {
-	cursor := buf.Cursor
-	// restore cursor position on exit
+func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel *Selection, cur Cursor) {
 	defer func(c Cursor) {
 		buf.Cursor = c
-	}(cursor)
+	}(buf.Cursor)
 
 	openClose := map[rune]rune{
 		'(': ')',
@@ -82,15 +80,26 @@ func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel Select
 
 	for {
 		if CursorChar(buf) == closeCh {
-			return true, Selection{
-				Start: start,
-				End:   buf.Cursor,
+			end := buf.Cursor
+			if include == false {
+				// no selection. empty ()
+				if end.Char == start.Char+1 {
+					return true, nil, end
+				}
+
+				start.Char += 1
+				end.Char -= 1
 			}
+
+			return true, &Selection{
+				Start: start,
+				End:   end,
+			}, buf.Cursor
 		}
 		if !CursorInc(buf) {
 			break
 		}
 	}
 
-	return
+	return false, nil, buf.Cursor
 }

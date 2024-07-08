@@ -770,6 +770,23 @@ func CmdEnsureCursorVisible(e *Editor) {
 	})
 }
 
+func CmdChangeInsideBlock(e *Editor, ch string) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
+		switch ch {
+		case "w":
+			CmdChangeWORD(e)
+		case "(", "[", "{", "'", "\"":
+			found, sel, cur := TextObjectBlock(buf, rune(ch[0]), false)
+			if !found {
+				return
+			}
+			buf.Selection = sel
+			buf.Cursor = cur
+			CmdSelectionChange(e)
+		}
+	})
+}
+
 func WithSelection(fn func(*Editor)) func(*Editor) {
 	return func(e *Editor) {
 		fn(e)

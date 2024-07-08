@@ -51,6 +51,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"a": mcwig.KeyMap{
 					"w": mcwig.CmdChangeWORD,
 				},
+				"i": mcwig.CmdChangeInsideBlock,
 				"f": mcwig.CmdChangeTo,
 				"t": mcwig.CmdChangeBefore,
 				"$": mcwig.CmdChangeEndOfLine,
