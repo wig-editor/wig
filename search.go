@@ -33,6 +33,7 @@ func SearchNext(e *Editor, buf *Buffer, line *Element[Line], pattern string) {
 
 		buf.Cursor.Line = lineNum
 		buf.Cursor.Char = matches[0][0] + from
+		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
 		break
 	}
 }
@@ -61,6 +62,7 @@ func SearchPrev(e *Editor, buf *Buffer, line *Element[Line], pattern string) {
 
 		buf.Cursor.Line = ln
 		buf.Cursor.Char = matches[0][0]
+		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
 		break
 	}
 }
