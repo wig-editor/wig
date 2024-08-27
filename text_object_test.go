@@ -69,6 +69,17 @@ func TestTextObjects(t *testing.T) {
 			found:   true,
 			sel:     nil,
 		},
+		{
+			cursor:  Cursor{Line: 0, Char: 6},
+			lines:   "( (  ) )",
+			ch:      '(',
+			include: false,
+			found:   true,
+			sel: &Selection{
+				Start: Cursor{0, 1, 0},
+				End:   Cursor{0, 6, 0},
+			},
+		},
 	}
 
 	for _, c := range tcases {

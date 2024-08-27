@@ -82,7 +82,7 @@ func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel *Selec
 		if CursorChar(buf) == closeCh {
 			end := buf.Cursor
 			if include == false {
-				// no selection. empty ()
+				// no selection. empty ().
 				if end.Char == start.Char+1 {
 					return true, nil, end
 				}

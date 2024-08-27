@@ -210,6 +210,13 @@ func CmdGotoLineEnd(e *Editor) {
 
 func CmdForwardWord(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		defer func() {
+			_, h := e.View.Size()
+			if buf.Cursor.Line-buf.ScrollOffset > h-3 {
+				CmdScrollDown(e)
+			}
+		}()
+
 		cls := CursorChClass(buf)
 		CursorInc(buf)
 
@@ -241,6 +248,12 @@ func CmdForwardWord(e *Editor) {
 
 func CmdBackwardWord(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		defer func() {
+			if buf.Cursor.Line < buf.ScrollOffset+3 {
+				CmdScrollUp(e)
+			}
+		}()
+
 		cls := CursorChClass(buf)
 		CursorDec(buf)
 
