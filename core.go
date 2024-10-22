@@ -434,6 +434,7 @@ func CmdLineOpenBelow(e *Editor) {
 	CmdAppendLine(e)
 	CmdNewLine(e)
 	CmdInsertModeAfter(e)
+	CmdIndent(e)
 }
 
 func CmdLineOpenAbove(e *Editor) {

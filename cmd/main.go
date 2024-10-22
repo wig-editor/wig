@@ -36,6 +36,8 @@ func main() {
 		editor.ActiveBuffer()
 	}
 
+	editor.OpenFile("/home/andrew/code/mcwig/core.go")
+
 	renderer := render.New(editor, tscreen)
 
 	go func() {

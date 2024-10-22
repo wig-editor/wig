@@ -20,6 +20,7 @@ func TestGuessIndent(t *testing.T) {
 			want:   3,
 		},
 		{
+			// 3 x2 spaces
 			line:   []rune("      1"),
 			indent: []rune("  "),
 			want:   3,
