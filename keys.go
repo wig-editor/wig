@@ -71,7 +71,7 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 
 		if mode != MODE_INSERT {
 			kv := isNumeric(key)
-			if kv && key != "0" {
+			if kv {
 				k.times = append(k.times, key)
 				return
 			}
@@ -144,7 +144,7 @@ func (k *KeyHandler) resetState() {
 }
 
 func (k *KeyHandler) GetTimes() int {
-	const max = 1000000
+	const max = 100000
 	val := strings.Join(k.times, "")
 	if isNumeric(val) {
 		v, _ := strconv.ParseInt(val, 10, 64)
