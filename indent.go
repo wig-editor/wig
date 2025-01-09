@@ -10,15 +10,15 @@ func CmdIndent(e *Editor) {
 				continue
 			}
 
+			// TODO: optimize this chunk. do not copy full line.
 			line.Value = make([]rune, len(prevLine.Value))
 			copy(line.Value, prevLine.Value)
 			CmdCursorFirstNonBlank(e)
 			line.Value = line.Value[:buf.Cursor.Char]
 
-			// TODO: check range if chars
 			if prevLine.Value[len(prevLine.Value)-1] == '{' {
-				// increase indentation
-				line.Value = append(line.Value, '	')
+				line.Value = append(line.Value, '\t')
+				CmdCursorRight(e)
 			}
 			break
 		}
