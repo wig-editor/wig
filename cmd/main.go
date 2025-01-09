@@ -30,10 +30,9 @@ func main() {
 	)
 
 	args := os.Args
+	editor.ActiveBuffer()
 	if len(args) > 1 {
 		editor.OpenFile(args[1])
-	} else {
-		editor.ActiveBuffer()
 	}
 
 	editor.OpenFile("/home/andrew/code/mcwig/core.go")

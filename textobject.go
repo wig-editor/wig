@@ -37,7 +37,7 @@ func TextObjectWord(buf *Buffer, bigword bool) (start, end int) {
 	return start, end
 }
 
-// Returns text inside '(', '{', '[' as Selection range. This implementation is simple
+// Returns selection inside '(', '{', '[' as "Selection" range. This implementation is simple
 // and does not check if open/close symbols are "balanced".
 func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel *Selection, cur Cursor) {
 	defer func(c Cursor) {
@@ -78,6 +78,7 @@ func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel *Selec
 
 	start := buf.Cursor
 
+	// move cursor "left" till we find first "open" bracket
 	for {
 		if CursorChar(buf) == closeCh {
 			end := buf.Cursor

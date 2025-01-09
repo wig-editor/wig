@@ -22,12 +22,12 @@ func TestTextObjects(t *testing.T) {
 	e.Buffers = append(e.Buffers, buf)
 
 	type test struct {
-		cursor  Cursor
-		lines   string
-		ch      rune
-		include bool
-		found   bool
-		sel     *Selection
+		cursor   Cursor
+		lines    string
+		ch       rune
+		include  bool
+		found    bool
+		expected *Selection
 	}
 
 	tcases := []test{
@@ -37,18 +37,18 @@ func TestTextObjects(t *testing.T) {
 			ch:      '(',
 			include: true,
 			found:   true,
-			sel: &Selection{
+			expected: &Selection{
 				Start: Cursor{0, 0, 0},
 				End:   Cursor{0, 3, 0},
 			},
 		},
 		{
-			cursor:  Cursor{Line: 1, Char: 0},
-			lines:   "ok)\n)",
-			ch:      '(',
-			include: true,
-			found:   false,
-			sel:     nil,
+			cursor:   Cursor{Line: 1, Char: 0},
+			lines:    "ok)\n)",
+			ch:       '(',
+			include:  true,
+			found:    false,
+			expected: nil,
 		},
 		{
 			cursor:  Cursor{Line: 0, Char: 0},
@@ -56,18 +56,18 @@ func TestTextObjects(t *testing.T) {
 			ch:      '(',
 			include: true,
 			found:   true,
-			sel: &Selection{
+			expected: &Selection{
 				Start: Cursor{0, 0, 0},
 				End:   Cursor{0, 1, 0},
 			},
 		},
 		{
-			cursor:  Cursor{Line: 0, Char: 0},
-			lines:   "()",
-			ch:      '(',
-			include: false,
-			found:   true,
-			sel:     nil,
+			cursor:   Cursor{Line: 0, Char: 0},
+			lines:    "()",
+			ch:       '(',
+			include:  false,
+			found:    true,
+			expected: nil,
 		},
 		{
 			cursor:  Cursor{Line: 0, Char: 6},
@@ -75,7 +75,7 @@ func TestTextObjects(t *testing.T) {
 			ch:      '(',
 			include: false,
 			found:   true,
-			sel: &Selection{
+			expected: &Selection{
 				Start: Cursor{0, 1, 0},
 				End:   Cursor{0, 6, 0},
 			},
@@ -84,23 +84,23 @@ func TestTextObjects(t *testing.T) {
 
 	for _, c := range tcases {
 		buf.ResetLines()
-		buf.Cursor = c.cursor
 		lines := strings.Split(c.lines, "\n")
 		for _, line := range lines {
 			buf.Append(line)
 		}
 		require.Equal(t, c.lines, buf.String())
+		buf.Cursor = c.cursor
 
 		found, sel, _ := TextObjectBlock(buf, c.ch, c.include)
 		require.Equal(t, c.found, found, c)
 		require.Equal(t, c.cursor.Char, buf.Cursor.Char)
 		require.Equal(t, c.cursor.Line, buf.Cursor.Line)
 
-		if found && c.sel != nil {
-			require.Equal(t, c.sel.Start.Line, sel.Start.Line, c)
-			require.Equal(t, c.sel.Start.Char, sel.Start.Char, c)
-			require.Equal(t, c.sel.End.Line, sel.End.Line, c)
-			require.Equal(t, c.sel.End.Char, sel.End.Char, c)
+		if found && c.expected != nil {
+			require.Equal(t, c.expected.Start.Line, sel.Start.Line, c)
+			require.Equal(t, c.expected.Start.Char, sel.Start.Char, c)
+			require.Equal(t, c.expected.End.Line, sel.End.Line, c)
+			require.Equal(t, c.expected.End.Char, sel.End.Char, c)
 		}
 	}
 

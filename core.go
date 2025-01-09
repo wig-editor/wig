@@ -88,7 +88,7 @@ func CmdCursorLineUp(e *Editor) {
 }
 
 func CmdCursorLineDown(e *Editor) {
-	Do(e, func(buf *Buffer, line *Element[Line]) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		if buf.Cursor.Line < buf.Lines.Len-1 {
 			buf.Cursor.Line++
 			restoreCharPosition(buf)
