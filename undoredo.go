@@ -32,6 +32,9 @@ func (tx *Transaction) End() {
 		apply: apply,
 		undo:  undo,
 	})
+
+	tx.buf = nil
+	tx.before = ""
 }
 
 type EditDiff struct {

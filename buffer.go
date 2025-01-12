@@ -88,6 +88,7 @@ func BufferReadFile(path string) (*Buffer, error) {
 
 func (buf *Buffer) SetMode(m Mode) {
 	buf.mode = m
+	return
 
 	// entering insert or visual mode - start tx
 	if m != MODE_NORMAL {
