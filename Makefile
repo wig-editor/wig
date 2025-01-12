@@ -1,6 +1,5 @@
 
 run:
-	-pkill -f go-build
 	go run cmd/main.go > /tmp/mcwig.panic.txt 2>&1
 
 test:

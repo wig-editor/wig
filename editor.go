@@ -62,6 +62,11 @@ func NewEditor(
 }
 
 func (e *Editor) OpenFile(path string) {
+	if e.BufferFindByFilePath(path, false) != nil {
+		e.activeWindow.Buffer = e.BufferFindByFilePath(path, false)
+		return
+	}
+
 	buf, err := BufferReadFile(path)
 	if err != nil {
 		e.LogError(err)
@@ -127,8 +132,27 @@ func (e *Editor) HandleInput(ev *tcell.EventKey) {
 	h(e, ev, mode)
 }
 
+// Find or create new buffer by its full file path
+func (e *Editor) BufferFindByFilePath(fp string, create bool) *Buffer {
+	for _, b := range e.Buffers {
+		if b.FilePath == fp {
+			return b
+		}
+	}
+
+	if !create {
+		return nil
+	}
+
+	b := NewBuffer()
+	b.FilePath = fp
+	b.Lines = List[Line]{}
+	e.Buffers = append(e.Buffers, b)
+	return b
+}
+
 func (e *Editor) LogError(err error, echo ...bool) {
-	buf := e.BufferFindByFilePath("[Messages]")
+	buf := e.BufferFindByFilePath("[Messages]", true)
 	buf.Append("error: " + err.Error())
 	if len(echo) > 0 {
 		e.EchoMessage(err.Error())
@@ -136,12 +160,12 @@ func (e *Editor) LogError(err error, echo ...bool) {
 }
 
 func (e *Editor) LogMessage(msg string) {
-	buf := e.BufferFindByFilePath("[Messages]")
+	buf := e.BufferFindByFilePath("[Messages]", true)
 	buf.Append(msg)
 }
 
 func (e *Editor) EchoMessage(msg string) {
-	buf := e.BufferFindByFilePath("[Messages]")
+	buf := e.BufferFindByFilePath("[Messages]", true)
 	buf.Append(msg)
 	e.Message = msg
 }

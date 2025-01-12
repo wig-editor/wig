@@ -139,21 +139,6 @@ func (b *Buffer) Save() error {
 	return nil
 }
 
-// Find or create new buffer
-func (e *Editor) BufferFindByFilePath(fp string) *Buffer {
-	for _, b := range e.Buffers {
-		if b.FilePath == fp {
-			return b
-		}
-	}
-
-	b := NewBuffer()
-	b.FilePath = fp
-	b.Lines = List[Line]{}
-	e.Buffers = append(e.Buffers, b)
-	return b
-}
-
 func (b *Buffer) Append(s string) {
 	for _, line := range strings.Split(s, "\n") {
 		b.Lines.PushBack([]rune(line))

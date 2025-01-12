@@ -535,8 +535,8 @@ func CmdChangeEndOfLine(e *Editor) {
 
 func CmdChangeLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		line.Value = nil
 		CmdInsertModeAfter(e)
+		line.Value = nil
 	})
 }
 
@@ -821,11 +821,7 @@ func WithSelection(fn func(*Editor)) func(*Editor) {
 		buf.Selection.End = buf.Cursor
 
 		if buf.Mode() == MODE_VISUAL_LINE {
-			if buf.Selection.Start.Line > buf.Selection.End.Line {
-				lineStart := CursorLineByNum(buf, buf.Selection.Start.Line)
-				buf.Selection.Start.Char = len(lineStart.Value) - 1
-				buf.Selection.End.Char = 0
-			} else {
+			if buf.Selection.Start.Line > buf.Selection.End.Line {} else {
 				lineEnd := CursorLineByNum(buf, buf.Selection.End.Line)
 				buf.Selection.Start.Char = 0
 				buf.Selection.End.Char = len(lineEnd.Value) - 1

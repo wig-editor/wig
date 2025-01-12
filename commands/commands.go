@@ -318,3 +318,9 @@ func CmdFormatBufferAndSave(e *mcwig.Editor) {
 	CmdFormatBuffer(e)
 	mcwig.CmdSaveFile(e)
 }
+
+func CmdMakeRun(e *mcwig.Editor) {
+	cmd := exec.Command("tmux", "send-keys", "-t", "mcwig:1.2", "make run", "Enter")
+	cmd.Dir = "/home/andrew/code/mcwig"
+	cmd.Start()
+}
