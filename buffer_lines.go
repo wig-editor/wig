@@ -29,7 +29,7 @@ func (l Line) Range(from, to int) []rune {
 	}
 
 	if to > len(l) || to == EOL {
-		return l[from:len(l)]
+		return l[from:]
 	}
 
 	if to < from {

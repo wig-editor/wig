@@ -18,7 +18,7 @@ func yankSave(e *Editor, buf *Buffer, line *Element[Line]) {
 	} else {
 		y = yank{SelectionToString(buf), false}
 	}
-	if buf.Mode == MODE_VISUAL_LINE {
+	if buf.Mode() == MODE_VISUAL_LINE {
 		y.isLine = true
 	}
 
@@ -35,10 +35,10 @@ func yankSave(e *Editor, buf *Buffer, line *Element[Line]) {
 func yankPut(e *Editor, buf *Buffer) {
 	v := e.Yanks.Last()
 
-	oldMode := buf.Mode
-	buf.Mode = MODE_INSERT
+	oldMode := buf.Mode()
+	buf.SetMode(MODE_INSERT)
 	defer func() {
-		buf.Mode = oldMode
+		buf.SetMode(oldMode)
 	}()
 
 	r := []rune(v.Value.val)

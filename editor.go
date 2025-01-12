@@ -114,7 +114,7 @@ func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
 }
 
 func (e *Editor) HandleInput(ev *tcell.EventKey) {
-	mode := e.ActiveBuffer().Mode
+	mode := e.ActiveBuffer().Mode()
 	h := e.Keys.HandleKey
 	e.Message = ""
 

@@ -25,7 +25,7 @@ type KeyHandler struct {
 func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
 	return &KeyHandler{
 		keymap:          mkeymap,
-		fallback:        HandleInsertKey,
+		fallback:        HandleInsertKey, // Default handler for "insert" mode.
 		waitingForInput: nil,
 		times:           []string{},
 	}
@@ -68,7 +68,6 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	case KeyMap:
 		keySet = v
 	default:
-
 		if mode != MODE_INSERT {
 			kv := isNumeric(key)
 			if kv {

@@ -6,7 +6,7 @@ import (
 
 func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.Mode != MODE_INSERT {
+		if buf.Mode() != MODE_INSERT {
 			return
 		}
 

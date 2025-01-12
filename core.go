@@ -18,10 +18,11 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 
 func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 	buf := e.ActiveBuffer()
-	if buf != nil {
-		line := CursorLine(buf)
-		fn(buf, line)
+	if buf == nil {
+		return
 	}
+
+	fn(buf, CursorLine(buf))
 }
 
 func CmdJoinNextLine(e *Editor) {
@@ -131,14 +132,14 @@ func CmdInsertMode(e *Editor) {
 			return
 		}
 
-		buf.Mode = MODE_INSERT
+		buf.SetMode(MODE_INSERT)
 	})
 }
 
 func CmdVisualMode(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		SelectionStart(buf)
-		buf.Mode = MODE_VISUAL
+		buf.SetMode(MODE_VISUAL)
 	})
 }
 
@@ -147,26 +148,26 @@ func CmdVisualLineMode(e *Editor) {
 		SelectionStart(buf)
 		buf.Selection.Start.Char = 0
 		buf.Selection.End.Char = len(line.Value) - 1
-		buf.Mode = MODE_VISUAL_LINE
+		buf.SetMode(MODE_VISUAL_LINE)
 	})
 }
 
 func CmdInsertModeAfter(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		buf.Cursor.Char++
-		buf.Mode = MODE_INSERT
+		buf.SetMode(MODE_INSERT)
 	})
 }
 
 func CmdNormalMode(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.Mode == MODE_INSERT {
+		if buf.Mode() == MODE_INSERT {
 			CmdCursorLeft(e)
 			if buf.Cursor.Char >= len(line.Value) {
 				CmdGotoLineEnd(e)
 			}
 		}
-		buf.Mode = MODE_NORMAL
+		buf.SetMode(MODE_NORMAL)
 		buf.Selection = nil
 	})
 }
@@ -801,13 +802,25 @@ func CmdChangeInsideBlock(e *Editor, ch string) {
 	})
 }
 
+func CmdUndo(e *Editor) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
+		buf.UndoRedo.Undo()
+	})
+}
+
+func CmdRedo(e *Editor) {
+	Do(e, func(buf *Buffer, _ *Element[Line]) {
+		buf.UndoRedo.Redo()
+	})
+}
+
 func WithSelection(fn func(*Editor)) func(*Editor) {
 	return func(e *Editor) {
 		fn(e)
 		buf := e.ActiveBuffer()
 		buf.Selection.End = buf.Cursor
 
-		if buf.Mode == MODE_VISUAL_LINE {
+		if buf.Mode() == MODE_VISUAL_LINE {
 			if buf.Selection.Start.Line > buf.Selection.End.Line {
 				lineStart := CursorLineByNum(buf, buf.Selection.Start.Line)
 				buf.Selection.Start.Char = len(lineStart.Value) - 1

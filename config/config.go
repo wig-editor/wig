@@ -41,9 +41,11 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"F":      mcwig.CmdBackwardChar,
 			"n":      mcwig.CmdSearchNext,
 			"N":      mcwig.CmdSearchPrev,
+			"u":      mcwig.CmdUndo,
+			"ctrl+r": mcwig.CmdRedo,
 			":":      ui.CmdLineInit,
-			";":      commands.CmdBufferPicker,
 			"/":      ui.CmdSearchPromptInit,
+			";":      commands.CmdBufferPicker,
 			"*":      commands.CmdSearchWordUnderCursor,
 			"c": mcwig.KeyMap{
 				"c": mcwig.CmdChangeLine,

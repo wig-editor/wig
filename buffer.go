@@ -38,7 +38,7 @@ type Driver interface {
 }
 
 type Buffer struct {
-	Mode         Mode
+	mode         Mode
 	FilePath     string
 	ScrollOffset int
 	Lines        List[Line]
@@ -46,18 +46,25 @@ type Buffer struct {
 	Selection    *Selection
 	Driver       Driver
 	IndentCh     []rune
+	Tx           *Transaction
+	UndoRedo     *UndoRedo
 }
 
 func NewBuffer() *Buffer {
 	lines := List[Line]{}
 	lines.PushBack(Line{})
-	return &Buffer{
+	b := &Buffer{
 		Lines:     lines,
 		Cursor:    Cursor{0, 0, 0},
 		IndentCh:  []rune{'\t'},
 		Selection: nil,
 		Driver:    nil,
+		Tx:        nil,
 	}
+
+	b.UndoRedo = NewUndoRedo(b)
+
+	return b
 }
 
 func BufferReadFile(path string) (*Buffer, error) {
@@ -79,11 +86,35 @@ func BufferReadFile(path string) (*Buffer, error) {
 	return buf, nil
 }
 
+func (buf *Buffer) SetMode(m Mode) {
+	buf.mode = m
+
+	// entering insert or visual mode - start tx
+	if m != MODE_NORMAL {
+		if buf.Tx != nil {
+			return
+		}
+
+		buf.Tx = NewTx(buf)
+		buf.Tx.Start()
+		return
+	}
+
+	if buf.Tx != nil {
+		buf.Tx.End()
+		buf.Tx = nil
+	}
+}
+
 func (b *Buffer) GetName() string {
 	if len(b.FilePath) > 0 {
 		return b.FilePath
 	}
 	return "[No Name]"
+}
+
+func (b *Buffer) Mode() Mode {
+	return b.mode
 }
 
 func (b *Buffer) Save() error {

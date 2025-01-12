@@ -1,7 +1,7 @@
 
 run:
 	-pkill -f go-build
-	go run cmd/main.go 2> /tmp/mcwig.panic.txt
+	go run cmd/main.go > /tmp/mcwig.panic.txt 2>&1
 
 test:
 	go test -v ./... -count=1
