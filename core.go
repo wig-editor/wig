@@ -457,19 +457,8 @@ func CmdDeleteLine(e *Editor) {
 			return
 		}
 
-		CmdYank(e)
-
-		buf.Lines.Remove(line)
-		if buf.Cursor.Line >= buf.Lines.Len {
-			CmdCursorLineUp(e)
-			CmdCursorBeginningOfTheLine(e)
-		}
-
-		if buf.Lines.Len == 0 {
-			buf.Lines.PushFront(Line{})
-		}
-
-		restoreCharPosition(buf)
+		CmdVisualLineMode(e)
+		CmdSelectinDelete(e)
 	})
 }
 
@@ -821,7 +810,8 @@ func WithSelection(fn func(*Editor)) func(*Editor) {
 		buf.Selection.End = buf.Cursor
 
 		if buf.Mode() == MODE_VISUAL_LINE {
-			if buf.Selection.Start.Line > buf.Selection.End.Line {} else {
+			if buf.Selection.Start.Line > buf.Selection.End.Line {
+			} else {
 				lineEnd := CursorLineByNum(buf, buf.Selection.End.Line)
 				buf.Selection.Start.Char = 0
 				buf.Selection.End.Char = len(lineEnd.Value) - 1
