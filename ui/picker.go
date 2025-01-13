@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"unicode"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/sahilm/fuzzy"
@@ -32,6 +33,12 @@ type UiPicker[T any] struct {
 }
 
 func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) *UiPicker[T] {
+	for i, _ := range items {
+		name := strings.TrimRightFunc(items[i].Name, unicode.IsSpace)
+		name = strings.ReplaceAll(name, "\t", "    ")
+		items[i].Name = name
+	}
+
 	picker := &UiPicker[T]{
 		e:          e,
 		chBuf:      make([]rune, 0, 32),

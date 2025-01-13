@@ -91,6 +91,9 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				},
 				"f": commands.CmdFindProjectFilePicker,
 				"F": commands.CmdCurrentBufferDirFilePicker,
+				"s": mcwig.KeyMap{
+					"s": commands.CmdSearchLine,
+				},
 			},
 		},
 		mcwig.MODE_VISUAL: mcwig.KeyMap{

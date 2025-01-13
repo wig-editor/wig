@@ -319,6 +319,38 @@ func CmdFormatBufferAndSave(e *mcwig.Editor) {
 	mcwig.CmdSaveFile(e)
 }
 
+func CmdSearchLine(e *mcwig.Editor) {
+	items := make([]ui.PickerItem[int], 0, 256)
+
+	line := e.ActiveBuffer().Lines.First()
+	i := 0
+	for line != nil {
+		items = append(items, ui.PickerItem[int]{
+			Name:   line.Value.String(),
+			Value:  i,
+			Active: false,
+		})
+
+		i++
+		line = line.Next()
+	}
+
+	action := func(p *ui.UiPicker[int], i *ui.PickerItem[int]) {
+		buf := e.ActiveBuffer()
+		buf.Cursor.Line = i.Value
+		buf.Cursor.Char = 0
+		mcwig.CmdCursorBeginningOfTheLine(e)
+		mcwig.CmdEnsureCursorVisible(e)
+		e.PopUi()
+	}
+
+	ui.PickerInit(
+		e,
+		action,
+		items,
+	)
+}
+
 func CmdMakeRun(e *mcwig.Editor) {
 	cmd := exec.Command("tmux", "send-keys", "-t", "mcwig:1.2", "make run", "Enter")
 	cmd.Dir = "/home/andrew/code/mcwig"
