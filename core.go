@@ -130,6 +130,9 @@ func CmdCursorFirstNonBlank(e *Editor) {
 
 func CmdInsertMode(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if line == nil {
+			return
+		}
 		if len(line.Value) == 0 {
 			CmdInsertModeAfter(e)
 			return
@@ -460,9 +463,11 @@ func CmdDeleteLine(e *Editor) {
 		if line == nil {
 			return
 		}
-
-		CmdVisualLineMode(e)
-		CmdSelectinDelete(e)
+		if buf.Lines.First() == buf.Lines.Last() {
+			line.Value = nil
+			return
+		}
+		buf.Lines.Remove(line)
 	})
 }
 

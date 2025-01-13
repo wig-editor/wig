@@ -4,12 +4,7 @@ Features:
 - save cursor position for undo/redo records
 
 Bugs:
-- fix ScrollOffset in horilontal layout
-- send many lines selected to pipe
-- repeat latest Exec/ExecBuffer
-- word movements adjust cursor preserved position. count tabs as spaces?
-- indicate that query is in progress of execution
-- w/b keys need to adjust screen scroll. cursor goes out of screen.
+- VIS LINE mode up selection does not work as expected
 
 done:
 - fuzzy search for current buffer lines
