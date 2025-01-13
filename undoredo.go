@@ -7,8 +7,7 @@ import (
 )
 
 type Transaction struct {
-	buf *Buffer
-
+	buf    *Buffer
 	before string
 }
 
