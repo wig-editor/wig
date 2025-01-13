@@ -107,6 +107,20 @@ func (buf *Buffer) SetMode(m Mode) {
 	}
 }
 
+func (b *Buffer) TxStart() {
+	if b.Tx != nil {
+		return
+	}
+
+	b.Tx = NewTx(b)
+	b.Tx.Start()
+}
+
+func (b *Buffer) TxEnd() {
+	b.Tx.End()
+	b.Tx = nil
+}
+
 func (b *Buffer) GetName() string {
 	if len(b.FilePath) > 0 {
 		return b.FilePath

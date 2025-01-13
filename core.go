@@ -359,7 +359,8 @@ func CmdBackwardChar(e *Editor, ch string) {
 func CmdDeleteCharForward(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if len(line.Value) == 0 {
-			CmdJoinNextLine(e)
+			CmdGotoLineEnd(e)
+			lineJoinNext(buf, line)
 			CmdCursorBeginningOfTheLine(e)
 			return
 		}
@@ -560,6 +561,7 @@ func CmdSelectinDelete(e *Editor) {
 		if buf.Selection == nil {
 			return
 		}
+
 		sel := SelectionNormalize(buf.Selection)
 
 		yankSave(e, buf, line)
