@@ -1,8 +1,7 @@
 Features:
 - cycle buffers with `
 - search project from word under cursor
-- fuzzy search for current buffer
-- save cusror position for undo/redo records
+- save cursor position for undo/redo records
 
 Bugs:
 - fix ScrollOffset in horilontal layout
@@ -11,3 +10,6 @@ Bugs:
 - word movements adjust cursor preserved position. count tabs as spaces?
 - indicate that query is in progress of execution
 - w/b keys need to adjust screen scroll. cursor goes out of screen.
+
+done:
+- fuzzy search for current buffer lines
