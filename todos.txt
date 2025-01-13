@@ -1,3 +1,9 @@
+Features:
+- cycle buffers with `
+- search project from word under cursor
+- fuzzy search for current buffer
+- save cusror position for undo/redo records
+
 Bugs:
 - fix ScrollOffset in horilontal layout
 - send many lines selected to pipe
