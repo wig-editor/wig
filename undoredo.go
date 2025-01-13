@@ -65,9 +65,8 @@ func (u *UndoRedo) checkPosition() bool {
 
 func (u *UndoRedo) Push(edits EditDiff) {
 	if len(edits.apply) > 0 || len(edits.undo) > 0 {
-
 		// we are back in history. remove all "forward" edits
-		if u.Position >= 0 && u.Position != len(u.History)-1 {
+		if u.Position >= 0 || u.Position != len(u.History)-1 {
 			u.History = u.History[:u.Position+1]
 		}
 

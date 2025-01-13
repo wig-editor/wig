@@ -22,6 +22,9 @@ func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 		return
 	}
 
+	if buf.TxStart() {
+		defer buf.TxEnd()
+	}
 	fn(buf, CursorLine(buf))
 }
 
@@ -794,15 +797,17 @@ func CmdChangeInsideBlock(e *Editor, ch string) {
 }
 
 func CmdUndo(e *Editor) {
-	Do(e, func(buf *Buffer, _ *Element[Line]) {
+	buf := e.ActiveBuffer()
+	if buf != nil {
 		buf.UndoRedo.Undo()
-	})
+	}
 }
 
 func CmdRedo(e *Editor) {
-	Do(e, func(buf *Buffer, _ *Element[Line]) {
+	buf := e.ActiveBuffer()
+	if buf != nil {
 		buf.UndoRedo.Redo()
-	})
+	}
 }
 
 func WithSelection(fn func(*Editor)) func(*Editor) {

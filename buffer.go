@@ -107,13 +107,14 @@ func (buf *Buffer) SetMode(m Mode) {
 	}
 }
 
-func (b *Buffer) TxStart() {
+func (b *Buffer) TxStart() (started bool) {
 	if b.Tx != nil {
 		return
 	}
 
 	b.Tx = NewTx(b)
 	b.Tx.Start()
+	return true
 }
 
 func (b *Buffer) TxEnd() {
