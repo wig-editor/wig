@@ -343,6 +343,10 @@ func CmdSearchLine(e *mcwig.Editor) {
 
 	action := func(p *ui.UiPicker[int], i *ui.PickerItem[int]) {
 		buf := e.ActiveBuffer()
+
+		e.ActiveWindow().Jumps.Push(buf)
+		defer e.ActiveWindow().Jumps.Push(buf)
+
 		buf.Cursor.Line = i.Value
 		buf.Cursor.Char = 0
 		mcwig.CmdCursorBeginningOfTheLine(e)

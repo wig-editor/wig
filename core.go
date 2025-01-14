@@ -183,6 +183,7 @@ func CmdGotoLine0(e *Editor) {
 		buf.Cursor.Line = 0
 		buf.ScrollOffset = 0
 		restoreCharPosition(buf)
+		e.ActiveWindow().Jumps.Push(buf)
 
 		if e.Keys.GetTimes() > 1 {
 			ln := e.Keys.GetTimes() - 1
@@ -215,6 +216,7 @@ func CmdGotoLineEnd(e *Editor) {
 		} else {
 			buf.Cursor.Char = 0
 		}
+		e.ActiveWindow().Jumps.Push(buf)
 	})
 }
 
@@ -643,7 +645,9 @@ func CmdSaveFile(e *Editor) {
 
 func CmdWindowVSplit(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
-		e.Windows = append(e.Windows, &Window{buf: buf})
+		nwin := CreateWindow()
+		nwin.SetBuffer(buf)
+		e.Windows = append(e.Windows, nwin)
 	})
 }
 

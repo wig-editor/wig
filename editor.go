@@ -18,6 +18,8 @@ type UiComponent interface {
 
 type Layout int
 
+var EditorInst *Editor
+
 const (
 	LayoutHorizontal Layout = 0
 	LayoutVertical   Layout = 1
@@ -46,7 +48,7 @@ func NewEditor(
 ) *Editor {
 	windows := []*Window{CreateWindow()}
 
-	return &Editor{
+	EditorInst = &Editor{
 		View:         view,
 		Keys:         keys,
 		Buffers:      make([]*Buffer, 0, 32),
@@ -59,6 +61,7 @@ func NewEditor(
 		RedrawCh:     make(chan int),
 		ScreenSyncCh: make(chan int),
 	}
+	return EditorInst
 }
 
 func (e *Editor) OpenFile(path string) {

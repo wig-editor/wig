@@ -7,6 +7,7 @@ type Window struct {
 
 func (win *Window) SetBuffer(buf *Buffer) {
 	if buf != nil {
+		win.Jumps.Push(buf)
 		win.buf = buf
 	}
 }
@@ -36,6 +37,14 @@ type Jumps struct {
 }
 
 func (j *Jumps) Push(b *Buffer) {
+
+	// track only line jumps
+	if j.List.Last() != nil {
+		if j.List.Last().Value.BufferName == b.GetName() && j.List.Last().Value.Cursor.Line == b.Cursor.Line {
+			return
+		}
+	}
+
 	j.List.PushBack(Jump{
 		BufferName: b.GetName(),
 		FilePath:   b.FilePath,
