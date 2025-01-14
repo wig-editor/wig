@@ -467,6 +467,7 @@ func CmdDeleteLine(e *Editor) {
 			line.Value = nil
 			return
 		}
+		yankSave(e, buf, line)
 		buf.Lines.Remove(line)
 	})
 }
@@ -636,7 +637,7 @@ func CmdSaveFile(e *Editor) {
 
 func CmdWindowVSplit(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
-		e.Windows = append(e.Windows, &Window{Buffer: buf})
+		e.Windows = append(e.Windows, &Window{buf: buf})
 	})
 }
 
@@ -752,7 +753,7 @@ func CmdKillBuffer(e *Editor) {
 					if idx < 0 {
 						idx = 0
 					}
-					e.activeWindow.Buffer = e.Buffers[idx]
+					e.ActiveWindow().SetBuffer(e.Buffers[idx])
 				}
 			}
 		}

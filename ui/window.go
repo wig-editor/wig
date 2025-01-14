@@ -6,7 +6,7 @@ import (
 )
 
 func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
-	buf := win.Buffer
+	buf := win.Buffer()
 	if buf == nil {
 		return
 	}

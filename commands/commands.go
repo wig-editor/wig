@@ -23,8 +23,11 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 	}
 
 	action := func(p *ui.UiPicker[*mcwig.Buffer], i *ui.PickerItem[*mcwig.Buffer]) {
-		editor.ActiveWindow().Buffer = i.Value
-		editor.PopUi()
+		defer editor.PopUi()
+		if i == nil {
+			return
+		}
+		editor.ActiveWindow().SetBuffer(i.Value)
 	}
 
 	ui.PickerInit(
@@ -108,8 +111,11 @@ func CmdFindProjectFilePicker(e *mcwig.Editor) {
 		ui.PickerInit(
 			e,
 			func(_ *ui.UiPicker[string], i *ui.PickerItem[string]) {
+				defer e.PopUi()
+				if i == nil {
+					return
+				}
 				e.OpenFile(rootDir + "/" + i.Value)
-				e.PopUi()
 			},
 			items,
 		)
@@ -185,8 +191,8 @@ func CmdSearchProject(e *mcwig.Editor) {
 		action := func(p *ui.UiPicker[RgJson], i *ui.PickerItem[RgJson]) {
 			defer e.PopUi()
 			e.OpenFile(i.Value.Data.Path.Text)
-			e.ActiveWindow().Buffer.Cursor.Line = i.Value.Data.LineNumber - 1
-			e.ActiveWindow().Buffer.Cursor.Char = i.Value.Data.Submatches[0].Start
+			e.ActiveWindow().Buffer().Cursor.Line = i.Value.Data.LineNumber - 1
+			e.ActiveWindow().Buffer().Cursor.Char = i.Value.Data.Submatches[0].Start
 			mcwig.CmdEnsureCursorVisible(e)
 		}
 
@@ -241,7 +247,7 @@ func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 				buf := mcwig.NewBuffer()
 				buf.FilePath = path.Join(rootDir, p.GetInput())
 				e.Buffers = append(e.Buffers, buf)
-				e.ActiveWindow().Buffer = buf
+				e.ActiveWindow().SetBuffer(buf)
 				e.PopUi()
 				return
 			}

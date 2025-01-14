@@ -44,7 +44,7 @@ func NewEditor(
 	view View,
 	keys *KeyHandler,
 ) *Editor {
-	windows := []*Window{{}}
+	windows := []*Window{CreateWindow()}
 
 	return &Editor{
 		View:         view,
@@ -63,7 +63,8 @@ func NewEditor(
 
 func (e *Editor) OpenFile(path string) {
 	if e.BufferFindByFilePath(path, false) != nil {
-		e.activeWindow.Buffer = e.BufferFindByFilePath(path, false)
+		fbuf := e.BufferFindByFilePath(path, false)
+		e.ActiveWindow().SetBuffer(fbuf)
 		return
 	}
 
@@ -73,7 +74,7 @@ func (e *Editor) OpenFile(path string) {
 		return
 	}
 	e.Buffers = append(e.Buffers, buf)
-	e.activeWindow.Buffer = buf
+	e.ActiveWindow().SetBuffer(buf)
 }
 
 func (e *Editor) ActiveBuffer() *Buffer {
@@ -81,10 +82,10 @@ func (e *Editor) ActiveBuffer() *Buffer {
 		buf := NewBuffer()
 		buf.FilePath = "[No Name]"
 		e.Buffers = append(e.Buffers, buf)
-		e.activeWindow.Buffer = buf
+		e.ActiveWindow().SetBuffer(buf)
 	}
 
-	return e.activeWindow.Buffer
+	return e.ActiveWindow().Buffer()
 }
 
 func (e *Editor) ActiveWindow() *Window {
@@ -102,20 +103,16 @@ func (e *Editor) PopUi() {
 }
 
 func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
-	found := false
 	for _, win := range e.Windows {
-		if win.Buffer == b {
-			found = true
+		if win.Buffer() == b {
+			return
 		}
 	}
-	if found {
+	if len(e.Windows) >= 1 {
+		e.Windows[len(e.Windows)-1].SetBuffer(b)
 		return
 	}
-	if len(e.Windows) > 1 {
-		e.Windows[len(e.Windows)-1].Buffer = b
-		return
-	}
-	e.Windows = append(e.Windows, &Window{Buffer: b})
+	e.Windows = append(e.Windows, &Window{buf: b})
 }
 
 func (e *Editor) HandleInput(ev *tcell.EventKey) {

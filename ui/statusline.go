@@ -13,7 +13,7 @@ func StatuslineRender(
 	win *mcwig.Window,
 ) {
 	// TODO: check buf for null
-	buf := win.Buffer
+	buf := win.Buffer()
 
 	w, h := view.Size()
 	h -= 1
@@ -29,7 +29,7 @@ func StatuslineRender(
 	leftSide := ""
 	leftSide = fmt.Sprintf("%s %s", buf.Mode().String(), buf.GetName())
 
-	if win.Buffer == e.ActiveWindow().Buffer && len(e.Message) > 0 {
+	if win.Buffer() == e.ActiveWindow().Buffer() && len(e.Message) > 0 {
 		leftSide = e.Message
 	}
 
