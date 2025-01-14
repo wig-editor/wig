@@ -207,6 +207,9 @@ func CmdGotoLine0(e *Editor) {
 
 func CmdGotoLineEnd(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if line == nil {
+			return
+		}
 		if len(line.Value) > 0 {
 			buf.Cursor.Char = len(line.Value) - 1
 		} else {
@@ -468,6 +471,9 @@ func CmdDeleteLine(e *Editor) {
 			return
 		}
 		yankSave(e, buf, line)
+		if line == buf.Lines.Last() {
+			defer CmdCursorLineUp(e)
+		}
 		buf.Lines.Remove(line)
 	})
 }

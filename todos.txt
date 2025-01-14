@@ -9,4 +9,3 @@ Bugs:
 
 done:
 - fuzzy search for current buffer lines
-
