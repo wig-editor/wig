@@ -7,7 +7,8 @@ import (
 	"unicode"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/sahilm/fuzzy"
+	"github.com/junegunn/fzf/src/algo"
+	"github.com/junegunn/fzf/src/util"
 
 	"github.com/firstrow/mcwig"
 )
@@ -132,7 +133,6 @@ func (u *UiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 	u.filterItems()
 }
 
-// TODO: use RG for filtering
 func (u *UiPicker[T]) filterItems() {
 	pattern := string(u.chBuf)
 	if len(pattern) == 0 {
@@ -140,16 +140,15 @@ func (u *UiPicker[T]) filterItems() {
 		return
 	}
 
-	data := make([]string, 0, len(u.items))
+	u.filtered = make([]PickerItem[T], 0, len(u.items))
+	pattern = strings.ReplaceAll(pattern, " ", "")
 
-	for _, row := range u.items {
-		data = append(data, row.Name)
-	}
-
-	matches := fuzzy.Find(pattern, data)
-	u.filtered = make([]PickerItem[T], 0, len(matches))
-	for _, row := range matches {
-		u.filtered = append(u.filtered, u.items[row.Index])
+	for i, row := range u.items {
+		chars := util.ToChars([]byte(row.Name))
+		res, _ := algo.FuzzyMatchV1(false, false, true, &chars, []rune(pattern), true, nil)
+		if res.Start >= 0 {
+			u.filtered = append(u.filtered, u.items[i])
+		}
 	}
 
 	u.activeItem = 0

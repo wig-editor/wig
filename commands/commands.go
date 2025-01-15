@@ -143,10 +143,14 @@ func CmdSearchProject(e *mcwig.Editor) {
 			} `json:"submatches"`
 		} `json:"data"`
 	}
+
 	const tmatch = "match"
 
 	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
-		getItems := func(pat string) []ui.PickerItem[RgJson] {
+		// search with rip grep only first word in pattern.
+		// everything else will be filtered with fuzzy matcher in ui/picker.
+		// this way we can achieve project-wide search like: "func cmd word"
+		rgDoSearch := func(pat string) []ui.PickerItem[RgJson] {
 			pat = strings.TrimSpace(pat)
 			if pat == "" {
 				return nil
@@ -154,7 +158,10 @@ func CmdSearchProject(e *mcwig.Editor) {
 
 			rootDir := e.Projects.GetRoot()
 
-			cmd := exec.Command("rg", "--json", "-S", pat)
+			parts := strings.Split(pat, " ")
+			fmt.Println("rg", parts[0])
+
+			cmd := exec.Command("rg", "--json", "-S", parts[0])
 			cmd.Dir = rootDir
 			stdout, err := cmd.Output()
 			if err != nil {
@@ -199,10 +206,11 @@ func CmdSearchProject(e *mcwig.Editor) {
 		p := ui.PickerInit(
 			e,
 			action,
-			getItems(""),
+			rgDoSearch(""),
 		)
+
 		p.OnChange(func() {
-			p.SetItems(getItems(p.GetInput()))
+			p.SetItems(rgDoSearch(p.GetInput()))
 		})
 	})
 }
