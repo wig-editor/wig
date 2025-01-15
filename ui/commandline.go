@@ -26,6 +26,9 @@ func CmdLineInit(e *mcwig.Editor) {
 			"Esc": func(e *mcwig.Editor) {
 				e.PopUi()
 			},
+			"Tab": func(e *mcwig.Editor) {
+				// todo autocomplete
+			},
 		},
 	})
 	cmdLine.keymap.Fallback(cmdLine.insertCh)
