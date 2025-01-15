@@ -82,9 +82,16 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"ctrl+w": mcwig.CmdWindowNext,
 				"t":      mcwig.CmdWindowToggleLayout,
 			},
+			"]": mcwig.KeyMap{
+				"]": mcwig.CmdJumpForward,
+			},
+			"[": mcwig.KeyMap{
+				"[": mcwig.CmdJumpBack,
+			},
 			"Space": mcwig.KeyMap{
 				"/": commands.CmdSearchProject,
 				"?": commands.CmdCommandPalettePicker,
+				"`": mcwig.CmdBufferCycle,
 				"b": mcwig.KeyMap{
 					"b": commands.CmdBufferPicker,
 					"k": mcwig.CmdKillBuffer,

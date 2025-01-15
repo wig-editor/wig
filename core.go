@@ -826,6 +826,39 @@ func CmdRedo(e *Editor) {
 	}
 }
 
+func CmdJumpBack(e *Editor) {
+	e.ActiveWindow().Jumps.JumpBack()
+	CmdEnsureCursorVisible(e)
+}
+
+func CmdJumpForward(e *Editor) {
+	e.ActiveWindow().Jumps.JumpForward()
+	CmdEnsureCursorVisible(e)
+}
+
+// Cycle between last two buffers in jump list
+func CmdBufferCycle(e *Editor) {
+	last := e.ActiveWindow().Jumps.List.Last()
+	prev := last.Prev()
+
+	if last == nil || prev == nil {
+		return
+	}
+
+	if last.Value.FilePath == prev.Value.FilePath {
+		return
+	}
+
+	var b *Buffer
+	if last.Value.FilePath == e.ActiveWindow().Buffer().GetName() {
+		b = e.BufferFindByFilePath(prev.Value.FilePath, false)
+	} else {
+		b = e.BufferFindByFilePath(last.Value.FilePath, false)
+	}
+
+	e.ActiveWindow().SetBuffer(b)
+}
+
 func WithSelection(fn func(*Editor)) func(*Editor) {
 	return func(e *Editor) {
 		fn(e)

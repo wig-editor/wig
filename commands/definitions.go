@@ -69,4 +69,5 @@ var AllCommands = map[string]CmdDefinition{
 	"CmdSearchPromptInit":           {Desc: "", Fn: ui.CmdSearchPromptInit},
 	"CmdFormatBuffer":               {Desc: "", Fn: CmdFormatBuffer},
 	"CmdSearchProject":              {Desc: "", Fn: CmdSearchProject},
+	"CmdJumpForward":                {Desc: "", Fn: mcwig.CmdJumpForward},
 }
