@@ -70,7 +70,7 @@ func (j *Jumps) JumpBack() {
 		return
 	}
 	b.Cursor = item.Cursor
-	EditorInst.ActiveWindow().SetBuffer(b)
+	EditorInst.ActiveWindow().buf = b
 	j.current = elem.Prev()
 }
 
@@ -89,6 +89,6 @@ func (j *Jumps) JumpForward() {
 		return
 	}
 	b.Cursor = item.Value.Cursor
-	EditorInst.ActiveWindow().SetBuffer(b)
+	EditorInst.ActiveWindow().buf = b
 	j.current = item
 }
