@@ -1,5 +1,4 @@
 Features:
-- cycle buffers with `
 - search project from word under cursor
 - save cursor position for undo/redo records
 - per-window cursors
@@ -9,3 +8,4 @@ Bugs:
 
 done:
 - fuzzy search for current buffer lines
+- cycle buffers with `

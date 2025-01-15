@@ -159,7 +159,6 @@ func CmdSearchProject(e *mcwig.Editor) {
 			rootDir := e.Projects.GetRoot()
 
 			parts := strings.Split(pat, " ")
-			fmt.Println("rg", parts[0])
 
 			cmd := exec.Command("rg", "--json", "-S", parts[0])
 			cmd.Dir = rootDir
