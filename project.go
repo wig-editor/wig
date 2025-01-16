@@ -13,7 +13,6 @@ type ProjectManager struct {
 
 func NewProjectManager() ProjectManager {
 	root, _ := os.Getwd()
-
 	return ProjectManager{
 		root: root,
 	}

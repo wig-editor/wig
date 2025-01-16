@@ -92,6 +92,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"/": commands.CmdSearchProject,
 				"?": commands.CmdCommandPalettePicker,
 				"`": mcwig.CmdBufferCycle,
+				"*": commands.CmdProjectSearchWordUnderCursor,
 				"b": mcwig.KeyMap{
 					"b": commands.CmdBufferPicker,
 					"k": mcwig.CmdKillBuffer,

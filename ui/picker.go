@@ -36,8 +36,7 @@ type UiPicker[T any] struct {
 func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) *UiPicker[T] {
 	for i, _ := range items {
 		name := strings.TrimRightFunc(items[i].Name, unicode.IsSpace)
-		name = strings.ReplaceAll(name, "\t", "    ")
-		items[i].Name = name
+		items[i].Name = strings.ReplaceAll(name, "\t", "    ")
 	}
 
 	picker := &UiPicker[T]{
@@ -86,6 +85,11 @@ func (u *UiPicker[T]) OnChange(callback func()) {
 }
 
 func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {
+	for i, _ := range items {
+		name := strings.TrimRightFunc(items[i].Name, unicode.IsSpace)
+		items[i].Name = strings.ReplaceAll(name, "\t", "    ")
+	}
+
 	u.items = items
 	u.filtered = items
 	u.activeItem = 0
@@ -142,6 +146,7 @@ func (u *UiPicker[T]) filterItems() {
 
 	u.filtered = make([]PickerItem[T], 0, len(u.items))
 	pattern = strings.ReplaceAll(pattern, " ", "")
+	pattern = strings.ToLower(pattern)
 
 	for i, row := range u.items {
 		chars := util.ToChars([]byte(row.Name))
@@ -156,6 +161,10 @@ func (u *UiPicker[T]) filterItems() {
 
 func (u *UiPicker[T]) GetInput() string {
 	return string(u.chBuf)
+}
+
+func (u *UiPicker[T]) SetInput(val string) {
+	u.chBuf = []rune(val)
 }
 
 func (u *UiPicker[T]) Render(view mcwig.View) {
