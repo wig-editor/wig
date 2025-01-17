@@ -29,11 +29,13 @@ func main() {
 		mcwig.NewKeyHandler(config.DefaultKeyMap()),
 	)
 
+	buf := editor.OpenFile("/home/andrew/code/mcwig/core.go")
+	editor.ActiveWindow().VisitBuffer(buf)
+
 	args := os.Args
-	editor.OpenFile("/home/andrew/code/mcwig/core.go")
-	editor.ActiveBuffer()
 	if len(args) > 1 {
-		editor.OpenFile(args[1])
+		buf = editor.OpenFile(args[1])
+		editor.ActiveWindow().VisitBuffer(buf)
 	}
 
 	renderer := render.New(editor, tscreen)

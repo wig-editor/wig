@@ -38,6 +38,7 @@ type Editor struct {
 	Yanks        List[yank]
 	Projects     ProjectManager
 	Message      string // display in echo area
+	Lsp          *LspManager
 
 	activeWindow *Window
 }
@@ -61,23 +62,44 @@ func NewEditor(
 		RedrawCh:     make(chan int),
 		ScreenSyncCh: make(chan int),
 	}
+	EditorInst.Lsp = NewLspManager(EditorInst)
+
 	return EditorInst
 }
 
-func (e *Editor) OpenFile(path string) {
-	if e.BufferFindByFilePath(path, false) != nil {
-		fbuf := e.BufferFindByFilePath(path, false)
-		e.ActiveWindow().SetBuffer(fbuf)
-		return
+func (e *Editor) OpenFile(path string) *Buffer {
+	if fbuf := e.BufferFindByFilePath(path, false); fbuf != nil {
+		return fbuf
 	}
 
 	buf, err := BufferReadFile(path)
 	if err != nil {
 		e.LogError(err)
-		return
+		return nil
 	}
 	e.Buffers = append(e.Buffers, buf)
-	e.ActiveWindow().SetBuffer(buf)
+	e.Lsp.DidOpen(buf)
+	return buf
+}
+
+// Find or create new buffer by its full file path
+func (e *Editor) BufferFindByFilePath(fp string, create bool) *Buffer {
+	for _, b := range e.Buffers {
+		if b.FilePath == fp {
+			return b
+		}
+	}
+
+	if !create {
+		return nil
+	}
+
+	b := NewBuffer()
+	b.FilePath = fp
+	b.Lines = List[Line]{}
+	e.Buffers = append(e.Buffers, b)
+
+	return b
 }
 
 func (e *Editor) ActiveBuffer() *Buffer {
@@ -85,7 +107,7 @@ func (e *Editor) ActiveBuffer() *Buffer {
 		buf := NewBuffer()
 		buf.FilePath = "[No Name]"
 		e.Buffers = append(e.Buffers, buf)
-		e.ActiveWindow().SetBuffer(buf)
+		e.ActiveWindow().ShowBuffer(buf)
 	}
 
 	return e.ActiveWindow().Buffer()
@@ -112,7 +134,7 @@ func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
 		}
 	}
 	if len(e.Windows) >= 1 {
-		e.Windows[len(e.Windows)-1].SetBuffer(b)
+		e.Windows[len(e.Windows)-1].ShowBuffer(b)
 		return
 	}
 	e.Windows = append(e.Windows, &Window{buf: b})
@@ -130,25 +152,6 @@ func (e *Editor) HandleInput(ev *tcell.EventKey) {
 	}
 
 	h(e, ev, mode)
-}
-
-// Find or create new buffer by its full file path
-func (e *Editor) BufferFindByFilePath(fp string, create bool) *Buffer {
-	for _, b := range e.Buffers {
-		if b.FilePath == fp {
-			return b
-		}
-	}
-
-	if !create {
-		return nil
-	}
-
-	b := NewBuffer()
-	b.FilePath = fp
-	b.Lines = List[Line]{}
-	e.Buffers = append(e.Buffers, b)
-	return b
 }
 
 func (e *Editor) LogError(err error, echo ...bool) {

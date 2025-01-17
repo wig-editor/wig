@@ -646,7 +646,7 @@ func CmdSaveFile(e *Editor) {
 func CmdWindowVSplit(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		nwin := CreateWindow()
-		nwin.SetBuffer(buf)
+		nwin.VisitBuffer(buf)
 		e.Windows = append(e.Windows, nwin)
 	})
 }
@@ -763,7 +763,7 @@ func CmdKillBuffer(e *Editor) {
 					if idx < 0 {
 						idx = 0
 					}
-					e.ActiveWindow().SetBuffer(e.Buffers[idx])
+					e.ActiveWindow().VisitBuffer(e.Buffers[idx])
 				}
 			}
 		}
@@ -856,7 +856,7 @@ func CmdBufferCycle(e *Editor) {
 		b = e.BufferFindByFilePath(last.Value.FilePath, false)
 	}
 
-	e.ActiveWindow().SetBuffer(b)
+	e.ActiveWindow().ShowBuffer(b)
 }
 
 func WithSelection(fn func(*Editor)) func(*Editor) {

@@ -26,7 +26,7 @@ func CmdBufferPicker(editor *mcwig.Editor) {
 		if i == nil {
 			return
 		}
-		editor.ActiveWindow().SetBuffer(i.Value)
+		editor.ActiveWindow().ShowBuffer(i.Value)
 	}
 
 	ui.PickerInit(
@@ -115,10 +115,8 @@ func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 		action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
 			// create new file
 			if i == nil {
-				buf := mcwig.NewBuffer()
-				buf.FilePath = path.Join(rootDir, p.GetInput())
-				e.Buffers = append(e.Buffers, buf)
-				e.ActiveWindow().SetBuffer(buf)
+				fp := path.Join(rootDir, p.GetInput())
+				e.ActiveWindow().VisitBuffer(e.OpenFile(fp))
 				e.PopUi()
 				return
 			}
@@ -133,7 +131,8 @@ func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
 				return
 			}
 
-			e.OpenFile(rootDir + "/" + i.Value)
+			buf := e.OpenFile(rootDir + "/" + i.Value)
+			e.ActiveWindow().VisitBuffer(buf)
 			e.PopUi()
 		}
 
@@ -217,7 +216,6 @@ func CmdSearchLine(e *mcwig.Editor) {
 
 		e.ActiveWindow().Jumps.Push(buf)
 		defer e.ActiveWindow().Jumps.Push(buf)
-
 		buf.Cursor.Line = i.Value
 		buf.Cursor.Char = 0
 		mcwig.CmdCursorBeginningOfTheLine(e)
@@ -230,6 +228,20 @@ func CmdSearchLine(e *mcwig.Editor) {
 		action,
 		items,
 	)
+}
+
+func CmdGotoDefinition(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
+		// loc := e.Lsp.Definition(buf, buf.Cursor)
+		// if loc == nil {
+		//	return
+		//}
+
+		// e.VisitFile(location.Filepath)
+		// nbuf := e.ActiveWindow().Buffer()
+		// buf.Cursor.Line = loc.line
+		// buf.Cursor.Char = loc.char
+	})
 }
 
 func CmdMakeRun(e *mcwig.Editor) {

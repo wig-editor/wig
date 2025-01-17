@@ -30,7 +30,6 @@ func TestEdits(t *testing.T) {
 	assert.Equal(t, linesToString(dupLines), buf.String())
 
 	panic(1)
-
 }
 
 func linesToString(l List[Line]) string {

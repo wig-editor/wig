@@ -10,6 +10,7 @@ require (
 	github.com/junegunn/fzf v0.57.0
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/stretchr/testify v1.10.0
+	go.lsp.dev/jsonrpc2 v0.10.0
 
 )
 
@@ -22,6 +23,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
+	github.com/segmentio/asm v1.1.3 // indirect
+	github.com/segmentio/encoding v0.3.4 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/term v0.27.0 // indirect
 	golang.org/x/text v0.21.0 // indirect

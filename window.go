@@ -5,9 +5,26 @@ type Window struct {
 	Jumps *Jumps
 }
 
-func (win *Window) SetBuffer(buf *Buffer) {
+// Jump to buffer and location. Records jump history.
+func (win *Window) VisitBuffer(buf *Buffer, cursor ...Cursor) {
 	if buf != nil {
+		if win.buf != nil {
+			win.Jumps.Push(win.buf)
+		}
+
+		if len(cursor) > 0 {
+			buf.Cursor.Line = cursor[0].Line
+			buf.Cursor.Char = cursor[0].Char
+		}
+
 		win.Jumps.Push(buf)
+		win.buf = buf
+	}
+}
+
+// Show buffer. No history.
+func (win *Window) ShowBuffer(buf *Buffer) {
+	if buf != nil {
 		win.buf = buf
 	}
 }

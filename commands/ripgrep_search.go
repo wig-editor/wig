@@ -46,7 +46,8 @@ func CmdFindProjectFilePicker(e *mcwig.Editor) {
 				if i == nil {
 					return
 				}
-				e.OpenFile(rootDir + "/" + i.Value)
+				buf := e.OpenFile(rootDir + "/" + i.Value)
+				e.ActiveWindow().VisitBuffer(buf)
 			},
 			items,
 		)
@@ -126,9 +127,14 @@ func rgDoSearch(e *mcwig.Editor, pat string) {
 
 		action := func(p *ui.UiPicker[RgJson], i *ui.PickerItem[RgJson]) {
 			defer e.PopUi()
-			e.OpenFile(i.Value.Data.Path.Text)
-			e.ActiveWindow().Buffer().Cursor.Line = i.Value.Data.LineNumber - 1
-			e.ActiveWindow().Buffer().Cursor.Char = i.Value.Data.Submatches[0].Start
+			buf := e.OpenFile(i.Value.Data.Path.Text)
+			e.ActiveWindow().VisitBuffer(
+				buf,
+				mcwig.Cursor{
+					Line: i.Value.Data.LineNumber - 1,
+					Char: i.Value.Data.Submatches[0].Start,
+				},
+			)
 			mcwig.CmdEnsureCursorVisible(e)
 		}
 
