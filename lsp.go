@@ -1,15 +1,287 @@
 package mcwig
 
 import (
+	"bufio"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net"
+	"os/exec"
 	"path/filepath"
+	"time"
 
 	"go.lsp.dev/jsonrpc2"
+	"go.lsp.dev/protocol"
 )
+
+var jjj = `{
+  "processId": null,
+  "rootPath": "/home/andrew/code/mcwig",
+  "clientInfo": {
+    "name": "mcwig",
+    "version": "001"
+  },
+  "rootUri": "file:///home/andrew/code/mcwig",
+  "capabilities": {
+    "general": {
+      "positionEncodings": [
+        "utf-32",
+        "utf-16"
+      ]
+    },
+    "workspace": {
+      "workspaceEdit": {
+        "documentChanges": true,
+        "resourceOperations": [
+          "create",
+          "rename",
+          "delete"
+        ]
+      },
+      "applyEdit": true,
+      "symbol": {
+        "symbolKind": {
+          "valueSet": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ]
+        }
+      },
+      "executeCommand": {
+        "dynamicRegistration": false
+      },
+      "didChangeWatchedFiles": {
+        "dynamicRegistration": true
+      },
+      "workspaceFolders": true,
+      "configuration": true,
+      "diagnostics": {
+        "refreshSupport": false
+      },
+      "fileOperations": {
+        "didCreate": false,
+        "willCreate": false,
+        "didRename": true,
+        "willRename": true,
+        "didDelete": false,
+        "willDelete": false
+      }
+    },
+    "textDocument": {
+      "declaration": {
+        "dynamicRegistration": true,
+        "linkSupport": true
+      },
+      "definition": {
+        "dynamicRegistration": true,
+        "linkSupport": true
+      },
+      "references": {
+        "dynamicRegistration": true
+      },
+      "implementation": {
+        "dynamicRegistration": true,
+        "linkSupport": true
+      },
+      "typeDefinition": {
+        "dynamicRegistration": true,
+        "linkSupport": true
+      },
+      "synchronization": {
+        "willSave": true,
+        "didSave": true,
+        "willSaveWaitUntil": true
+      },
+      "documentSymbol": {
+        "symbolKind": {
+          "valueSet": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ]
+        },
+        "hierarchicalDocumentSymbolSupport": true
+      },
+      "formatting": {
+        "dynamicRegistration": true
+      },
+      "rangeFormatting": {
+        "dynamicRegistration": true
+      },
+      "onTypeFormatting": {
+        "dynamicRegistration": true
+      },
+      "rename": {
+        "dynamicRegistration": true,
+        "prepareSupport": true
+      },
+      "codeAction": {
+        "dynamicRegistration": true,
+        "isPreferredSupport": true,
+        "codeActionLiteralSupport": {
+          "codeActionKind": {
+            "valueSet": [
+              "",
+              "quickfix",
+              "refactor",
+              "refactor.extract",
+              "refactor.inline",
+              "refactor.rewrite",
+              "source",
+              "source.organizeImports"
+            ]
+          }
+        },
+        "resolveSupport": {
+          "properties": [
+            "edit",
+            "command"
+          ]
+        },
+        "dataSupport": true
+      },
+      "completion": {
+        "completionItem": {
+          "snippetSupport": true,
+          "documentationFormat": [
+            "markdown",
+            "plaintext"
+          ],
+          "resolveAdditionalTextEditsSupport": true,
+          "insertReplaceSupport": true,
+          "deprecatedSupport": true,
+          "resolveSupport": {
+            "properties": [
+              "documentation",
+              "detail",
+              "additionalTextEdits",
+              "command",
+              "insertTextFormat",
+              "insertTextMode"
+            ]
+          },
+          "insertTextModeSupport": {
+            "valueSet": [
+              1,
+              2
+            ]
+          }
+        },
+        "contextSupport": true,
+        "dynamicRegistration": true
+      },
+      "signatureHelp": {
+        "signatureInformation": {
+          "parameterInformation": {
+            "labelOffsetSupport": true
+          }
+        },
+        "dynamicRegistration": true
+      },
+      "documentLink": {
+        "dynamicRegistration": true,
+        "tooltipSupport": true
+      },
+      "hover": {
+        "contentFormat": [
+          "markdown",
+          "plaintext"
+        ],
+        "dynamicRegistration": true
+      },
+      "selectionRange": {
+        "dynamicRegistration": true
+      },
+      "callHierarchy": {
+        "dynamicRegistration": false
+      },
+      "typeHierarchy": {
+        "dynamicRegistration": true
+      },
+      "publishDiagnostics": {
+        "relatedInformation": true,
+        "tagSupport": {
+          "valueSet": [
+            1,
+            2
+          ]
+        },
+        "versionSupport": true
+      },
+      "diagnostic": {
+        "dynamicRegistration": false,
+        "relatedDocumentSupport": false
+      },
+      "linkedEditingRange": {
+        "dynamicRegistration": true
+      }
+    },
+    "window": {
+      "workDoneProgress": true,
+      "showDocument": {
+        "support": true
+      }
+    }
+  },
+  "initializationOptions": null,
+  "workDoneToken": "1"
+}`
 
 type LspServerConfig struct {
 	Cmd  []string // gopls serve -listen=127.0.0.1:101010
 	Type string   // unix or tcp
 	Addr string
+}
+
+type lspConn struct {
+	rpcConn jsonrpc2.Conn
 }
 
 var lspConfigs = map[string]LspServerConfig{
@@ -28,14 +300,14 @@ func LspConfigByFileName(file string) (conf LspServerConfig, found bool) {
 
 type LspManager struct {
 	e      *Editor
-	conns  map[string]lspConn
+	conns  map[string]*lspConn
 	ignore map[string]bool
 }
 
 func NewLspManager(e *Editor) *LspManager {
 	return &LspManager{
 		e:     e,
-		conns: map[string]lspConn{},
+		conns: map[string]*lspConn{},
 	}
 }
 
@@ -47,12 +319,11 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 		return
 	}
 
-	var client lspConn
+	var client *lspConn
 	var err error
 
 	client, ok := l.conns[root]
 	// initialize
-
 	if !ok {
 		conf, ok := LspConfigByFileName(buf.FilePath)
 		if !ok {
@@ -72,17 +343,83 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 	client.didOpen(buf)
 }
 
-func (l *LspManager) startServer(sconf LspServerConfig) (lspConn, error) {
-	return lspConn{}, nil
+func (l *LspManager) startServer(conf LspServerConfig) (conn *lspConn, err error) {
+	cmd := exec.Command(conf.Cmd[0], conf.Cmd[1:]...)
+
+	pout, _ := cmd.StdoutPipe()
+	perr, _ := cmd.StderrPipe()
+
+	err = cmd.Start()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	go func() {
+		scanner := bufio.NewScanner(pout)
+		for scanner.Scan() {
+			l.e.LogMessage(scanner.Text())
+		}
+	}()
+	go func() {
+		scanner := bufio.NewScanner(perr)
+		for scanner.Scan() {
+			l.e.LogMessage(scanner.Text())
+		}
+	}()
+
+	time.Sleep(500 * time.Millisecond)
+
+	tcpc, err := net.Dial(conf.Type, conf.Addr)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	s := jsonrpc2.NewStream(tcpc)
+	c := jsonrpc2.NewConn(s)
+
+	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
+		fmt.Println("handler got", req.Method(), string(req.Params()))
+		return reply(ctx, nil, nil)
+	}
+	c.Go(context.Background(), handler)
+
+	// initialize connection sequence
+	r := &protocol.InitializeParams{}
+	json.Unmarshal([]byte(jjj), r)
+
+	var result protocol.InitializeResult
+	id, err := c.Call(context.Background(), "initialize", r, &result)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println("INIT DONE", id, err)
+
+	id, err = c.Call(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{}, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println("INITIALIZED", id, err)
+	// end init
+
+	return &lspConn{
+		rpcConn: c,
+	}, nil
 }
 
-///////////////////////////////////
-// Lsp Procotol Connection
-////////////////////////////////////
-
-type lspConn struct {
-	rpc jsonrpc2.Conn
-}
-
-func (c *lspConn) didOpen(buf *Buffer) {
+func (l *lspConn) didOpen(buf *Buffer) {
+	// didOpen
+	didOpen := protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI:        protocol.DocumentURI(fmt.Sprintf("file://%s", buf.FilePath)),
+			LanguageID: protocol.GoLanguage,
+			Version:    0,
+			Text:       buf.String(),
+		},
+	}
+	id, err := l.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen, nil)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println("DIDOPEN DONE", id, err)
+	// didOpen
 }
