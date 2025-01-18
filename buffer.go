@@ -77,13 +77,29 @@ func BufferReadFile(path string) (*Buffer, error) {
 	buf.FilePath = path
 	buf.Cursor = Cursor{0, 0, 0}
 	buf.Selection = nil
-	buf.Lines = List[Line]{}
+	buf.ResetLines()
 
 	for _, line := range bytes.Split(data, []byte("\n")) {
 		buf.Lines.PushBack([]rune(string(line)))
 	}
 
 	return buf, nil
+}
+
+func BufferReloadFile(buf *Buffer) error {
+	data, err := os.ReadFile(buf.FilePath)
+	if err != nil {
+		return err
+	}
+
+	buf.Selection = nil
+	buf.Lines = List[Line]{}
+
+	for _, line := range bytes.Split(data, []byte("\n")) {
+		buf.Lines.PushBack([]rune(string(line)))
+	}
+
+	return nil
 }
 
 func (buf *Buffer) SetMode(m Mode) {

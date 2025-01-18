@@ -1,11 +1,14 @@
 Features:
-- search project from word under cursor
 - save cursor position for undo/redo records
 - per-window cursors
+-
+-
 
 Bugs:
 - VIS LINE mode up selection does not work as expected
+- when buffer closed in split window
 
 done:
 - fuzzy search for current buffer lines
 - cycle buffers with `
+- search project from word under cursor

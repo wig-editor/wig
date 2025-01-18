@@ -96,7 +96,7 @@ var jjj = `{
         "dynamicRegistration": true,
         "linkSupport": true
       },
-      "definition": {
+      "dn347ggVefinition": {
         "dynamicRegistration": true,
         "linkSupport": true
       },
@@ -314,7 +314,7 @@ func NewLspManager(e *Editor) *LspManager {
 func (l *LspManager) DidOpen(buf *Buffer) {
 	root, _ := l.e.Projects.FindRoot(buf)
 
-	_, ignore := l.conns[root]
+	_, ignore := l.ignore[root]
 	if ignore {
 		return
 	}
@@ -330,7 +330,8 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 			l.ignore[root] = true
 		}
 
-		client, err = l.startServer(conf)
+		// starts server and returns client conn
+		client, err = l.startAndInitializeServer(conf)
 		if err != nil {
 			l.e.LogMessage("failed to start tcp server")
 			l.e.EchoMessage("failed to start tcp server")
@@ -343,7 +344,41 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 	client.didOpen(buf)
 }
 
-func (l *LspManager) startServer(conf LspServerConfig) (conn *lspConn, err error) {
+func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cur Cursor) {
+	root, _ := l.e.Projects.FindRoot(buf)
+	fmt.Println("defnio")
+
+	_, ignore := l.ignore[root]
+	if ignore {
+		return
+	}
+
+	client, ok := l.conns[root]
+	if !ok {
+		return
+	}
+
+	definitionReq := protocol.DefinitionParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{
+				URI: protocol.DocumentURI(fmt.Sprintf("file://%s", buf.FilePath)),
+			},
+			Position: protocol.Position{
+				Line:      uint32(buf.Cursor.Line),
+				Character: uint32(buf.Cursor.Char),
+			},
+		},
+	}
+	var definitionResp []protocol.Location
+	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDefinition, definitionReq, &definitionResp)
+	if err != nil {
+		l.e.EchoMessage(err.Error())
+	}
+	fmt.Println(definitionResp)
+	return "TODO", Cursor{}
+}
+
+func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspConn, err error) {
 	cmd := exec.Command(conf.Cmd[0], conf.Cmd[1:]...)
 
 	pout, _ := cmd.StdoutPipe()
@@ -367,7 +402,8 @@ func (l *LspManager) startServer(conf LspServerConfig) (conn *lspConn, err error
 		}
 	}()
 
-	time.Sleep(500 * time.Millisecond)
+	// TODO: replace with wait channel
+	time.Sleep(100 * time.Millisecond)
 
 	tcpc, err := net.Dial(conf.Type, conf.Addr)
 	if err != nil {
@@ -378,7 +414,7 @@ func (l *LspManager) startServer(conf LspServerConfig) (conn *lspConn, err error
 	c := jsonrpc2.NewConn(s)
 
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
-		fmt.Println("handler got", req.Method(), string(req.Params()))
+		// fmt.Println("handler got", req.Method(), string(req.Params()))
 		return reply(ctx, nil, nil)
 	}
 	c.Go(context.Background(), handler)
@@ -388,17 +424,16 @@ func (l *LspManager) startServer(conf LspServerConfig) (conn *lspConn, err error
 	json.Unmarshal([]byte(jjj), r)
 
 	var result protocol.InitializeResult
-	id, err := c.Call(context.Background(), "initialize", r, &result)
+	_, err = c.Call(context.Background(), "initialize", r, &result)
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println("INIT DONE", id, err)
-
-	id, err = c.Call(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{}, nil)
+	// fmt.Println("INIT DONE", id, err)
+	_, err = c.Call(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{}, nil)
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println("INITIALIZED", id, err)
+	// fmt.Println("INITIALIZED", id, err)
 	// end init
 
 	return &lspConn{
@@ -416,10 +451,10 @@ func (l *lspConn) didOpen(buf *Buffer) {
 			Text:       buf.String(),
 		},
 	}
-	id, err := l.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen, nil)
+	_, err := l.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen, nil)
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println("DIDOPEN DONE", id, err)
+	// fmt.Println("DIDOPEN DONE", id, err)
 	// didOpen
 }

@@ -230,12 +230,21 @@ func CmdSearchLine(e *mcwig.Editor) {
 	)
 }
 
+func CmdReloadBuffer(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
+		err := mcwig.BufferReloadFile(buf)
+		if err != nil {
+			e.EchoMessage(err.Error())
+		}
+	})
+}
+
 func CmdGotoDefinition(e *mcwig.Editor) {
 	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		// loc := e.Lsp.Definition(buf, buf.Cursor)
-		// if loc == nil {
-		//	return
-		//}
+		e.Lsp.Definition(buf, buf.Cursor)
+		//if loc == nil {
+		//			return
+		//	}
 
 		// e.VisitFile(location.Filepath)
 		// nbuf := e.ActiveWindow().Buffer()
