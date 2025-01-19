@@ -396,7 +396,7 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 
 	err = cmd.Start()
 	if err != nil {
-		panic(err.Error())
+		l.e.LogError(err)
 	}
 
 	go func() {
@@ -415,6 +415,8 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	go func() {
 		cmd.Wait()
 		l.e.LogMessage("lsp server exited")
+		// cleanup all connections
+		l.conns = make(map[string]*lspConn)
 	}()
 
 	// TODO: replace with wait channel
@@ -429,7 +431,6 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	c := jsonrpc2.NewConn(s)
 
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
-		// fmt.Println("handler got", req.Method(), string(req.Params()))
 		return reply(ctx, nil, nil)
 	}
 	c.Go(context.Background(), handler)
@@ -443,13 +444,11 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	if err != nil {
 		l.e.LogError(err)
 	}
-	// fmt.Println("INIT DONE", id, err)
+
 	_, err = c.Call(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{}, nil)
 	if err != nil {
 		l.e.LogError(err)
 	}
-	// fmt.Println("INITIALIZED", id, err)
-	// end init
 
 	return &lspConn{
 		rpcConn: c,
