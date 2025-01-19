@@ -346,7 +346,6 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 
 func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cur Cursor) {
 	root, _ := l.e.Projects.FindRoot(buf)
-	fmt.Println("defnio")
 
 	_, ignore := l.ignore[root]
 	if ignore {
@@ -374,8 +373,19 @@ func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cu
 	if err != nil {
 		l.e.EchoMessage(err.Error())
 	}
-	fmt.Println(definitionResp)
-	return "TODO", Cursor{}
+
+	if len(definitionResp) == 0 {
+		return
+	}
+
+	filePath = string(definitionResp[0].URI[7:])
+	line := int(definitionResp[0].Range.Start.Line)
+	ch := int(definitionResp[0].Range.Start.Character)
+
+	return filePath, Cursor{
+		Line: line,
+		Char: ch,
+	}
 }
 
 func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspConn, err error) {
@@ -402,12 +412,17 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 		}
 	}()
 
+	go func() {
+		cmd.Wait()
+		l.e.LogMessage("lsp server exited")
+	}()
+
 	// TODO: replace with wait channel
 	time.Sleep(100 * time.Millisecond)
 
 	tcpc, err := net.Dial(conf.Type, conf.Addr)
 	if err != nil {
-		panic(err.Error())
+		l.e.LogError(err)
 	}
 
 	s := jsonrpc2.NewStream(tcpc)
@@ -426,12 +441,12 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	var result protocol.InitializeResult
 	_, err = c.Call(context.Background(), "initialize", r, &result)
 	if err != nil {
-		panic(err.Error())
+		l.e.LogError(err)
 	}
 	// fmt.Println("INIT DONE", id, err)
 	_, err = c.Call(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{}, nil)
 	if err != nil {
-		panic(err.Error())
+		l.e.LogError(err)
 	}
 	// fmt.Println("INITIALIZED", id, err)
 	// end init

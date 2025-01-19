@@ -241,15 +241,17 @@ func CmdReloadBuffer(e *mcwig.Editor) {
 
 func CmdGotoDefinition(e *mcwig.Editor) {
 	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		e.Lsp.Definition(buf, buf.Cursor)
-		//if loc == nil {
-		//			return
-		//	}
+		filePath, cursor := e.Lsp.Definition(buf, buf.Cursor)
+		if filePath == "" {
+			return
+		}
 
-		// e.VisitFile(location.Filepath)
-		// nbuf := e.ActiveWindow().Buffer()
-		// buf.Cursor.Line = loc.line
-		// buf.Cursor.Char = loc.char
+		nbuf := e.OpenFile(filePath)
+		if nbuf == nil {
+			return
+		}
+		e.ActiveWindow().VisitBuffer(nbuf, cursor)
+		mcwig.CmdEnsureCursorVisible(e)
 	})
 }
 
