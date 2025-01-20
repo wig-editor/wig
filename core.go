@@ -785,6 +785,20 @@ func CmdKillBuffer(e *Editor) {
 func CmdEnsureCursorVisible(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		_, h := e.View.Size()
+		if buf.Cursor.Line > buf.ScrollOffset+h-3 {
+			buf.ScrollOffset = buf.Cursor.Line - h + 3
+		}
+
+		if buf.Cursor.Line < buf.ScrollOffset+3 {
+			buf.ScrollOffset = buf.Cursor.Line - 3
+		}
+		buf.ScrollOffset = buf.Cursor.Line - (h / 2) + 3
+	})
+}
+
+func CmdCursorCenter(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		_, h := e.View.Size()
 		buf.ScrollOffset = buf.Cursor.Line - (h / 2) + 3
 	})
 }
@@ -822,12 +836,12 @@ func CmdRedo(e *Editor) {
 
 func CmdJumpBack(e *Editor) {
 	e.ActiveWindow().Jumps.JumpBack()
-	CmdEnsureCursorVisible(e)
+	CmdCursorCenter(e)
 }
 
 func CmdJumpForward(e *Editor) {
 	e.ActiveWindow().Jumps.JumpForward()
-	CmdEnsureCursorVisible(e)
+	CmdCursorCenter(e)
 }
 
 // Cycle between last two buffers in jump list

@@ -251,7 +251,7 @@ func CmdGotoDefinition(e *mcwig.Editor) {
 			return
 		}
 		e.ActiveWindow().VisitBuffer(nbuf, cursor)
-		mcwig.CmdEnsureCursorVisible(e)
+		mcwig.CmdCursorCenter(e)
 	})
 }
 
