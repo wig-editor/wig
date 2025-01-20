@@ -792,7 +792,6 @@ func CmdEnsureCursorVisible(e *Editor) {
 		if buf.Cursor.Line < buf.ScrollOffset+3 {
 			buf.ScrollOffset = buf.Cursor.Line - 3
 		}
-		buf.ScrollOffset = buf.Cursor.Line - (h / 2) + 3
 	})
 }
 
