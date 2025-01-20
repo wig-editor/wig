@@ -246,6 +246,15 @@ func CmdGotoDefinition(e *mcwig.Editor) {
 	})
 }
 
+func CmdLspShowSignature(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
+		sign := e.Lsp.Signature(buf, buf.Cursor)
+		if sign != "" {
+			e.EchoMessage(sign)
+		}
+	})
+}
+
 func CmdReloadBuffer(e *mcwig.Editor) {
 	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
 		err := mcwig.BufferReloadFile(buf)

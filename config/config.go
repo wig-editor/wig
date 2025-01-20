@@ -94,6 +94,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"?": commands.CmdCommandPalettePicker,
 				"`": mcwig.CmdBufferCycle,
 				"*": commands.CmdProjectSearchWordUnderCursor,
+				"h": commands.CmdLspShowSignature,
 				"b": mcwig.KeyMap{
 					"b": commands.CmdBufferPicker,
 					"k": mcwig.CmdKillBuffer,

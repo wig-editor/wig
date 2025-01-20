@@ -102,6 +102,7 @@ func (e *Editor) BufferFindByFilePath(fp string, create bool) *Buffer {
 	return b
 }
 
+// Returns active window buffer
 func (e *Editor) ActiveBuffer() *Buffer {
 	if len(e.Buffers) == 0 {
 		buf := NewBuffer()

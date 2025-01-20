@@ -12,6 +12,7 @@ import (
 
 	"go.lsp.dev/jsonrpc2"
 	"go.lsp.dev/protocol"
+	"go.lsp.dev/uri"
 )
 
 var jjj = `{
@@ -342,6 +343,43 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 	}
 
 	client.didOpen(buf)
+}
+
+func (l *LspManager) Signature(buf *Buffer, cursor Cursor) (sign string) {
+	root, _ := l.e.Projects.FindRoot(buf)
+
+	_, ignore := l.ignore[root]
+	if ignore {
+		return
+	}
+
+	client, ok := l.conns[root]
+	if !ok {
+		return
+	}
+
+	srReq := protocol.SignatureHelpParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{
+				URI: uri.URI(fmt.Sprintf("file://%s", buf.FilePath)),
+			},
+			Position: protocol.Position{
+				Line:      uint32(buf.Cursor.Line),
+				Character: uint32(buf.Cursor.Char),
+			},
+		},
+	}
+	var sigHelpResp protocol.SignatureHelp
+	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentSignatureHelp, srReq, &sigHelpResp)
+	if err != nil {
+		l.e.LogError(err)
+	}
+
+	if len(sigHelpResp.Signatures) > 0 {
+		sign = sigHelpResp.Signatures[0].Label
+	}
+
+	return
 }
 
 func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cur Cursor) {
