@@ -785,13 +785,7 @@ func CmdKillBuffer(e *Editor) {
 func CmdEnsureCursorVisible(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		_, h := e.View.Size()
-		if buf.Cursor.Line > buf.ScrollOffset+h-3 {
-			buf.ScrollOffset = buf.Cursor.Line - h + 3
-		}
-
-		if buf.Cursor.Line < buf.ScrollOffset+3 {
-			buf.ScrollOffset = buf.Cursor.Line - 3
-		}
+		buf.ScrollOffset = buf.Cursor.Line - (h / 2) + 3
 	})
 }
 
