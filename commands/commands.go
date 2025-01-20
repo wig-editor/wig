@@ -246,6 +246,34 @@ func CmdGotoDefinition(e *mcwig.Editor) {
 	})
 }
 
+// TODO: fix when per-window cursors are ready
+func CmdGotoDefinitionOtherWindow(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
+		if len(e.Windows) == 1 {
+			mcwig.CmdWindowVSplit(e)
+		}
+
+		mcwig.CmdWindowNext(e)
+		e.ActiveWindow().ShowBuffer(buf)
+		CmdGotoDefinition(e)
+	})
+}
+
+func CmdViewDefinitionOtherWindow(e *mcwig.Editor) {
+	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
+		curWin := e.ActiveWindow()
+
+		if len(e.Windows) == 1 {
+			mcwig.CmdWindowVSplit(e)
+		}
+
+		mcwig.CmdWindowNext(e)
+		e.ActiveWindow().ShowBuffer(buf)
+		CmdGotoDefinition(e)
+		e.SetActiveWindow(curWin)
+	})
+}
+
 func CmdLspShowSignature(e *mcwig.Editor) {
 	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
 		sign := e.Lsp.Signature(buf, buf.Cursor)

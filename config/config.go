@@ -71,6 +71,8 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"g": mcwig.KeyMap{
 				"g": mcwig.CmdGotoLine0,
 				"d": commands.CmdGotoDefinition,
+				"O": commands.CmdGotoDefinitionOtherWindow,
+				"o": commands.CmdViewDefinitionOtherWindow,
 			},
 			"ctrl+c": mcwig.KeyMap{
 				"ctrl+c": commands.CmdExecute,

@@ -118,6 +118,10 @@ func (e *Editor) ActiveWindow() *Window {
 	return e.activeWindow
 }
 
+func (e *Editor) SetActiveWindow(w *Window) {
+	e.activeWindow = w
+}
+
 func (e *Editor) PushUi(c UiComponent) {
 	e.UiComponents = append(e.UiComponents, c)
 }
