@@ -8,6 +8,7 @@ import (
 	"net"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.lsp.dev/jsonrpc2"
@@ -380,6 +381,41 @@ func (l *LspManager) Signature(buf *Buffer, cursor Cursor) (sign string) {
 	}
 
 	return
+}
+
+func (l *LspManager) Hover(buf *Buffer, cursor Cursor) (sign string) {
+	root, _ := l.e.Projects.FindRoot(buf)
+
+	_, ignore := l.ignore[root]
+	if ignore {
+		return
+	}
+
+	client, ok := l.conns[root]
+	if !ok {
+		return
+	}
+
+	srReq := protocol.HoverParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{
+				URI: uri.URI(fmt.Sprintf("file://%s", buf.FilePath)),
+			},
+			Position: protocol.Position{
+				Line:      uint32(buf.Cursor.Line),
+				Character: uint32(buf.Cursor.Char),
+			},
+		},
+	}
+	var hover protocol.Hover
+	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentHover, srReq, &hover)
+	if err != nil {
+		l.e.LogError(err)
+	}
+
+	result := strings.ReplaceAll(hover.Contents.Value, "\n", "")
+
+	return result
 }
 
 func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cur Cursor) {
