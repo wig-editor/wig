@@ -13,7 +13,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 		return
 	}
 
-	width, _ := view.Size()
+	width, height := view.Size()
 	width -= 2
 
 	currentLine := buf.Lines.First()
@@ -31,7 +31,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 	colorNode := buf.Highlighter.RootNode()
 
 	for currentLine != nil {
-		if lineNum >= offset {
+		if lineNum >= offset && y <= height-1 {
 			// render each character in the line separately
 			x := 0
 
@@ -67,7 +67,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 
 				colorNode := mcwig.GetColorNode(colorNode, uint32(lineNum), uint32(i))
 
-				// todo: handle tabs
+				// todo: handle tabs colors?
 				view.SetContent(x, y, string(ch), mcwig.NodeToColor(colorNode))
 
 				// render cursor
