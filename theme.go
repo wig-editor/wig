@@ -14,7 +14,7 @@ import (
 var defaultColors = `
 color default "#ebebeb,#171717"
 color cursor "#21252C,#ABB2BF"
-color search "#d89833,#ABB2BF"
+color search "#5386c6,#171717"
 color statusline "#0f0f0f,#768298"
 color statusline.active "#282828,#ABB2BF"
 `

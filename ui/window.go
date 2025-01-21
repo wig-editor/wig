@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+
 	str "github.com/boyter/go-string"
 	"github.com/firstrow/mcwig"
 )
@@ -25,6 +27,8 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 	if buf.Cursor.Char > width {
 		skip = buf.Cursor.Char - width
 	}
+
+	colorNode := buf.Highlighter.RootNode()
 
 	for currentLine != nil {
 		if lineNum >= offset {
@@ -59,7 +63,12 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				}
 
 				ch := getRenderChar(currentLine.Value[i])
-				view.SetContent(x, y, string(ch), textStyle)
+				_ = fmt.Sprintf("%s", textStyle)
+
+				colorNode := mcwig.GetColorNode(colorNode, uint32(lineNum), uint32(i))
+
+				// todo: handle tabs
+				view.SetContent(x, y, string(ch), mcwig.NodeToColor(colorNode))
 
 				// render cursor
 				if isActiveWin {

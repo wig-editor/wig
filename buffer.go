@@ -48,6 +48,7 @@ type Buffer struct {
 	IndentCh     []rune
 	Tx           *Transaction
 	UndoRedo     *UndoRedo
+	Highlighter  *Highlighter
 }
 
 func NewBuffer() *Buffer {
