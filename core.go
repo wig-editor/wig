@@ -25,6 +25,7 @@ func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 	if buf.TxStart() {
 		defer buf.TxEnd()
 	}
+
 	fn(buf, CursorLine(buf))
 }
 

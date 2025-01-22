@@ -3,15 +3,23 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/firstrow/mcwig"
 	"github.com/firstrow/mcwig/config"
 	"github.com/firstrow/mcwig/render"
+
+	"net/http"
+	_ "net/http/pprof"
 )
 
 func main() {
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
+
 	tscreen, err := tcell.NewScreen()
 	if err != nil {
 		panic(err)
@@ -49,7 +57,9 @@ func main() {
 				editor.View.Resize(0, 0, w, h)
 				renderer.Render()
 			case *tcell.EventKey:
+				start := time.Now()
 				editor.HandleInput(ev)
+				editor.EchoMessage(fmt.Sprintf("%v", time.Now().Sub(start)))
 				renderer.Render()
 			case *tcell.EventError:
 				fmt.Println("error:", ev)

@@ -13,8 +13,9 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 		return
 	}
 
-	width, height := view.Size()
-	width -= 2
+	termWidth, termHeight := view.Size()
+	termWidth -= 2
+	termHeight -= 1
 
 	currentLine := buf.Lines.First()
 	offset := buf.ScrollOffset
@@ -24,14 +25,14 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 	isActiveWin := win == e.ActiveWindow()
 
 	skip := 0
-	if buf.Cursor.Char > width {
-		skip = buf.Cursor.Char - width
+	if buf.Cursor.Char > termWidth {
+		skip = buf.Cursor.Char - termWidth
 	}
 
 	colorNode := buf.Highlighter.RootNode()
 
 	for currentLine != nil {
-		if lineNum >= offset && y <= height-1 {
+		if lineNum >= offset && y <= termHeight {
 			// render each character in the line separately
 			x := 0
 
@@ -64,7 +65,6 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 
 				ch := getRenderChar(currentLine.Value[i])
 				_ = fmt.Sprintf("%s", textStyle)
-
 				colorNode := mcwig.GetColorNode(colorNode, uint32(lineNum), uint32(i))
 
 				// todo: handle tabs colors?

@@ -2,7 +2,6 @@ package mcwig
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -92,7 +91,6 @@ func (h *Highlighter) Build() {
 				EndLine:   c.Node.EndPoint().Row,
 				EndChar:   c.Node.EndPoint().Column,
 			}
-			fmt.Println(node)
 			h.nodes.PushBack(node)
 		}
 	}
@@ -107,10 +105,8 @@ func GetColorNode(node *Element[TreeSitterRangeNode], line uint32, ch uint32) *E
 		return nil
 	}
 
-	n := node.Value
-
-	if line >= n.StartLine && line <= n.EndLine {
-		if ch >= n.StartChar && ch < n.EndChar {
+	if line >= node.Value.StartLine && line <= node.Value.EndLine {
+		if ch >= node.Value.StartChar && ch < node.Value.EndChar {
 			return node
 		}
 	}
