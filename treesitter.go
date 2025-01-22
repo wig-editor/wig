@@ -19,12 +19,15 @@ type TreeSitterRangeNode struct {
 }
 
 type Highlighter struct {
-	e     *Editor
-	buf   *Buffer
-	nodes List[TreeSitterRangeNode]
+	e      *Editor
+	buf    *Buffer
+	nodes  List[TreeSitterRangeNode]
+	parser *sitter.Parser
+	q      *sitter.Query
 }
 
 func HighlighterInitBuffer(e *Editor, buf *Buffer) {
+	return
 	if !strings.HasSuffix(buf.FilePath, ".go") {
 		return
 	}
@@ -34,6 +37,19 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 		buf:   buf,
 		nodes: List[TreeSitterRangeNode]{},
 	}
+	h.parser = sitter.NewParser()
+	h.parser.SetLanguage(golang.GetLanguage())
+
+	hgFile := "/home/andrew/code/mcwig/runtime/helix/go/highlights.scm"
+	highlightQ, _ := os.ReadFile(hgFile)
+
+	var err error
+	h.q, err = sitter.NewQuery(highlightQ, golang.GetLanguage())
+	if err != nil {
+		h.e.LogError(err)
+		return
+	}
+
 	h.Build()
 	buf.Highlighter = h
 }
@@ -43,26 +59,15 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 func (h *Highlighter) Build() {
 	h.nodes = List[TreeSitterRangeNode]{}
 
-	parser := sitter.NewParser()
-	parser.SetLanguage(golang.GetLanguage())
-
 	sourceCode := []byte(h.buf.String())
-
-	tree, err := parser.ParseCtx(context.Background(), nil, sourceCode)
+	tree, err := h.parser.ParseCtx(context.Background(), nil, sourceCode)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	hgFile := "/home/andrew/code/mcwig/runtime/helix/go/highlights.scm"
-	highlightQ, _ := os.ReadFile(hgFile)
-	q, err := sitter.NewQuery(highlightQ, golang.GetLanguage())
-	if err != nil {
-		h.e.LogError(err)
-		return
-	}
-
 	qc := sitter.NewQueryCursor()
-	qc.Exec(q, tree.RootNode())
+	qc.Exec(h.q, tree.RootNode())
+	defer qc.Close()
 
 	for {
 		m, ok := qc.NextMatch()
@@ -73,10 +78,8 @@ func (h *Highlighter) Build() {
 		// Apply predicates filtering
 		m = qc.FilterPredicates(m, sourceCode)
 		for _, c := range m.Captures {
-			// fmt.Println(q.CaptureNameForId(c.Index))
-			// fmt.Println(">", c.Node.Type(), c.Node.StartPoint(), c.Node.EndPoint())
 			node := TreeSitterRangeNode{
-				NodeName:  q.CaptureNameForId(c.Index),
+				NodeName:  h.q.CaptureNameForId(c.Index),
 				StartLine: c.Node.StartPoint().Row,
 				StartChar: c.Node.StartPoint().Column,
 				EndLine:   c.Node.EndPoint().Row,

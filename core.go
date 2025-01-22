@@ -487,6 +487,7 @@ func CmdDeleteLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		CmdVisualLineMode(e)
 		CmdSelectinDelete(e)
+		buf.Lines.Remove(line)
 	})
 }
 
