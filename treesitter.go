@@ -24,23 +24,16 @@ type Highlighter struct {
 	nodes List[TreeSitterRangeNode]
 }
 
-func HighlighterForBuffer(e *Editor, buf *Buffer) *Highlighter {
-	if buf.Highlighter == nil {
-		return &Highlighter{
-			e:     e,
-			buf:   buf,
-			nodes: List[TreeSitterRangeNode]{},
-		}
-	}
-	return buf.Highlighter
-}
-
-func HighlighterInitBuffer(buf *Buffer) {
+func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 	if !strings.HasSuffix(buf.FilePath, ".go") {
 		return
 	}
 
-	h := &Highlighter{buf: buf}
+	h := &Highlighter{
+		e:     e,
+		buf:   buf,
+		nodes: List[TreeSitterRangeNode]{},
+	}
 	h.Build()
 	buf.Highlighter = h
 }

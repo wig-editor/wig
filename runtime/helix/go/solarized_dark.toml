@@ -61,8 +61,6 @@
 "ui.text.info" = {fg = "base02", modifiers = ["bold"]}
 "ui.text" = { fg = "base1" }
 "ui.text.focus" = { fg = "blue", modifiers = ["bold"]}
-
-# 主光标/selectio
 "ui.cursor.primary" = { fg = "base03", bg = "base1" }
 "ui.cursor.select" = { fg = "base02", bg = "cyan" }
 "ui.cursorline.primary" = { bg = "base02" }
@@ -74,10 +72,8 @@
 "ui.virtual.indent-guide" = { fg = "base02" }
 "ui.virtual.ruler" = { bg = "base02" }
 
-# normal模式的光标
 "ui.cursor" = {fg = "base02", bg = "cyan"}
 "ui.cursor.insert" = {fg = "base03", bg = "base3"}
-# 当前光标匹配的标点符号
 "ui.cursor.match" = { fg = "base03", bg = "base00" }
 
 "warning" =  { fg = "orange", modifiers= ["bold", "underlined"] }
@@ -93,7 +89,7 @@
 "diagnostic.deprecated" = { modifiers = ["crossed_out"] }
 
 [palette]
-# 深色 越来越深
+
 base03   = "#002b36"
 base025  = "#03303b"
 base02   = "#073642"
@@ -106,7 +102,7 @@ base1    = "#93a1a1"
 base2    = "#eee8d5"
 base3    = "#fdf6e3"
 
-# 浅色 越來越浅
+
 yellow  = "#b58900"
 orange  = "#cb4b16"
 red     = "#dc322f"
