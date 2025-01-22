@@ -346,6 +346,34 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 	client.didOpen(buf)
 }
 
+// TODO: implement proper change notifiocation with text ranges.
+func (l *LspManager) DidChange(buf *Buffer) {
+}
+
+func (l *LspManager) DidClose(buf *Buffer) {
+	root, _ := l.e.Projects.FindRoot(buf)
+
+	_, ignore := l.ignore[root]
+	if ignore {
+		return
+	}
+
+	client, ok := l.conns[root]
+	if !ok {
+		return
+	}
+
+	req := protocol.DidCloseTextDocumentParams{
+		TextDocument: protocol.TextDocumentIdentifier{
+			URI: uri.URI(fmt.Sprintf("file://%s", buf.FilePath)),
+		},
+	}
+	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDidClose, req, nil)
+	if err != nil {
+		l.e.LogError(err)
+	}
+}
+
 func (l *LspManager) Signature(buf *Buffer, cursor Cursor) (sign string) {
 	root, _ := l.e.Projects.FindRoot(buf)
 

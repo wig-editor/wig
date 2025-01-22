@@ -780,6 +780,7 @@ func CmdKillBuffer(e *Editor) {
 		defer e.ActiveBuffer()
 
 		// remove from buffers list
+		// ands moves to the next buffer
 		for i, b := range e.Buffers {
 			if b == buf {
 				e.Buffers = append(e.Buffers[:i], e.Buffers[i+1:]...)
@@ -803,6 +804,8 @@ func CmdKillBuffer(e *Editor) {
 				l = next
 			}
 		}
+
+		e.Lsp.DidClose(buf)
 
 	})
 }
