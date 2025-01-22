@@ -26,16 +26,13 @@ type Highlighter struct {
 
 func HighlighterForBuffer(e *Editor, buf *Buffer) *Highlighter {
 	if buf.Highlighter == nil {
-		// TODO: return dummy highlighter
 		return &Highlighter{
-			e:   e,
-			buf: buf,
+			e:     e,
+			buf:   buf,
+			nodes: List[TreeSitterRangeNode]{},
 		}
 	}
-	return &Highlighter{
-		e:   e,
-		buf: buf,
-	}
+	return buf.Highlighter
 }
 
 func HighlighterInitBuffer(buf *Buffer) {
@@ -60,9 +57,10 @@ func (h *Highlighter) Build() {
 
 	tree, err := parser.ParseCtx(context.Background(), nil, sourceCode)
 	if err != nil {
+		panic(err.Error())
 	}
 
-	hgFile := "/home/andrew/code/helix/runtime/queries/go/highlights.scm"
+	hgFile := "/home/andrew/code/mcwig/runtime/helix/go/highlights.scm"
 	highlightQ, _ := os.ReadFile(hgFile)
 	q, err := sitter.NewQuery(highlightQ, golang.GetLanguage())
 	if err != nil {

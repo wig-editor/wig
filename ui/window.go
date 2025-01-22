@@ -27,7 +27,10 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 		skip = buf.Cursor.Char - termWidth
 	}
 
-	colorNode := buf.Highlighter.RootNode()
+	var colorNode *mcwig.Element[mcwig.TreeSitterRangeNode]
+	if buf.Highlighter != nil {
+		colorNode = buf.Highlighter.RootNode()
+	}
 
 	for currentLine != nil {
 		if lineNum >= offset && y <= termHeight {

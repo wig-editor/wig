@@ -22,7 +22,7 @@ var colors AllConfig
 
 func init() {
 	colors = AllConfig{}
-	colorThemeFile := "/home/andrew/code/helix/runtime/themes/solarized_dark.toml"
+	colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/solarized_dark.toml"
 	theme, err := os.ReadFile(colorThemeFile)
 	if err != nil {
 		panic(err.Error())
@@ -35,6 +35,7 @@ func init() {
 	}
 }
 
+// TODO: handle nested color names. like keyword.some.type
 func Color(color string) tcell.Style {
 	defaultBg := colors.Palette[colors.Colors["ui.background"].Bg]
 	defaultFg := colors.Palette[colors.Colors["ui.text"].Fg]
