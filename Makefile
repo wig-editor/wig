@@ -8,3 +8,8 @@ test:
 build:
 	go build cmd/main.go
 	mv ./main ~/go/bin/mcwig
+	
+build-run:
+	go build cmd/main.go
+	mv ./main ~/go/bin/mcwig
+	mcwig > /tmp/mcwig.panic.txt 2>&1

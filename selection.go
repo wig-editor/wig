@@ -43,6 +43,9 @@ func SelectionToString(buf *Buffer) string {
 	}
 
 	if s.Start.Line == s.End.Line {
+		if len(lineStart.Value) == 0 {
+			return ""
+		}
 		return string(lineStart.Value[s.Start.Char:endCh])
 	}
 

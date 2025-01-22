@@ -16,7 +16,11 @@ func yankSave(e *Editor, buf *Buffer, line *Element[Line]) {
 	if buf.Selection == nil {
 		y = yank{string(line.Value), true}
 	} else {
-		y = yank{SelectionToString(buf), false}
+		st := SelectionToString(buf)
+		if len(st) == 0 {
+			return
+		}
+		y = yank{st, false}
 	}
 	if buf.Mode() == MODE_VISUAL_LINE {
 		y.isLine = true

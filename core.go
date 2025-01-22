@@ -11,7 +11,6 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	if next == nil {
 		return
 	}
-
 	line.Value = append(line.Value, next.Value...)
 	buf.Lines.Remove(next)
 }
@@ -605,16 +604,16 @@ func CmdSelectinDelete(e *Editor) {
 		lineEnd := CursorLineByNum(buf, sel.End.Line)
 
 		if sel.Start.Line == sel.End.Line {
-			if sel.End.Char < len(lineStart.Value) {
-				lineStart.Value = append(lineStart.Value[:sel.Start.Char], lineStart.Value[sel.End.Char+1:]...)
-			} else {
-				lineStart.Value = lineStart.Value[:sel.Start.Char]
-			}
-
 			if len(lineStart.Value) == 0 {
 				buf.Lines.Remove(lineStart)
 				CmdCursorBeginningOfTheLine(e)
 				return
+			}
+
+			if sel.End.Char < len(lineStart.Value) {
+				lineStart.Value = append(lineStart.Value[:sel.Start.Char], lineStart.Value[sel.End.Char+1:]...)
+			} else {
+				lineStart.Value = lineStart.Value[:sel.Start.Char]
 			}
 
 			cursorGotoChar(buf, sel.Start.Char)
