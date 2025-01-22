@@ -40,6 +40,8 @@ func (tx *Transaction) End() {
 		if tx.buf.Highlighter != nil {
 			tx.buf.Highlighter.Build()
 		}
+
+		EditorInst.Lsp.DidChange(tx.buf)
 	}
 
 	tx.buf = nil
