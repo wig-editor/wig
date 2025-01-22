@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -57,9 +56,9 @@ func main() {
 				editor.View.Resize(0, 0, w, h)
 				renderer.Render()
 			case *tcell.EventKey:
-				start := time.Now()
+				// start := time.Now()
+				// editor.EchoMessage(fmt.Sprintf("%v", time.Now().Sub(start)))
 				editor.HandleInput(ev)
-				editor.EchoMessage(fmt.Sprintf("%v", time.Now().Sub(start)))
 				renderer.Render()
 			case *tcell.EventError:
 				fmt.Println("error:", ev)

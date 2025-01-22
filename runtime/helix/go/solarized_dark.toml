@@ -49,7 +49,7 @@
 "ui.cursorline" = { bg = "base03" }
 "ui.statusline" = { fg = "base03", bg = "base0" }
 "ui.statusline.normal" = { bg = "blue" }
-"ui.statusline.insert" = { bg = "green" }
+"ui.statusline.insert" = { bg = "green", fg = "base03" }
 "ui.statusline.select" = { bg = "yellow" }
 "ui.statusline.inactive" = { fg = "base1", bg = "base01" }
 "ui.popup" = { bg = "base02" }

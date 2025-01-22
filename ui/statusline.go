@@ -12,15 +12,17 @@ func StatuslineRender(
 	view mcwig.View,
 	win *mcwig.Window,
 ) {
-	// TODO: check buf for null
 	buf := win.Buffer()
 
 	w, h := view.Size()
 	h -= 1
 
-	st := mcwig.Color("statusline")
+	st := mcwig.Color("ui.statusline.inactive")
 	if win == e.ActiveWindow() {
-		st = mcwig.Color("statusline.active")
+		st = mcwig.Color("ui.statusline")
+	}
+	if buf.Mode() == mcwig.MODE_INSERT {
+		st = mcwig.Color("ui.statusline.insert")
 	}
 
 	bg := strings.Repeat(" ", w)
