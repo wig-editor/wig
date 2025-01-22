@@ -105,23 +105,6 @@ func BufferReloadFile(buf *Buffer) error {
 
 func (buf *Buffer) SetMode(m Mode) {
 	buf.mode = m
-	return
-
-	// entering insert or visual mode - start tx
-	if m != MODE_NORMAL {
-		if buf.Tx != nil {
-			return
-		}
-
-		buf.Tx = NewTx(buf)
-		buf.Tx.Start()
-		return
-	}
-
-	if buf.Tx != nil {
-		buf.Tx.End()
-		buf.Tx = nil
-	}
 }
 
 func (b *Buffer) TxStart() (started bool) {

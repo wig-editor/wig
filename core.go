@@ -31,6 +31,9 @@ func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 
 func CmdJoinNextLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if buf.TxStart() {
+			defer buf.TxEnd()
+		}
 		CmdGotoLineEnd(e)
 		lineJoinNext(buf, line)
 	})
@@ -317,6 +320,9 @@ func CmdBackwardWord(e *Editor) {
 
 func CmdReplaceChar(e *Editor, ch string) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if buf.TxStart() {
+			defer buf.TxEnd()
+		}
 		c := []rune(ch)
 		line.Value[buf.Cursor.Char] = c[0]
 	})
@@ -370,6 +376,9 @@ func CmdBackwardChar(e *Editor, ch string) {
 
 func CmdDeleteCharForward(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if buf.TxStart() {
+			defer buf.TxEnd()
+		}
 		if len(line.Value) == 0 {
 			CmdGotoLineEnd(e)
 			lineJoinNext(buf, line)
@@ -387,6 +396,10 @@ func CmdDeleteCharBackward(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.Cursor.Line == 0 && buf.Cursor.Char == 0 {
 			return
+		}
+
+		if buf.TxStart() {
+			defer buf.TxEnd()
 		}
 
 		if len(line.Value) == 0 {
@@ -425,6 +438,10 @@ func CmdAppendLine(e *Editor) {
 
 func CmdNewLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if buf.TxStart() {
+			defer buf.TxEnd()
+		}
+
 		// EOL
 		if (buf.Cursor.Char) >= len(line.Value) {
 			buf.Lines.insertValueAfter(Line{}, line)
@@ -453,6 +470,9 @@ func CmdLineOpenBelow(e *Editor) {
 
 func CmdLineOpenAbove(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
+		if buf.TxStart() {
+			defer buf.TxEnd()
+		}
 		if buf.Cursor.Line == 0 {
 			buf.Lines.PushFront(Line{})
 			CmdCursorBeginningOfTheLine(e)
@@ -466,18 +486,8 @@ func CmdLineOpenAbove(e *Editor) {
 
 func CmdDeleteLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if line == nil {
-			return
-		}
-		if buf.Lines.First() == buf.Lines.Last() {
-			line.Value = nil
-			return
-		}
-		yankSave(e, buf, line)
-		if line == buf.Lines.Last() {
-			defer CmdCursorLineUp(e)
-		}
-		buf.Lines.Remove(line)
+		CmdVisualLineMode(e)
+		CmdSelectinDelete(e)
 	})
 }
 
@@ -543,6 +553,9 @@ func CmdChangeEndOfLine(e *Editor) {
 
 func CmdChangeLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if buf.TxStart() {
+			defer buf.TxEnd()
+		}
 		CmdInsertModeAfter(e)
 		line.Value = nil
 	})
@@ -578,6 +591,10 @@ func CmdSelectinDelete(e *Editor) {
 		}()
 		if buf.Selection == nil {
 			return
+		}
+
+		if buf.TxStart() {
+			defer buf.TxEnd()
 		}
 
 		sel := SelectionNormalize(buf.Selection)
@@ -713,6 +730,10 @@ func CmdYankPut(e *Editor) {
 			return
 		}
 
+		if buf.TxStart() {
+			defer buf.TxEnd()
+		}
+
 		CmdCursorRight(e)
 		v := e.Yanks.Last()
 
@@ -732,6 +753,10 @@ func CmdYankPutBefore(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if e.Yanks.Len == 0 {
 			return
+		}
+
+		if buf.TxStart() {
+			defer buf.TxEnd()
 		}
 
 		v := e.Yanks.Last()

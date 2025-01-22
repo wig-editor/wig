@@ -119,9 +119,5 @@ func NodeToColor(node *Element[TreeSitterRangeNode]) tcell.Style {
 		return Color("default")
 	}
 
-	if node.Value.NodeName == "variable" {
-		return Color("search")
-	}
-
-	return Color("default")
+	return Color(node.Value.NodeName)
 }

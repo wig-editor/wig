@@ -9,6 +9,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/junegunn/fzf v0.57.0
 	github.com/mattn/go-runewidth v0.0.15
+	github.com/pelletier/go-toml v1.9.5
 	github.com/smacker/go-tree-sitter v0.0.0-20240827094217-dd81d9e9be82
 	github.com/stretchr/testify v1.10.0
 	go.lsp.dev/jsonrpc2 v0.10.0

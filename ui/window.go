@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"fmt"
-
 	str "github.com/boyter/go-string"
 	"github.com/firstrow/mcwig"
 )
@@ -46,12 +44,14 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 			for i := skip; i < len(currentLine.Value); i++ {
 				// render selection
 				textStyle := mcwig.Color("default")
+				tempColor := 0
 
 				// highlight search
 				if len(searchMatches) > 0 {
 					for _, m := range searchMatches {
 						if i >= m[0] && i < m[1] {
-							textStyle = mcwig.Color("statusline")
+							textStyle = mcwig.Color("ui.cursor.match")
+							tempColor = 1
 						}
 					}
 				}
@@ -59,21 +59,24 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				// selection
 				if buf.Selection != nil {
 					if mcwig.SelectionCursorInRange(buf.Selection, mcwig.Cursor{Line: lineNum, Char: i}) {
-						textStyle = mcwig.Color("statusline")
+						textStyle = mcwig.Color("ui.selection")
+						tempColor = 1
 					}
 				}
 
 				ch := getRenderChar(currentLine.Value[i])
-				_ = fmt.Sprintf("%s", textStyle)
 				colorNode := mcwig.GetColorNode(colorNode, uint32(lineNum), uint32(i))
+				if tempColor == 0 {
+					textStyle = mcwig.NodeToColor(colorNode)
+				}
 
 				// todo: handle tabs colors?
-				view.SetContent(x, y, string(ch), mcwig.NodeToColor(colorNode))
+				view.SetContent(x, y, string(ch), textStyle)
 
 				// render cursor
 				if isActiveWin {
 					if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {
-						view.SetContent(x, y, string(ch[0]), mcwig.Color("cursor"))
+						view.SetContent(x, y, string(ch[0]), mcwig.Color("ui.cursor"))
 					}
 				}
 
@@ -82,7 +85,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 
 			// render cursor after the end of the line in insert mode
 			if lineNum == buf.Cursor.Line && buf.Cursor.Char >= len(currentLine.Value) && isActiveWin {
-				view.SetContent(x, y, " ", mcwig.Color("cursor"))
+				view.SetContent(x, y, " ", mcwig.Color("ui.cursor"))
 			}
 
 			y++
