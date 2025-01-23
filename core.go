@@ -12,7 +12,6 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 		return
 	}
 	line.Value = append(line.Value, next.Value...)
-	buf.Lines.Remove(next)
 }
 
 func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
@@ -808,6 +807,12 @@ func CmdKillBuffer(e *Editor) {
 
 		e.Lsp.DidClose(buf)
 
+	})
+}
+
+func CmdIndentOrComplete(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		e.Lsp.Completion(buf)
 	})
 }
 

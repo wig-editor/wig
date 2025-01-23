@@ -521,6 +521,44 @@ func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cu
 	}
 }
 
+func (l *LspManager) Completion(buf *Buffer) (sign string) {
+	root, _ := l.e.Projects.FindRoot(buf)
+
+	_, ignore := l.ignore[root]
+	if ignore {
+		return
+	}
+
+	client, ok := l.conns[root]
+	if !ok {
+		return
+	}
+
+	req := protocol.CompletionParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{
+				URI: uri.URI(fmt.Sprintf("file://%s", buf.FilePath)),
+			},
+			Position: protocol.Position{
+				Line:      uint32(buf.Cursor.Line),
+				Character: uint32(buf.Cursor.Char),
+			},
+		},
+		Context: &protocol.CompletionContext{
+			TriggerKind: protocol.CompletionTriggerKindInvoked,
+		},
+	}
+
+	var result protocol.CompletionList
+	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentCompletion, req, &result)
+	if err != nil {
+		l.e.LogError(err)
+	}
+	fmt.Println(result)
+
+	return ""
+}
+
 func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspConn, err error) {
 	cmd := exec.Command(conf.Cmd[0], conf.Cmd[1:]...)
 
