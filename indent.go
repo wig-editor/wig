@@ -1,8 +1,14 @@
 package mcwig
 
+import "strings"
+
 // Aligns with previous non-empty line. Also checks for [{:
 func CmdIndent(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if !strings.HasSuffix(buf.FilePath, ".go") {
+			return
+		}
+
 		prevLine := line.Prev()
 		for prevLine != nil {
 			if prevLine.Value.IsEmpty() {

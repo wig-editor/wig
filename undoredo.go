@@ -101,6 +101,10 @@ func (u *UndoRedo) Undo() {
 	if u.Position >= 0 {
 		u.Position--
 	}
+
+	if u.Buf.Highlighter != nil {
+		u.Buf.Highlighter.Build()
+	}
 }
 
 func (u *UndoRedo) Redo() {
@@ -118,5 +122,9 @@ func (u *UndoRedo) Redo() {
 
 	if u.Position < len(u.History)-1 {
 		u.Position++
+	}
+
+	if u.Buf.Highlighter != nil {
+		u.Buf.Highlighter.Build()
 	}
 }

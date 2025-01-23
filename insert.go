@@ -35,6 +35,7 @@ func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 	}
 	if ev.Key() == tcell.KeyEnter {
 		CmdNewLine(e)
+		CmdIndent(e)
 		return
 	}
 

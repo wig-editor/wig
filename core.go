@@ -20,9 +20,11 @@ func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 	if buf == nil {
 		return
 	}
+
 	if buf.TxStart() {
 		defer buf.TxEnd()
 	}
+
 	fn(buf, CursorLine(buf))
 }
 
@@ -170,6 +172,11 @@ func CmdExitInsertMode(e *Editor) {
 	}
 
 	buf.TxEnd()
+
+	// TODO: this is ugly
+	if buf.Highlighter != nil {
+		buf.Highlighter.Build()
+	}
 }
 
 func CmdVisualMode(e *Editor) {
@@ -496,7 +503,6 @@ func CmdDeleteLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		CmdVisualLineMode(e)
 		CmdSelectinDelete(e)
-		buf.Lines.Remove(line)
 	})
 }
 
@@ -607,7 +613,7 @@ func CmdSelectinDelete(e *Editor) {
 		lineEnd := CursorLineByNum(buf, sel.End.Line)
 
 		if sel.Start.Line == sel.End.Line {
-			if len(lineStart.Value) == 0 {
+			if len(lineStart.Value) == 0 || buf.Mode() == MODE_VISUAL_LINE {
 				buf.Lines.Remove(lineStart)
 				CmdCursorBeginningOfTheLine(e)
 				return
