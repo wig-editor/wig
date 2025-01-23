@@ -88,3 +88,28 @@ func SelectionStart(buf *Buffer) {
 		End:   buf.Cursor,
 	}
 }
+
+func WithSelection(fn func(*Editor)) func(*Editor) {
+	return func(e *Editor) {
+		fn(e)
+		buf := e.ActiveBuffer()
+		buf.Selection.End = buf.Cursor
+
+		if buf.Mode() == MODE_VISUAL_LINE {
+			if buf.Selection.Start.Line > buf.Selection.End.Line {
+			} else {
+				lineEnd := CursorLineByNum(buf, buf.Selection.End.Line)
+				buf.Selection.Start.Char = 0
+				buf.Selection.End.Char = len(lineEnd.Value) - 1
+			}
+		}
+	}
+}
+
+func WithSelectionToChar(fn func(*Editor, string)) func(*Editor, string) {
+	return func(e *Editor, ch string) {
+		fn(e, ch)
+		buf := e.ActiveBuffer()
+		buf.Selection.End = buf.Cursor
+	}
+}
