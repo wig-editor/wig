@@ -6,6 +6,8 @@ import (
 	"unicode"
 )
 
+const minVisibleLines = 6
+
 func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	next := line.Next()
 	if next == nil {
@@ -41,7 +43,7 @@ func CmdScrollUp(e *Editor) {
 			buf.ScrollOffset--
 
 			_, h := e.View.Size()
-			if buf.Cursor.Line > buf.ScrollOffset+h-3 {
+			if buf.Cursor.Line > buf.ScrollOffset+h-minVisibleLines {
 				CmdCursorLineUp(e)
 			}
 		}
@@ -50,10 +52,10 @@ func CmdScrollUp(e *Editor) {
 
 func CmdScrollDown(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.ScrollOffset < buf.Lines.Len-3 {
+		if buf.ScrollOffset < buf.Lines.Len-minVisibleLines {
 			buf.ScrollOffset++
 
-			if buf.Cursor.Line <= buf.ScrollOffset+3 {
+			if buf.Cursor.Line <= buf.ScrollOffset+minVisibleLines {
 				CmdCursorLineDown(e)
 			}
 		}
@@ -84,7 +86,7 @@ func CmdCursorLineUp(e *Editor) {
 			buf.Cursor.Line--
 			restoreCharPosition(buf)
 
-			if buf.Cursor.Line < buf.ScrollOffset+3 {
+			if buf.Cursor.Line < buf.ScrollOffset+minVisibleLines {
 				CmdScrollUp(e)
 			}
 		}
@@ -98,7 +100,7 @@ func CmdCursorLineDown(e *Editor) {
 			restoreCharPosition(buf)
 
 			_, h := e.View.Size()
-			if buf.Cursor.Line-buf.ScrollOffset > h-3 {
+			if buf.Cursor.Line-buf.ScrollOffset > h-minVisibleLines {
 				CmdScrollDown(e)
 			}
 		}
@@ -229,11 +231,11 @@ func CmdGotoLine0(e *Editor) {
 			buf.Cursor.Line = ln
 
 			_, h := e.View.Size()
-			if buf.Cursor.Line > buf.ScrollOffset+h-3 {
+			if buf.Cursor.Line > buf.ScrollOffset+h-minVisibleLines {
 				buf.ScrollOffset = buf.Cursor.Line - h/2
 			}
 
-			if buf.Cursor.Line <= buf.ScrollOffset+h+3 {
+			if buf.Cursor.Line <= buf.ScrollOffset+h+minVisibleLines {
 				buf.ScrollOffset = buf.Cursor.Line - h/2
 			}
 
@@ -260,7 +262,7 @@ func CmdForwardWord(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		defer func() {
 			_, h := e.View.Size()
-			if buf.Cursor.Line-buf.ScrollOffset > h-3 {
+			if buf.Cursor.Line-buf.ScrollOffset > h-minVisibleLines {
 				CmdScrollDown(e)
 			}
 		}()
@@ -297,7 +299,7 @@ func CmdForwardWord(e *Editor) {
 func CmdBackwardWord(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		defer func() {
-			if buf.Cursor.Line < buf.ScrollOffset+3 {
+			if buf.Cursor.Line < buf.ScrollOffset+minVisibleLines {
 				CmdScrollUp(e)
 			}
 		}()
@@ -821,12 +823,12 @@ func CmdIndentOrComplete(e *Editor) {
 func CmdEnsureCursorVisible(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		_, h := e.View.Size()
-		if buf.Cursor.Line > buf.ScrollOffset+h-3 {
-			buf.ScrollOffset = buf.Cursor.Line - h + 3
+		if buf.Cursor.Line > buf.ScrollOffset+h-minVisibleLines {
+			buf.ScrollOffset = buf.Cursor.Line - h + minVisibleLines
 		}
 
-		if buf.Cursor.Line < buf.ScrollOffset+3 {
-			buf.ScrollOffset = buf.Cursor.Line - 3
+		if buf.Cursor.Line < buf.ScrollOffset+minVisibleLines {
+			buf.ScrollOffset = buf.Cursor.Line - minVisibleLines
 		}
 	})
 }
@@ -834,7 +836,7 @@ func CmdEnsureCursorVisible(e *Editor) {
 func CmdCursorCenter(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		_, h := e.View.Size()
-		buf.ScrollOffset = buf.Cursor.Line - (h / 2) + 3
+		buf.ScrollOffset = buf.Cursor.Line - (h / 2) + minVisibleLines
 	})
 }
 
