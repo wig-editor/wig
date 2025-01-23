@@ -598,7 +598,7 @@ func CmdSelectionChange(e *Editor) {
 func CmdSelectinDelete(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		defer func() {
-			CmdExitInsertMode(e)
+			buf.Selection = nil
 		}()
 		if buf.Selection == nil {
 			return
