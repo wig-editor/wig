@@ -27,7 +27,6 @@ type Highlighter struct {
 }
 
 func HighlighterInitBuffer(e *Editor, buf *Buffer) {
-	return
 	if !strings.HasSuffix(buf.FilePath, ".go") {
 		return
 	}
@@ -54,8 +53,6 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 	buf.Highlighter = h
 }
 
-// on file open should be called!
-// builds list of nodes with color identifiers and ranges
 func (h *Highlighter) Build() {
 	h.nodes = List[TreeSitterRangeNode]{}
 
@@ -64,6 +61,7 @@ func (h *Highlighter) Build() {
 	if err != nil {
 		panic(err.Error())
 	}
+	defer tree.Close()
 
 	qc := sitter.NewQueryCursor()
 	qc.Exec(h.q, tree.RootNode())
@@ -78,14 +76,15 @@ func (h *Highlighter) Build() {
 		// Apply predicates filtering
 		m = qc.FilterPredicates(m, sourceCode)
 		for _, c := range m.Captures {
-			node := TreeSitterRangeNode{
+			startPoint := c.Node.StartPoint()
+			endPoint := c.Node.EndPoint()
+			h.nodes.PushBack(TreeSitterRangeNode{
 				NodeName:  h.q.CaptureNameForId(c.Index),
-				StartLine: c.Node.StartPoint().Row,
-				StartChar: c.Node.StartPoint().Column,
-				EndLine:   c.Node.EndPoint().Row,
-				EndChar:   c.Node.EndPoint().Column,
-			}
-			h.nodes.PushBack(node)
+				StartLine: startPoint.Row,
+				StartChar: startPoint.Column,
+				EndLine:   endPoint.Row,
+				EndChar:   endPoint.Column,
+			})
 		}
 	}
 }

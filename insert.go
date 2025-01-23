@@ -4,6 +4,10 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+// TODO: optimize:
+// 1. do not use Do func.
+// 2. do not use CmdCommands.
+// 3. start/end transaction for whore "insert" mode time.
 func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.Mode() != MODE_INSERT {
