@@ -20,11 +20,9 @@ func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 	if buf == nil {
 		return
 	}
-
 	if buf.TxStart() {
 		defer buf.TxEnd()
 	}
-
 	fn(buf, CursorLine(buf))
 }
 
@@ -166,9 +164,6 @@ func CmdExitInsertMode(e *Editor) {
 		return
 	}
 
-	if buf.Mode() != MODE_INSERT {
-		return
-	}
 	CmdCursorLeft(e)
 	if buf.Cursor.Char >= len(line.Value) {
 		CmdGotoLineEnd(e)

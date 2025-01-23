@@ -5,10 +5,8 @@ import (
 )
 
 // TODO: optimize:
-// 1. do not use Do func.
-// 2. do not use CmdCommands.
-// 3. start/end transaction for whore "insert" mode time.
-// 4. do not search for line "every" time.
+// - remove cmd calls
+// - do not search for line "every" time.
 func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 	buf := e.ActiveWindow().Buffer()
 
@@ -44,12 +42,18 @@ func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 
 	if buf.Cursor.Char >= len(line.Value) {
 		line.Value = append(line.Value, ch)
-		CmdCursorRight(e)
+		if buf.Cursor.Char < len(line.Value) {
+			buf.Cursor.Char++
+			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+		}
 	} else {
 		tmp := []rune{ch}
 		tmp = append(tmp, line.Value[buf.Cursor.Char:]...)
 		line.Value = append(line.Value[:buf.Cursor.Char], tmp...)
 		tmp = nil
-		CmdCursorRight(e)
+		if buf.Cursor.Char < len(line.Value) {
+			buf.Cursor.Char++
+			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+		}
 	}
 }
