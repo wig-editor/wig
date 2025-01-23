@@ -12,6 +12,7 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 		return
 	}
 	line.Value = append(line.Value, next.Value...)
+	buf.Lines.Remove(next)
 }
 
 func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
