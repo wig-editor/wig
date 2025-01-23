@@ -219,7 +219,7 @@ func CmdSearchLine(e *mcwig.Editor) {
 		buf.Cursor.Line = i.Value
 		buf.Cursor.Char = 0
 		mcwig.CmdCursorBeginningOfTheLine(e)
-		mcwig.CmdEnsureCursorVisible(e)
+		mcwig.CmdCursorCenter(e)
 		e.PopUi()
 	}
 

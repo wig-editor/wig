@@ -22,15 +22,14 @@ func (tx *Transaction) Start() {
 }
 
 func (tx *Transaction) End() {
-	aString := tx.before
 	bString := tx.buf.String()
 
-	if aString == bString {
+	if tx.before == bString {
 		return
 	}
 
-	apply := myers.ComputeEdits(span.URIFromPath("a.txt"), aString, bString)
-	undo := myers.ComputeEdits(span.URIFromPath("b.txt"), bString, aString)
+	apply := myers.ComputeEdits(span.URIFromPath("a.txt"), tx.before, bString)
+	undo := myers.ComputeEdits(span.URIFromPath("b.txt"), bString, tx.before)
 	tx.buf.UndoRedo.Push(EditDiff{
 		apply: apply,
 		undo:  undo,
