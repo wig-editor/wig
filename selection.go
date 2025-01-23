@@ -93,10 +93,19 @@ func WithSelection(fn func(*Editor)) func(*Editor) {
 	return func(e *Editor) {
 		fn(e)
 		buf := e.ActiveBuffer()
+		if buf.Selection == nil {
+			// TODO: this is workaround for when selection was deleted but did
+			// not exited VIS_LINE_MODE
+			CmdNormalMode(e)
+			return
+		}
 		buf.Selection.End = buf.Cursor
 
 		if buf.Mode() == MODE_VISUAL_LINE {
 			if buf.Selection.Start.Line > buf.Selection.End.Line {
+				lineStart := CursorLineByNum(buf, buf.Selection.Start.Line)
+				buf.Selection.Start.Char = len(lineStart.Value) - 1
+				buf.Selection.End.Char = 0
 			} else {
 				lineEnd := CursorLineByNum(buf, buf.Selection.End.Line)
 				buf.Selection.Start.Char = 0
