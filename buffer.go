@@ -118,6 +118,10 @@ func (b *Buffer) TxStart() (started bool) {
 }
 
 func (b *Buffer) TxEnd() {
+	if b.Tx == nil {
+		return
+	}
+
 	b.Tx.End()
 	b.Tx = nil
 }

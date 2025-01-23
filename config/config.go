@@ -19,7 +19,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"l":      mcwig.CmdCursorRight,
 			"j":      mcwig.CmdCursorLineDown,
 			"k":      mcwig.CmdCursorLineUp,
-			"i":      mcwig.CmdInsertMode,
+			"i":      mcwig.CmdEnterInsertMode,
 			"v":      mcwig.CmdVisualMode,
 			"V":      mcwig.CmdVisualLineMode,
 			"a":      mcwig.CmdInsertModeAfter,
@@ -142,7 +142,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"y":   mcwig.CmdYank,
 		},
 		mcwig.MODE_INSERT: mcwig.KeyMap{
-			"Esc":    mcwig.CmdNormalMode,
+			"Esc":    mcwig.CmdExitInsertMode,
 			"ctrl+f": mcwig.CmdCursorRight,
 			"ctrl+b": mcwig.CmdCursorLeft,
 			"ctrl+j": mcwig.CmdCursorLineDown,

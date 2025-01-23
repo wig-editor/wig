@@ -30,9 +30,6 @@ func Do(e *Editor, fn func(buf *Buffer, line *Element[Line])) {
 
 func CmdJoinNextLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.TxStart() {
-			defer buf.TxEnd()
-		}
 		CmdGotoLineEnd(e)
 		lineJoinNext(buf, line)
 	})
@@ -131,24 +128,71 @@ func CmdCursorFirstNonBlank(e *Editor) {
 	})
 }
 
-func CmdInsertMode(e *Editor) {
-	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if line == nil {
-			return
-		}
-		if len(line.Value) == 0 {
-			CmdInsertModeAfter(e)
-			return
-		}
+func CmdEnterInsertMode(e *Editor) {
+	buf := e.ActiveBuffer()
+	if buf == nil {
+		return
+	}
 
-		buf.SetMode(MODE_INSERT)
-	})
+	line := CursorLine(buf)
+	if line == nil {
+		return
+	}
+
+	if !buf.TxStart() {
+		e.LogMessage("should not happen")
+	}
+
+	if len(line.Value) == 0 {
+		buf.Cursor.Char++
+	}
+
+	buf.SetMode(MODE_INSERT)
+}
+
+func CmdExitInsertMode(e *Editor) {
+	buf := e.ActiveBuffer()
+	if buf == nil {
+		return
+	}
+
+	defer func() {
+		buf.SetMode(MODE_NORMAL)
+		buf.Selection = nil
+	}()
+
+	line := CursorLine(buf)
+	if line == nil {
+		return
+	}
+
+	if buf.Mode() != MODE_INSERT {
+		return
+	}
+	CmdCursorLeft(e)
+	if buf.Cursor.Char >= len(line.Value) {
+		CmdGotoLineEnd(e)
+	}
+
+	buf.TxEnd()
 }
 
 func CmdVisualMode(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		SelectionStart(buf)
 		buf.SetMode(MODE_VISUAL)
+	})
+}
+func CmdNormalMode(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		if buf.Mode() == MODE_INSERT {
+			CmdCursorLeft(e)
+			if buf.Cursor.Char >= len(line.Value) {
+				CmdGotoLineEnd(e)
+			}
+		}
+		buf.SetMode(MODE_NORMAL)
+		buf.Selection = nil
 	})
 }
 
@@ -164,20 +208,7 @@ func CmdVisualLineMode(e *Editor) {
 func CmdInsertModeAfter(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
 		buf.Cursor.Char++
-		buf.SetMode(MODE_INSERT)
-	})
-}
-
-func CmdNormalMode(e *Editor) {
-	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.Mode() == MODE_INSERT {
-			CmdCursorLeft(e)
-			if buf.Cursor.Char >= len(line.Value) {
-				CmdGotoLineEnd(e)
-			}
-		}
-		buf.SetMode(MODE_NORMAL)
-		buf.Selection = nil
+		CmdEnterInsertMode(e)
 	})
 }
 
@@ -319,9 +350,6 @@ func CmdBackwardWord(e *Editor) {
 
 func CmdReplaceChar(e *Editor, ch string) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.TxStart() {
-			defer buf.TxEnd()
-		}
 		c := []rune(ch)
 		line.Value[buf.Cursor.Char] = c[0]
 	})
@@ -375,9 +403,6 @@ func CmdBackwardChar(e *Editor, ch string) {
 
 func CmdDeleteCharForward(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.TxStart() {
-			defer buf.TxEnd()
-		}
 		if len(line.Value) == 0 {
 			CmdGotoLineEnd(e)
 			lineJoinNext(buf, line)
@@ -395,10 +420,6 @@ func CmdDeleteCharBackward(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if buf.Cursor.Line == 0 && buf.Cursor.Char == 0 {
 			return
-		}
-
-		if buf.TxStart() {
-			defer buf.TxEnd()
 		}
 
 		if len(line.Value) == 0 {
@@ -437,10 +458,6 @@ func CmdAppendLine(e *Editor) {
 
 func CmdNewLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.TxStart() {
-			defer buf.TxEnd()
-		}
-
 		// EOL
 		if (buf.Cursor.Char) >= len(line.Value) {
 			buf.Lines.insertValueAfter(Line{}, line)
@@ -469,9 +486,6 @@ func CmdLineOpenBelow(e *Editor) {
 
 func CmdLineOpenAbove(e *Editor) {
 	Do(e, func(buf *Buffer, _ *Element[Line]) {
-		if buf.TxStart() {
-			defer buf.TxEnd()
-		}
 		if buf.Cursor.Line == 0 {
 			buf.Lines.PushFront(Line{})
 			CmdCursorBeginningOfTheLine(e)
@@ -510,7 +524,7 @@ func CmdChangeWord(e *Editor) {
 			End:   Cursor{Line: buf.Cursor.Line, Char: end},
 		}
 		CmdSelectinDelete(e)
-		CmdInsertMode(e)
+		CmdEnterInsertMode(e)
 	})
 }
 
@@ -523,7 +537,7 @@ func CmdChangeWORD(e *Editor) {
 			End:   Cursor{Line: buf.Cursor.Line, Char: end},
 		}
 		CmdSelectinDelete(e)
-		CmdInsertMode(e)
+		CmdEnterInsertMode(e)
 	})
 }
 
@@ -553,9 +567,6 @@ func CmdChangeEndOfLine(e *Editor) {
 
 func CmdChangeLine(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.TxStart() {
-			defer buf.TxEnd()
-		}
 		CmdInsertModeAfter(e)
 		line.Value = nil
 	})
@@ -580,21 +591,17 @@ func CmdDeleteBefore(e *Editor, ch string) {
 func CmdSelectionChange(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		CmdSelectinDelete(e)
-		CmdInsertMode(e)
+		CmdEnterInsertMode(e)
 	})
 }
 
 func CmdSelectinDelete(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		defer func() {
-			CmdNormalMode(e)
+			CmdExitInsertMode(e)
 		}()
 		if buf.Selection == nil {
 			return
-		}
-
-		if buf.TxStart() {
-			defer buf.TxEnd()
 		}
 
 		sel := SelectionNormalize(buf.Selection)
@@ -718,7 +725,7 @@ func CmdYank(e *Editor) {
 			if buf.Selection != nil {
 				buf.Cursor = buf.Selection.Start
 			}
-			CmdNormalMode(e)
+			CmdExitInsertMode(e)
 		}()
 		yankSave(e, buf, line)
 	})
@@ -728,10 +735,6 @@ func CmdYankPut(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		if e.Yanks.Len == 0 {
 			return
-		}
-
-		if buf.TxStart() {
-			defer buf.TxEnd()
 		}
 
 		CmdCursorRight(e)
@@ -755,14 +758,10 @@ func CmdYankPutBefore(e *Editor) {
 			return
 		}
 
-		if buf.TxStart() {
-			defer buf.TxEnd()
-		}
-
 		v := e.Yanks.Last()
 		if v.Value.isLine {
 			CmdLineOpenAbove(e)
-			CmdNormalMode(e)
+			CmdExitInsertMode(e)
 			yankPut(e, buf)
 			CmdCursorBeginningOfTheLine(e)
 		} else {
