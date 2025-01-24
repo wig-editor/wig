@@ -10,3 +10,10 @@ done:
 - fuzzy search for current buffer lines
 - cycle buffers with `
 - search project from word under cursor
+
+
+FIX:
+panic: runtime error: index out of range [6] with length 4goroutine 13 [running]:github.com/firstrow/mcwig.CmdReplaceChar.func1(0xc00015c0c0, 0xc0005cacc0)        
+/home/andrew/code/mcwig/core.go:358 +0x7fgithub.com/firstrow/mcwig.Do(0xc000405e18?, 0xc000405e38)        
+/home/andrew/code/mcwig/core.go:30 +0x85github.com/firstrow/mcwig.CmdReplaceChar(0x0?, {0x891d23?, 0x39?})        
+/home/andrew/code/mcwig/core.go:356 +0x33

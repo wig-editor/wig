@@ -21,7 +21,6 @@ func CmdFindProjectFilePicker(e *mcwig.Editor) {
 		cmd.Dir = rootDir
 		stdout, err := cmd.Output()
 		if err != nil {
-			e.LogMessage(string(stdout))
 			e.LogError(err)
 			return
 		}
@@ -95,7 +94,6 @@ func rgDoSearch(e *mcwig.Editor, pat string) {
 			cmd.Dir = rootDir
 			stdout, err := cmd.Output()
 			if err != nil {
-				e.LogMessage(string(stdout))
 				e.LogError(err)
 				return nil
 			}

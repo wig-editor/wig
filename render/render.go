@@ -24,7 +24,6 @@ func New(e *mcwig.Editor, screen tcell.Screen) *Renderer {
 }
 
 func (r *Renderer) Render() {
-	r.screen.Clear()
 	r.screen.Fill(' ', mcwig.Color("ui.background"))
 
 	w, h := r.screen.Size()
