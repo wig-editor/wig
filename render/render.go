@@ -65,7 +65,6 @@ func (r *Renderer) Render() {
 }
 
 func (r *Renderer) SetContent(x, y int, str string, st tcell.Style) {
-	xx := x
 	for _, ch := range str {
 		var comb []rune
 		w := runewidth.RuneWidth(ch)
@@ -75,8 +74,8 @@ func (r *Renderer) SetContent(x, y int, str string, st tcell.Style) {
 			w = 1
 		}
 
-		r.screen.SetContent(xx, y, ch, comb, st)
-		xx += w
+		r.screen.SetContent(x, y, ch, comb, st)
+		x += w
 	}
 }
 
