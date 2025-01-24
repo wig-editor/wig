@@ -99,7 +99,6 @@ func (t *mview) Resize(x, y, width, height int) {
 }
 
 func (t *mview) SetContent(x, y int, str string, st tcell.Style) {
-	xx := x
 	for _, ch := range str {
 		var comb []rune
 		w := runewidth.RuneWidth(ch)
@@ -109,7 +108,7 @@ func (t *mview) SetContent(x, y int, str string, st tcell.Style) {
 			w = 1
 		}
 
-		t.viewport.SetContent(xx, y, ch, comb, st)
-		xx += w
+		t.viewport.SetContent(x, y, ch, comb, st)
+		x += w
 	}
 }
