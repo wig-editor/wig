@@ -73,6 +73,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"d": commands.CmdGotoDefinition,
 				"O": commands.CmdGotoDefinitionOtherWindow,
 				"o": commands.CmdViewDefinitionOtherWindow,
+				"c": mcwig.CmdToggleComment,
 			},
 			"ctrl+c": mcwig.KeyMap{
 				"ctrl+c": commands.CmdExecute,
@@ -129,6 +130,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"*":      commands.CmdSearchWordUnderCursor,
 			"g": mcwig.KeyMap{
 				"g": mcwig.WithSelection(mcwig.CmdGotoLine0),
+				"c": mcwig.CmdToggleComment,
 			},
 		},
 		mcwig.MODE_VISUAL_LINE: mcwig.KeyMap{

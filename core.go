@@ -599,6 +599,28 @@ func CmdSelectionChange(e *Editor) {
 	})
 }
 
+func CmdToggleComment(e *Editor) {
+	Do(e, func(buf *Buffer, line *Element[Line]) {
+		comment := []rune("// ")
+		cmAppend := func(line *Element[Line]) {
+			idx := 0
+			for i, c := range line.Value {
+				if !unicode.IsSpace(c) {
+					idx = i
+					break
+				}
+			}
+			tmpData := make([]rune, 0, len(line.Value)+len(comment))
+			tmpData = append(tmpData, line.Value[:idx]...)
+			tmpData = append(tmpData, comment...)
+			tmpData = append(tmpData, line.Value[idx:]...)
+			line.Value = tmpData
+
+		}
+		cmAppend(line)
+	})
+}
+
 func CmdSelectinDelete(e *Editor) {
 	Do(e, func(buf *Buffer, line *Element[Line]) {
 		defer func() {
