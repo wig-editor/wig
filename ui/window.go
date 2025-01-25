@@ -6,6 +6,11 @@ import (
 )
 
 func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
+	// t1 := time.Now()
+	// defer func() {
+	// fmt.Println(time.Now().Sub(t1))
+	// }()
+
 	buf := win.Buffer()
 	if buf == nil {
 		return

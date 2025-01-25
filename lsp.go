@@ -554,7 +554,6 @@ func (l *LspManager) Completion(buf *Buffer) (sign string) {
 	if err != nil {
 		l.e.LogError(err)
 	}
-	fmt.Println(result)
 
 	return ""
 }

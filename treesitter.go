@@ -26,6 +26,8 @@ type Highlighter struct {
 	q      *sitter.Query
 }
 
+// TODO: highlighter parser and query MUST be request
+// for every buffer
 func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 	if !strings.HasSuffix(buf.FilePath, ".go") {
 		return
@@ -94,9 +96,7 @@ func (h *Highlighter) RootNode() *Element[TreeSitterRangeNode] {
 }
 
 func GetColorNode(node *Element[TreeSitterRangeNode], line uint32, ch uint32) *Element[TreeSitterRangeNode] {
-	if node == nil {
-		return nil
-	}
+	return nil
 
 	if line >= node.Value.StartLine && line <= node.Value.EndLine {
 		if ch >= node.Value.StartChar && ch < node.Value.EndChar {

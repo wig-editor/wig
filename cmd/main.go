@@ -56,8 +56,6 @@ func main() {
 				editor.View.Resize(0, 0, w, h)
 				renderer.Render()
 			case *tcell.EventKey:
-				// start := time.Now()
-				// editor.EchoMessage(fmt.Sprintf("%v", time.Now().Sub(start)))
 				editor.HandleInput(ev)
 				renderer.Render()
 			case *tcell.EventError:
