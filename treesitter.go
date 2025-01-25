@@ -55,6 +55,9 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 	buf.Highlighter = h
 }
 
+// Build and "syntax" must be separated.
+// so we can do full rebuild and query syntax ranges only
+// for lines on the screen.
 func (h *Highlighter) Build() {
 	h.nodes = List[TreeSitterRangeNode]{}
 
