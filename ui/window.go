@@ -1,6 +1,9 @@
 package ui
 
 import (
+	"fmt"
+	"time"
+
 	str "github.com/boyter/go-string"
 	"github.com/firstrow/mcwig"
 )
@@ -34,6 +37,9 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 
 	var colorNode *mcwig.Element[mcwig.TreeSitterRangeNode]
 	if buf.Highlighter != nil {
+		t1 := time.Now()
+		buf.Highlighter.Highlights(uint32(buf.ScrollOffset), uint32(buf.ScrollOffset+termHeight))
+		fmt.Println(time.Now().Sub(t1))
 		colorNode = buf.Highlighter.RootNode()
 	}
 

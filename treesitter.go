@@ -19,11 +19,13 @@ type TreeSitterRangeNode struct {
 }
 
 type Highlighter struct {
-	e      *Editor
-	buf    *Buffer
-	nodes  List[TreeSitterRangeNode]
-	parser *sitter.Parser
-	q      *sitter.Query
+	e          *Editor
+	buf        *Buffer
+	nodes      List[TreeSitterRangeNode]
+	parser     *sitter.Parser
+	q          *sitter.Query
+	tree       *sitter.Tree
+	sourceCode []byte
 }
 
 // TODO: highlighter parser and query MUST be request
@@ -61,15 +63,28 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 func (h *Highlighter) Build() {
 	h.nodes = List[TreeSitterRangeNode]{}
 
-	sourceCode := []byte(h.buf.String())
-	tree, err := h.parser.ParseCtx(context.Background(), nil, sourceCode)
+	if h.tree != nil {
+		h.tree.Close()
+	}
+
+	h.sourceCode = []byte(h.buf.String())
+	tree, err := h.parser.ParseCtx(context.Background(), nil, h.sourceCode)
 	if err != nil {
 		panic(err.Error())
 	}
-	defer tree.Close()
 
+	h.tree = tree
+}
+
+func (h *Highlighter) RootNode() *Element[TreeSitterRangeNode] {
+	return h.nodes.First()
+}
+
+func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 	qc := sitter.NewQueryCursor()
-	qc.Exec(h.q, tree.RootNode())
+	qc.SetPointRange(sitter.Point{Row: lineStart, Column: 0}, sitter.Point{Row: lineEnd + 1, Column: 0})
+	qc.Exec(h.q, h.tree.RootNode())
+
 	defer qc.Close()
 
 	for {
@@ -79,7 +94,7 @@ func (h *Highlighter) Build() {
 		}
 
 		// Apply predicates filtering
-		m = qc.FilterPredicates(m, sourceCode)
+		m = qc.FilterPredicates(m, h.sourceCode)
 		for _, c := range m.Captures {
 			startPoint := c.Node.StartPoint()
 			endPoint := c.Node.EndPoint()
@@ -94,13 +109,10 @@ func (h *Highlighter) Build() {
 	}
 }
 
-func (h *Highlighter) RootNode() *Element[TreeSitterRangeNode] {
-	return h.nodes.First()
-}
-
 func GetColorNode(node *Element[TreeSitterRangeNode], line uint32, ch uint32) *Element[TreeSitterRangeNode] {
-	return nil
-
+	// if node == nil {
+		return nil
+	// }
 	if line >= node.Value.StartLine && line <= node.Value.EndLine {
 		if ch >= node.Value.StartChar && ch < node.Value.EndChar {
 			return node
