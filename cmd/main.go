@@ -8,6 +8,7 @@ import (
 
 	"github.com/firstrow/mcwig"
 	"github.com/firstrow/mcwig/config"
+	"github.com/firstrow/mcwig/metrics"
 	"github.com/firstrow/mcwig/render"
 
 	"net/http"
@@ -56,8 +57,16 @@ func main() {
 				editor.View.Resize(0, 0, w, h)
 				renderer.Render()
 			case *tcell.EventKey:
-				editor.HandleInput(ev)
-				renderer.Render()
+				metrics.Track("handler", func() {
+					editor.HandleInput(ev)
+				})
+
+				metrics.Track("render", func() {
+					renderer.Render()
+				})
+
+				renderer.RenderMetrics(metrics.Get())
+				renderer.Show()
 			case *tcell.EventError:
 				fmt.Println("error:", ev)
 				return

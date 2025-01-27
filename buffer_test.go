@@ -35,8 +35,8 @@ func TestLineByNum(t *testing.T) {
 
 func TestSelectionDelete(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
-	buf := e.ActiveBuffer()
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
 	buf.Selection = &Selection{
 		Start: Cursor{Line: 0, Char: 0},
 		End:   Cursor{Line: 1, Char: 0},
@@ -69,8 +69,8 @@ func TestSaveFile(t *testing.T) {
 
 func TestWordUnderCusor(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
-	buf := e.ActiveBuffer()
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
 	buf.Selection = &Selection{
 		Start: Cursor{Line: 0, Char: 0},
 		End:   Cursor{Line: 1, Char: 0},

@@ -110,9 +110,9 @@ func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 }
 
 func GetColorNode(node *Element[TreeSitterRangeNode], line uint32, ch uint32) *Element[TreeSitterRangeNode] {
-	// if node == nil {
+	if node == nil {
 		return nil
-	// }
+	}
 	if line >= node.Value.StartLine && line <= node.Value.EndLine {
 		if ch >= node.Value.StartChar && ch < node.Value.EndChar {
 			return node
@@ -120,6 +120,16 @@ func GetColorNode(node *Element[TreeSitterRangeNode], line uint32, ch uint32) *E
 	}
 
 	return GetColorNode(node.Next(), line, ch)
+}
+
+type TreeSitterNodeCursor struct {
+	rootNode *Element[TreeSitterRangeNode]
+}
+
+func NewColorNodeCursor(rootNode *Element[TreeSitterRangeNode]) *TreeSitterNodeCursor {
+	return &TreeSitterNodeCursor{
+		rootNode: rootNode,
+	}
 }
 
 func NodeToColor(node *Element[TreeSitterRangeNode]) tcell.Style {

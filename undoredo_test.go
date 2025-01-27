@@ -10,8 +10,7 @@ import (
 
 func TestEdits(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
-	buf := e.ActiveBuffer()
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
 	buf.Cursor.Char = 0
 	buf.Cursor.Line = 0
 	buf.Selection = nil
@@ -28,8 +27,6 @@ func TestEdits(t *testing.T) {
 	}
 
 	assert.Equal(t, linesToString(dupLines), buf.String())
-
-	panic(1)
 }
 
 func linesToString(l List[Line]) string {

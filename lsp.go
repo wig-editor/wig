@@ -308,11 +308,13 @@ type LspManager struct {
 
 func NewLspManager(e *Editor) *LspManager {
 	return &LspManager{
-		e:     e,
-		conns: map[string]*lspConn{},
+		e:      e,
+		conns:  map[string]*lspConn{},
+		ignore: map[string]bool{},
 	}
 }
 
+// TODO: check for supported file extension before doing anything
 func (l *LspManager) DidOpen(buf *Buffer) {
 	root, _ := l.e.Projects.FindRoot(buf)
 
@@ -325,11 +327,13 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 	var err error
 
 	client, ok := l.conns[root]
+
 	// initialize
 	if !ok {
 		conf, ok := LspConfigByFileName(buf.FilePath)
 		if !ok {
 			l.ignore[root] = true
+			return
 		}
 
 		// starts server and returns client conn

@@ -1,11 +1,9 @@
 package ui
 
 import (
-	"fmt"
-	"time"
-
 	str "github.com/boyter/go-string"
 	"github.com/firstrow/mcwig"
+	"github.com/firstrow/mcwig/metrics"
 )
 
 func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
@@ -37,9 +35,9 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 
 	var colorNode *mcwig.Element[mcwig.TreeSitterRangeNode]
 	if buf.Highlighter != nil {
-		t1 := time.Now()
-		buf.Highlighter.Highlights(uint32(buf.ScrollOffset), uint32(buf.ScrollOffset+termHeight))
-		fmt.Println(time.Now().Sub(t1))
+		metrics.Track("hl", func() {
+			buf.Highlighter.Highlights(uint32(buf.ScrollOffset), uint32(buf.ScrollOffset+termHeight))
+		})
 		colorNode = buf.Highlighter.RootNode()
 	}
 
@@ -79,7 +77,9 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				}
 
 				ch := getRenderChar(currentLine.Value[i])
+
 				colorNode := mcwig.GetColorNode(colorNode, uint32(lineNum), uint32(i))
+
 				if tempColor == 0 {
 					textStyle = mcwig.NodeToColor(colorNode)
 				}

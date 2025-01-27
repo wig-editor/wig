@@ -1,6 +1,9 @@
 package render
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gdamore/tcell/v2"
 	_ "github.com/gdamore/tcell/v2/encoding"
 	"github.com/gdamore/tcell/v2/views"
@@ -60,7 +63,9 @@ func (r *Renderer) Render() {
 	}
 
 	// ui.NotificationsRender(r.e, mainView)
+}
 
+func (r *Renderer) Show() {
 	r.screen.Show()
 }
 
@@ -76,6 +81,14 @@ func (r *Renderer) SetContent(x, y int, str string, st tcell.Style) {
 
 		r.screen.SetContent(x, y, ch, comb, st)
 		x += w
+	}
+}
+
+func (r *Renderer) RenderMetrics(info map[string]time.Duration) {
+	y := 0
+	for k, v := range info {
+		r.SetContent(50, y, fmt.Sprintf("%s: %v", k, v), tcell.StyleDefault)
+		y++
 	}
 }
 

@@ -3,14 +3,15 @@ package mcwig
 import (
 	"testing"
 
-	"github.com/firstrow/mcwig/testutils"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/firstrow/mcwig/testutils"
 )
 
 func TestYankSingleLine(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
-	buf := e.ActiveBuffer()
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
 	buf.Selection = nil
 	CmdYank(e)
 	CmdYank(e)
@@ -32,8 +33,8 @@ line five
 
 func TestYankSelection(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
-	buf := e.ActiveBuffer()
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
 	// "ine thre"
 	buf.Selection = &Selection{Start: Cursor{Line: 2, Char: 1}, End: Cursor{Line: 2, Char: 8}}
 	CmdYank(e)
