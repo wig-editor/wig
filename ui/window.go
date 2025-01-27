@@ -33,7 +33,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 		if offset > 0 {
 			startLine = uint32(offset)
 		}
-		buf.Highlighter.Highlights(uint32(startLine), uint32(buf.ScrollOffset+termHeight))
+		buf.Highlighter.Highlights(uint32(startLine), startLine+uint32(termHeight))
 		tsNodeCursor = mcwig.NewColorNodeCursor(buf.Highlighter.RootNode())
 	}
 
