@@ -2,6 +2,7 @@ package mcwig
 
 import (
 	"os"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -40,6 +41,10 @@ func Color(color string) tcell.Style {
 	defaultBg := colors.Palette[colors.Colors["ui.background"].Bg]
 	defaultFg := colors.Palette[colors.Colors["ui.text"].Fg]
 
+	if color == "default" {
+		return tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
+	}
+
 	if val, ok := colors.Colors[color]; ok {
 		fgPaletteKey := val.Fg
 		bgPaletteKey := val.Bg
@@ -55,6 +60,11 @@ func Color(color string) tcell.Style {
 		}
 
 		return tcell.StyleDefault.Background(tcell.GetColor(bgColor)).Foreground(tcell.GetColor(fgColor))
+	} else {
+		sections := strings.Split(color, ".")
+		if len(sections) > 1 {
+			return Color(sections[0])
+		}
 	}
 
 	return tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
