@@ -81,11 +81,18 @@ func (h *Highlighter) RootNode() *Element[TreeSitterRangeNode] {
 }
 
 func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
+	h.nodes = List[TreeSitterRangeNode]{}
+
 	qc := sitter.NewQueryCursor()
-	qc.SetPointRange(sitter.Point{Row: lineStart, Column: 0}, sitter.Point{Row: lineEnd + 1, Column: 0})
+	qc.SetPointRange(
+		sitter.Point{Row: lineStart, Column: 0},
+		sitter.Point{Row: lineEnd, Column: 0},
+	)
 	qc.Exec(h.q, h.tree.RootNode())
 
 	defer qc.Close()
+
+	i := 0
 
 	for {
 		m, ok := qc.NextMatch()
@@ -106,29 +113,7 @@ func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 				EndChar:   endPoint.Column,
 			})
 		}
-	}
-}
-
-func GetColorNode(node *Element[TreeSitterRangeNode], line uint32, ch uint32) *Element[TreeSitterRangeNode] {
-	if node == nil {
-		return nil
-	}
-	if line >= node.Value.StartLine && line <= node.Value.EndLine {
-		if ch >= node.Value.StartChar && ch < node.Value.EndChar {
-			return node
-		}
-	}
-
-	return GetColorNode(node.Next(), line, ch)
-}
-
-type TreeSitterNodeCursor struct {
-	rootNode *Element[TreeSitterRangeNode]
-}
-
-func NewColorNodeCursor(rootNode *Element[TreeSitterRangeNode]) *TreeSitterNodeCursor {
-	return &TreeSitterNodeCursor{
-		rootNode: rootNode,
+		i++
 	}
 }
 
@@ -138,4 +123,51 @@ func NodeToColor(node *Element[TreeSitterRangeNode]) tcell.Style {
 	}
 
 	return Color(node.Value.NodeName)
+}
+
+type TreeSitterNodeCursor struct {
+	cursor *Element[TreeSitterRangeNode]
+}
+
+func NewColorNodeCursor(rootNode *Element[TreeSitterRangeNode]) *TreeSitterNodeCursor {
+	if rootNode == nil {
+		return nil
+	}
+	return &TreeSitterNodeCursor{
+		cursor: rootNode,
+	}
+}
+
+func (c *TreeSitterNodeCursor) Seek(line, ch uint32) (node *Element[TreeSitterRangeNode], found bool) {
+	inRange := func(node *Element[TreeSitterRangeNode], line, ch uint32) bool {
+		if node == nil {
+			return false
+		}
+		if line >= node.Value.StartLine && line <= node.Value.EndLine {
+			if ch >= node.Value.StartChar && ch < node.Value.EndChar {
+				return true
+			}
+		}
+		return false
+	}
+
+	if inRange(c.cursor, line, ch) {
+		return c.cursor, true
+	}
+
+	nextNode := c.cursor.Next()
+	for nextNode != nil {
+		if nextNode.Value.StartLine > line {
+			break
+		}
+
+		if inRange(nextNode, line, ch) {
+			c.cursor = nextNode
+			return c.cursor, true
+		}
+
+		nextNode = nextNode.Next()
+	}
+
+	return nil, false
 }

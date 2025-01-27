@@ -3,15 +3,9 @@ package ui
 import (
 	str "github.com/boyter/go-string"
 	"github.com/firstrow/mcwig"
-	"github.com/firstrow/mcwig/metrics"
 )
 
 func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
-	// t1 := time.Now()
-	// defer func() {
-	// fmt.Println(time.Now().Sub(t1))
-	// }()
-
 	buf := win.Buffer()
 	if buf == nil {
 		return
@@ -33,12 +27,14 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 		skip = buf.Cursor.Char - termWidth
 	}
 
-	var colorNode *mcwig.Element[mcwig.TreeSitterRangeNode]
+	var tsNodeCursor *mcwig.TreeSitterNodeCursor
 	if buf.Highlighter != nil {
-		metrics.Track("hl", func() {
-			buf.Highlighter.Highlights(uint32(buf.ScrollOffset), uint32(buf.ScrollOffset+termHeight))
-		})
-		colorNode = buf.Highlighter.RootNode()
+		startLine := uint32(0)
+		if offset > 0 {
+			startLine = uint32(offset)
+		}
+		buf.Highlighter.Highlights(uint32(startLine), uint32(buf.ScrollOffset+termHeight))
+		tsNodeCursor = mcwig.NewColorNodeCursor(buf.Highlighter.RootNode())
 	}
 
 	for currentLine != nil {
@@ -78,10 +74,12 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 
 				ch := getRenderChar(currentLine.Value[i])
 
-				colorNode := mcwig.GetColorNode(colorNode, uint32(lineNum), uint32(i))
+				if tsNodeCursor != nil {
 
-				if tempColor == 0 {
-					textStyle = mcwig.NodeToColor(colorNode)
+					colorNode, ok := tsNodeCursor.Seek(uint32(lineNum), uint32(i))
+					if ok && tempColor == 0 {
+						textStyle = mcwig.NodeToColor(colorNode)
+					}
 				}
 
 				// todo: handle tabs colors?
