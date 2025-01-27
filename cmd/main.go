@@ -66,7 +66,6 @@ func main() {
 				})
 
 				renderer.RenderMetrics(metrics.Get())
-				renderer.Show()
 			case *tcell.EventError:
 				fmt.Println("error:", ev)
 				return

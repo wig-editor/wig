@@ -63,9 +63,6 @@ func (r *Renderer) Render() {
 	}
 
 	// ui.NotificationsRender(r.e, mainView)
-}
-
-func (r *Renderer) Show() {
 	r.screen.Show()
 }
 
@@ -90,6 +87,7 @@ func (r *Renderer) RenderMetrics(info map[string]time.Duration) {
 		r.SetContent(50, y, fmt.Sprintf("%s: %v", k, v), tcell.StyleDefault)
 		y++
 	}
+	r.screen.Show()
 }
 
 type mview struct {
