@@ -81,30 +81,34 @@ func CmdCursorRight(e *Editor) {
 }
 
 func CmdCursorLineUp(e *Editor) {
-	Do(e, func(buf *Buffer, line *Element[Line]) {
-		if buf.Cursor.Line > 0 {
-			buf.Cursor.Line--
-			restoreCharPosition(buf)
+	buf := e.ActiveBuffer()
+	if buf == nil {
+		return
+	}
+	if buf.Cursor.Line > 0 {
+		buf.Cursor.Line--
+		restoreCharPosition(buf)
 
-			if buf.Cursor.Line < buf.ScrollOffset+minVisibleLines {
-				CmdScrollUp(e)
-			}
+		if buf.Cursor.Line < buf.ScrollOffset+minVisibleLines {
+			CmdScrollUp(e)
 		}
-	})
+	}
 }
 
 func CmdCursorLineDown(e *Editor) {
-	Do(e, func(buf *Buffer, _ *Element[Line]) {
-		if buf.Cursor.Line < buf.Lines.Len-1 {
-			buf.Cursor.Line++
-			restoreCharPosition(buf)
+	buf := e.ActiveBuffer()
+	if buf == nil {
+		return
+	}
+	if buf.Cursor.Line < buf.Lines.Len-1 {
+		buf.Cursor.Line++
+		restoreCharPosition(buf)
 
-			_, h := e.View.Size()
-			if buf.Cursor.Line-buf.ScrollOffset > h-minVisibleLines {
-				CmdScrollDown(e)
-			}
+		_, h := e.View.Size()
+		if buf.Cursor.Line-buf.ScrollOffset > h-minVisibleLines {
+			CmdScrollDown(e)
 		}
-	})
+	}
 }
 
 func CmdCursorBeginningOfTheLine(e *Editor) {
