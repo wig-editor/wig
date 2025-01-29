@@ -16,6 +16,13 @@ type UiComponent interface {
 	Render(view View)
 }
 
+type Context struct {
+	Editor *Editor
+	Buf    *Buffer
+	Count  uint32
+	Char   string
+}
+
 type Layout int
 
 var EditorInst *Editor

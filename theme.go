@@ -59,6 +59,7 @@ func Color(color string) tcell.Style {
 			bgColor = defaultBg
 		}
 
+		// return tcell.StyleDefault.Background(tcell.GetColor(bgColor)).Foreground(tcell.GetColor(fgColor)).Underline(tcell.UnderlineStyleDashed, tcell.ColorFireBrick)
 		return tcell.StyleDefault.Background(tcell.GetColor(bgColor)).Foreground(tcell.GetColor(fgColor))
 	} else {
 		sections := strings.Split(color, ".")

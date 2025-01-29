@@ -11,6 +11,8 @@ import (
 type ModeKeyMap map[Mode]KeyMap
 type KeyMap map[string]interface{}
 
+const kspace = "Space"
+
 type KeyHandler struct {
 	keymap ModeKeyMap
 
@@ -58,10 +60,17 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	key := k.normalizeKeyName(ev)
 
 	var keySet KeyMap
+
+	ctx := Context{
+		E:     editor,
+		Buf:   editor.ActiveBuffer(),
+		Count: 1,
+	}
+
 	switch v := k.waitingForInput.(type) {
-	case func(e *Editor, ch string):
+	case func(ctx Context, ch string):
 		for i := 0; i < k.GetTimes(); i++ {
-			v(editor, key)
+			v(ctx, key)
 		}
 		k.resetState()
 		return
@@ -80,18 +89,18 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	}
 
 	if key == " " {
-		key = "Space"
+		key = kspace
 	}
 
 	if action, ok := keySet[key]; ok {
 		switch action := action.(type) {
 		case KeyMap:
 			k.waitingForInput = action
-		case func(e *Editor, ch string):
+		case func(ctx Context, ch string):
 			k.waitingForInput = action
-		case func(*Editor):
+		case func(Context):
 			for i := 0; i < k.GetTimes(); i++ {
-				action(editor)
+				action(ctx)
 			}
 			k.resetState()
 		default:

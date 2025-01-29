@@ -89,14 +89,14 @@ func SelectionStart(buf *Buffer) {
 	}
 }
 
-func WithSelection(fn func(*Editor)) func(*Editor) {
-	return func(e *Editor) {
-		fn(e)
-		buf := e.ActiveBuffer()
+func WithSelection(fn func(Context)) func(Context) {
+	return func(ctx Context) {
+		fn(ctx)
+		buf := ctx.Buf
 		if buf.Selection == nil {
 			// TODO: this is workaround for when selection was deleted but did
 			// not exited VIS_LINE_MODE
-			CmdNormalMode(e)
+			CmdNormalMode(ctx)
 			return
 		}
 		buf.Selection.End = buf.Cursor
@@ -115,10 +115,10 @@ func WithSelection(fn func(*Editor)) func(*Editor) {
 	}
 }
 
-func WithSelectionToChar(fn func(*Editor, string)) func(*Editor, string) {
-	return func(e *Editor, ch string) {
-		fn(e, ch)
-		buf := e.ActiveBuffer()
+func WithSelectionToChar(fn func(ctx Context)) func(ctx Context) {
+	return func(ctx Context) {
+		fn(ctx)
+		buf := ctx.Buf
 		buf.Selection.End = buf.Cursor
 	}
 }

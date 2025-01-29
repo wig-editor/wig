@@ -2,9 +2,8 @@ package mcwig
 
 import "strings"
 
-// Aligns with previous non-empty line. Also checks for [{:
-func CmdIndent(e *Editor) {
-	Do(e, func(buf *Buffer, line *Element[Line]) {
+func CmdIndent(ctx Context) {
+	Do(ctx, func(buf *Buffer, line *Element[Line]) {
 		if !strings.HasSuffix(buf.FilePath, ".go") {
 			return
 		}
@@ -19,12 +18,12 @@ func CmdIndent(e *Editor) {
 			// TODO: optimize this chunk. do not copy full line.
 			line.Value = make([]rune, len(prevLine.Value))
 			copy(line.Value, prevLine.Value)
-			CmdCursorFirstNonBlank(e)
+			CmdCursorFirstNonBlank(ctx)
 			line.Value = line.Value[:buf.Cursor.Char]
 
 			if prevLine.Value[len(prevLine.Value)-1] == '{' {
 				line.Value = append(line.Value, '\t')
-				CmdCursorRight(e)
+				CmdCursorRight(ctx)
 			}
 			break
 		}
