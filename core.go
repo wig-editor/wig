@@ -631,7 +631,7 @@ func CmdSelectinDelete(ctx Context) {
 
 		sel := SelectionNormalize(buf.Selection)
 
-		yankSave(ctx.Editor, buf, line)
+		yankSave(ctx)
 
 		lineStart := CursorLineByNum(buf, sel.Start.Line)
 		lineEnd := CursorLineByNum(buf, sel.End.Line)
@@ -727,7 +727,7 @@ func CmdWindowToggleLayout(ctx Context) {
 }
 
 func CmdWindowClose(ctx Context) {
-	if len(e.Windows) == 1 {
+	if len(ctx.Editor.Windows) == 1 {
 		return
 	}
 
@@ -752,7 +752,7 @@ func CmdYank(ctx Context) {
 			}
 			CmdExitInsertMode(ctx)
 		}()
-		yankSave(ctx.Editor, buf, line)
+		yankSave(ctx)
 	})
 }
 
@@ -773,7 +773,7 @@ func CmdYankPut(ctx Context) {
 			defer CmdCursorBeginningOfTheLine(ctx)
 		}
 
-		yankPut(ctx.Editor, buf)
+		yankPut(ctx)
 	})
 }
 
@@ -787,58 +787,54 @@ func CmdYankPutBefore(ctx Context) {
 		if v.Value.isLine {
 			CmdLineOpenAbove(ctx)
 			CmdExitInsertMode(ctx)
-			yankPut(ctx.Editor, buf)
+			yankPut(ctx)
 			CmdCursorBeginningOfTheLine(ctx)
 		} else {
-			yankPut(ctx.Editor, buf)
+			yankPut(ctx)
 		}
 	})
 }
 
 func CmdKillBuffer(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if len(e.Buffers) == 0 {
-			return
-		}
+	buffers := ctx.Editor.Buffers
+	if len(buffers) == 0 {
+		return
+	}
 
-		// creates [No Name] buffer
-		defer ctx.Editor.ActiveBuffer()
+	// creates [No Name] buffer
+	defer ctx.Editor.ActiveBuffer()
 
-		// remove from buffers list
-		// ands moves to the next buffer
-		for i, b := range ctx.Editor.Buffers {
-			if b == buf {
-				e.Buffers = append(e.Buffers[:i], ctx.Editor.Buffers[i+1:]...)
-				if len(e.Buffers) > 0 {
-					idx := i - 1
-					if idx < 0 {
-						idx = 0
-					}
-					e.ActiveWindow().VisitBuffer(e.Buffers[idx])
+	// remove from buffers list
+	// ands moves to the next buffer
+	for i, b := range buffers {
+		if b == ctx.Buf {
+			buffers = append(buffers[:i], buffers[i+1:]...)
+			if len(buffers) > 0 {
+				idx := i - 1
+				if idx < 0 {
+					idx = 0
 				}
+				ctx.Editor.ActiveWindow().VisitBuffer(buffers[idx])
 			}
 		}
+	}
 
-		// cleanup all nodes
-		{
-			l := buf.Lines.First()
-			for l != nil {
-				next := l.Next()
-				l.Value = nil
-				buf.Lines.Remove(l)
-				l = next
-			}
+	// cleanup all nodes
+	{
+		l := ctx.Buf.Lines.First()
+		for l != nil {
+			next := l.Next()
+			l.Value = nil
+			ctx.Buf.Lines.Remove(l)
+			l = next
 		}
+	}
 
-		e.Lsp.DidClose(buf)
-
-	})
+	ctx.Editor.Lsp.DidClose(ctx.Buf)
 }
 
 func CmdIndentOrComplete(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		e.Lsp.Completion(buf)
-	})
+	ctx.Editor.Lsp.Completion(ctx.Buf)
 }
 
 func CmdEnsureCursorVisible(ctx Context) {
@@ -893,13 +889,13 @@ func CmdRedo(ctx Context) {
 }
 
 func CmdJumpBack(ctx Context) {
-	e.ActiveWindow().Jumps.JumpBack()
-	CmdCursorCenter(e)
+	ctx.Editor.ActiveWindow().Jumps.JumpBack()
+	CmdCursorCenter(ctx)
 }
 
 func CmdJumpForward(ctx Context) {
-	e.ActiveWindow().Jumps.JumpForward()
-	CmdCursorCenter(e)
+	ctx.Editor.ActiveWindow().Jumps.JumpForward()
+	CmdCursorCenter(ctx)
 }
 
 // Cycle between last two buffers in jump list

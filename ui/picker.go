@@ -49,20 +49,20 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 	}
 	picker.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
 		mcwig.MODE_INSERT: mcwig.KeyMap{
-			"Esc": func(e *mcwig.Editor) {
-				e.PopUi()
+			"Esc": func(ctx mcwig.Context) {
+				ctx.Editor.PopUi()
 			},
-			"Tab": func(e *mcwig.Editor) {
+			"Tab": func(ctx mcwig.Context) {
 				if picker.activeItem < len(picker.filtered)-1 {
 					picker.activeItem++
 				}
 			},
-			"Backtab": func(e *mcwig.Editor) {
+			"Backtab": func(ctx mcwig.Context) {
 				if picker.activeItem > 0 {
 					picker.activeItem--
 				}
 			},
-			"Enter": func(e *mcwig.Editor) {
+			"Enter": func(ctx mcwig.Context) {
 				picker.action(picker, picker.activeItemT)
 			},
 		},
@@ -100,7 +100,7 @@ func (u *UiPicker[T]) ClearInput() {
 	u.activeItem = 0
 }
 
-func (u *UiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
+func (u *UiPicker[T]) insertCh(ctx mcwig.Context, ev *tcell.EventKey) {
 	if ev.Modifiers()&tcell.ModCtrl != 0 {
 		return
 	}
@@ -124,7 +124,7 @@ func (u *UiPicker[T]) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 		return
 	}
 	if ev.Key() == tcell.KeyEnter {
-		e.PopUi()
+		ctx.Editor.PopUi()
 		return
 	}
 

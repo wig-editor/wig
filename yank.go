@@ -11,46 +11,48 @@ type Yanks struct {
 	items List[yank]
 }
 
-func yankSave(e *Editor, buf *Buffer, line *Element[Line]) {
+func yankSave(ctx Context) {
 	var y yank
-	if buf.Selection == nil {
+	line := CursorLine(ctx.Buf)
+	if ctx.Buf.Selection == nil {
 		y = yank{string(line.Value), true}
 	} else {
-		st := SelectionToString(buf)
+		st := SelectionToString(ctx.Buf)
 		if len(st) == 0 {
 			return
 		}
 		y = yank{st, false}
 	}
-	if buf.Mode() == MODE_VISUAL_LINE {
+	if ctx.Buf.Mode() == MODE_VISUAL_LINE {
 		y.isLine = true
 	}
 
-	if e.Yanks.Len == 0 {
-		e.Yanks.PushBack(y)
+	if ctx.Editor.Yanks.Len == 0 {
+		ctx.Editor.Yanks.PushBack(y)
 		return
 	}
 
-	if e.Yanks.Last().Value != y {
-		e.Yanks.PushBack(y)
+	if ctx.Editor.Yanks.Last().Value != y {
+		ctx.Editor.Yanks.PushBack(y)
 	}
 }
 
-func yankPut(e *Editor, buf *Buffer) {
-	v := e.Yanks.Last()
+func yankPut(ctx Context) {
+	v := ctx.Editor.Yanks.Last()
 
-	oldMode := buf.Mode()
-	buf.SetMode(MODE_INSERT)
+	oldMode := ctx.Buf.Mode()
+	ctx.Buf.SetMode(MODE_INSERT)
 	defer func() {
-		buf.SetMode(oldMode)
+		ctx.Buf.SetMode(oldMode)
 	}()
 
+	// TODO: use Selection:Replace/Change
 	r := []rune(v.Value.val)
 	for _, ch := range r {
 		k := tcell.KeyRune
 		if ch == '\n' {
 			k = tcell.KeyEnter
 		}
-		HandleInsertKey(e, tcell.NewEventKey(k, ch, tcell.ModNone))
+		HandleInsertKey(ctx, tcell.NewEventKey(k, ch, tcell.ModNone))
 	}
 }

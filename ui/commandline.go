@@ -11,32 +11,31 @@ import (
 type uiCommandLine struct {
 	e      *mcwig.Editor
 	keymap *mcwig.KeyHandler
-
-	chBuf []rune
+	chBuf  []rune
 }
 
-func CmdLineInit(e *mcwig.Editor) {
+func CmdLineInit(ctx mcwig.Context) {
 	cmdLine := &uiCommandLine{
-		e:     e,
+		e:     ctx.Editor,
 		chBuf: []rune{},
 	}
 
 	cmdLine.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
 		mcwig.MODE_NORMAL: mcwig.KeyMap{
-			"Esc": func(e *mcwig.Editor) {
-				e.PopUi()
+			"Esc": func(ctx mcwig.Context) {
+				ctx.Editor.PopUi()
 			},
-			"Tab": func(e *mcwig.Editor) {
+			"Tab": func(ctx mcwig.Context) {
 				// todo autocomplete
 			},
 		},
 	})
 	cmdLine.keymap.Fallback(cmdLine.insertCh)
 
-	e.PushUi(cmdLine)
+	ctx.Editor.PushUi(cmdLine)
 }
 
-func (u *uiCommandLine) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
+func (u *uiCommandLine) insertCh(ctx mcwig.Context, ev *tcell.EventKey) {
 	if ev.Modifiers()&tcell.ModCtrl != 0 {
 		return
 	}
@@ -53,14 +52,14 @@ func (u *uiCommandLine) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 		if len(u.chBuf) > 0 {
 			u.chBuf = u.chBuf[:len(u.chBuf)-1]
 		} else {
-			e.PopUi()
+			ctx.Editor.PopUi()
 		}
 		return
 	}
 	if ev.Key() == tcell.KeyEnter {
 		cmd := strings.TrimSpace(string(u.chBuf))
 		u.execute(cmd)
-		e.PopUi()
+		ctx.Editor.PopUi()
 		return
 	}
 
@@ -68,17 +67,17 @@ func (u *uiCommandLine) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 }
 
 func (u *uiCommandLine) execute(cmd string) {
-	parts := strings.Split(cmd, " ")
+	ctx := u.e.NewContext()
 
-	switch parts[0] {
+	switch cmd {
 	case "q":
-		mcwig.CmdExit(u.e)
+		mcwig.CmdExit(ctx)
 	case "q!":
-		mcwig.CmdExit(u.e)
+		mcwig.CmdExit(ctx)
 	case "w":
-		mcwig.CmdSaveFile(u.e)
+		mcwig.CmdSaveFile(ctx)
 	case "bd":
-		mcwig.CmdKillBuffer(u.e)
+		mcwig.CmdKillBuffer(ctx)
 	}
 }
 

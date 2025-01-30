@@ -93,6 +93,14 @@ func (e *Editor) OpenFile(path string) *Buffer {
 	return buf
 }
 
+func (e *Editor) NewContext() Context {
+	return Context{
+		Editor: e,
+		Buf:    e.ActiveBuffer(),
+		Count:  1,
+	}
+}
+
 // Find or create new buffer by its full file path
 func (e *Editor) BufferFindByFilePath(fp string, create bool) *Buffer {
 	for _, b := range e.Buffers {

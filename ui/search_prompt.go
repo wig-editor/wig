@@ -15,24 +15,24 @@ type uiSearchPrompt struct {
 	chBuf []rune
 }
 
-func CmdSearchPromptInit(e *mcwig.Editor) {
+func CmdSearchPromptInit(ctx mcwig.Context) {
 	cmdLine := &uiSearchPrompt{
-		e:     e,
+		e:     ctx.Editor,
 		chBuf: []rune{},
 	}
 
 	cmdLine.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
 		mcwig.MODE_NORMAL: mcwig.KeyMap{
-			"Esc": func(e *mcwig.Editor) {
-				e.PopUi()
+			"Esc": func(ctx mcwig.Context) {
+				ctx.Editor.PopUi()
 			},
 		},
 	})
 	cmdLine.keymap.Fallback(cmdLine.insertCh)
-	e.PushUi(cmdLine)
+	ctx.Editor.PushUi(cmdLine)
 }
 
-func (u *uiSearchPrompt) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
+func (u *uiSearchPrompt) insertCh(ctx mcwig.Context, ev *tcell.EventKey) {
 	if ev.Modifiers()&tcell.ModCtrl != 0 {
 		return
 	}
@@ -49,14 +49,14 @@ func (u *uiSearchPrompt) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 		if len(u.chBuf) > 0 {
 			u.chBuf = u.chBuf[:len(u.chBuf)-1]
 		} else {
-			e.PopUi()
+			ctx.Editor.PopUi()
 		}
 		return
 	}
 	if ev.Key() == tcell.KeyEnter {
 		cmd := strings.TrimSpace(string(u.chBuf))
 		u.execute(cmd)
-		e.PopUi()
+		ctx.Editor.PopUi()
 		return
 	}
 
@@ -64,11 +64,9 @@ func (u *uiSearchPrompt) insertCh(e *mcwig.Editor, ev *tcell.EventKey) {
 }
 
 func (u *uiSearchPrompt) execute(cmd string) {
-	mcwig.Do(u.e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		pat := strings.TrimSpace(cmd)
-		mcwig.LastSearchPattern = pat
-		mcwig.SearchNext(u.e, buf, line, pat)
-	})
+	pat := strings.TrimSpace(cmd)
+	mcwig.LastSearchPattern = pat
+	mcwig.SearchNext(u.e.NewContext(), pat)
 }
 
 func (u *uiSearchPrompt) Keymap() *mcwig.KeyHandler {

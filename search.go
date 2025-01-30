@@ -7,11 +7,12 @@ import (
 )
 
 // Move cursor to the next search patten match
-func SearchNext(e *Editor, buf *Buffer, line *Element[Line], pattern string) {
-	defer CmdEnsureCursorVisible(e)
+func SearchNext(ctx Context, pattern string) {
+	defer CmdEnsureCursorVisible(ctx)
 
-	lineNum := buf.Cursor.Line
-	from := buf.Cursor.Char + 1
+	line := CursorLine(ctx.Buf)
+	lineNum := ctx.Buf.Cursor.Line
+	from := ctx.Buf.Cursor.Char + 1
 	haystack := string(line.Value.Range(from, EOL))
 
 	for line != nil {
@@ -31,18 +32,20 @@ func SearchNext(e *Editor, buf *Buffer, line *Element[Line], pattern string) {
 			return matches[i][0] < matches[j][0]
 		})
 
-		buf.Cursor.Line = lineNum
-		buf.Cursor.Char = matches[0][0] + from
-		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+		ctx.Buf.Cursor.Line = lineNum
+		ctx.Buf.Cursor.Char = matches[0][0] + from
+		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
 		break
 	}
 }
 
-func SearchPrev(e *Editor, buf *Buffer, line *Element[Line], pattern string) {
-	defer CmdEnsureCursorVisible(e)
+func SearchPrev(ctx Context, pattern string) {
+	defer CmdEnsureCursorVisible(ctx)
 
-	ln := buf.Cursor.Line
-	haystack := string(line.Value.Range(0, buf.Cursor.Char-1))
+	line := CursorLine(ctx.Buf)
+
+	ln := ctx.Buf.Cursor.Line
+	haystack := string(line.Value.Range(0, ctx.Buf.Cursor.Char-1))
 
 	for line != nil {
 		matches := str.IndexAllIgnoreCase(haystack, pattern, -1)
@@ -60,23 +63,19 @@ func SearchPrev(e *Editor, buf *Buffer, line *Element[Line], pattern string) {
 			return matches[i][0] > matches[j][0]
 		})
 
-		buf.Cursor.Line = ln
-		buf.Cursor.Char = matches[0][0]
-		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+		ctx.Buf.Cursor.Line = ln
+		ctx.Buf.Cursor.Char = matches[0][0]
+		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
 		break
 	}
 }
 
 var LastSearchPattern string
 
-func CmdSearchNext(e *Editor) {
-	Do(e, func(buf *Buffer, line *Element[Line]) {
-		SearchNext(e, buf, line, LastSearchPattern)
-	})
+func CmdSearchNext(ctx Context) {
+	SearchNext(ctx, LastSearchPattern)
 }
 
-func CmdSearchPrev(e *Editor) {
-	Do(e, func(buf *Buffer, line *Element[Line]) {
-		SearchPrev(e, buf, line, LastSearchPattern)
-	})
+func CmdSearchPrev(ctx Context) {
+	SearchPrev(ctx, LastSearchPattern)
 }

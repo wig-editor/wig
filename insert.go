@@ -7,10 +7,8 @@ import (
 // TODO: optimize:
 // - remove cmd calls
 // - do not search for line "every" time.
-func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
-	buf := e.ActiveWindow().Buffer()
-
-	if buf.Mode() != MODE_INSERT {
+func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
+	if ctx.Buf.Mode() != MODE_INSERT {
 		return
 	}
 
@@ -33,30 +31,30 @@ func HandleInsertKey(e *Editor, ev *tcell.EventKey) {
 	}
 
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
-		CmdDeleteCharBackward(e)
+		CmdDeleteCharBackward(ctx)
 		return
 	}
 	if ev.Key() == tcell.KeyEnter {
-		CmdNewLine(e)
+		CmdNewLine(ctx)
 		return
 	}
 
-	line := CursorLine(buf)
+	line := CursorLine(ctx.Buf)
 
-	if buf.Cursor.Char >= len(line.Value) {
+	if ctx.Buf.Cursor.Char >= len(line.Value) {
 		line.Value = append(line.Value, ch)
-		if buf.Cursor.Char < len(line.Value) {
-			buf.Cursor.Char++
-			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+		if ctx.Buf.Cursor.Char < len(line.Value) {
+			ctx.Buf.Cursor.Char++
+			ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
 		}
 	} else {
 		tmp := []rune{ch}
-		tmp = append(tmp, line.Value[buf.Cursor.Char:]...)
-		line.Value = append(line.Value[:buf.Cursor.Char], tmp...)
+		tmp = append(tmp, line.Value[ctx.Buf.Cursor.Char:]...)
+		line.Value = append(line.Value[:ctx.Buf.Cursor.Char], tmp...)
 		tmp = nil
-		if buf.Cursor.Char < len(line.Value) {
-			buf.Cursor.Char++
-			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+		if ctx.Buf.Cursor.Char < len(line.Value) {
+			ctx.Buf.Cursor.Char++
+			ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
 		}
 	}
 }

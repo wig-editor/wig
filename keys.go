@@ -17,9 +17,9 @@ type KeyHandler struct {
 	keymap ModeKeyMap
 
 	// if key has been not found in KeyMap, fallback will be called.
-	fallback func(e *Editor, ev *tcell.EventKey)
+	fallback func(ctx Context, ev *tcell.EventKey)
 
-	// KeyMap or func(*Editor) or func(*Editor, string)
+	// KeyMap or func(Context)
 	waitingForInput interface{}
 	times           []string
 }
@@ -52,7 +52,7 @@ func mergeKeyMaps(k1 KeyMap, k2 KeyMap) {
 	}
 }
 
-func (k *KeyHandler) Fallback(fn func(e *Editor, ev *tcell.EventKey)) {
+func (k *KeyHandler) Fallback(fn func(ctx Context, ev *tcell.EventKey)) {
 	k.fallback = fn
 }
 
@@ -61,11 +61,7 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 
 	var keySet KeyMap
 
-	ctx := Context{
-		E:     editor,
-		Buf:   editor.ActiveBuffer(),
-		Count: 1,
-	}
+	ctx := editor.NewContext()
 
 	switch v := k.waitingForInput.(type) {
 	case func(ctx Context, ch string):
@@ -106,10 +102,12 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 		default:
 			k.resetState()
 		}
+
 		return
 	}
 
-	k.fallback(editor, ev)
+	// insert mode
+	k.fallback(ctx, ev)
 	k.resetState()
 }
 

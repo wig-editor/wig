@@ -11,32 +11,32 @@ import (
 	"github.com/firstrow/mcwig/ui"
 )
 
-func CmdBufferPicker(editor *mcwig.Editor) {
+func CmdBufferPicker(ctx mcwig.Context) {
 	items := make([]ui.PickerItem[*mcwig.Buffer], 0, 32)
-	for _, b := range editor.Buffers {
+	for _, b := range ctx.Editor.Buffers {
 		items = append(items, ui.PickerItem[*mcwig.Buffer]{
 			Name:   b.GetName(),
 			Value:  b,
-			Active: b == editor.ActiveBuffer(),
+			Active: b == ctx.Editor.ActiveBuffer(),
 		})
 	}
 
 	action := func(p *ui.UiPicker[*mcwig.Buffer], i *ui.PickerItem[*mcwig.Buffer]) {
-		defer editor.PopUi()
+		defer ctx.Editor.PopUi()
 		if i == nil {
 			return
 		}
-		editor.ActiveWindow().ShowBuffer(i.Value)
+		ctx.Editor.ActiveWindow().VisitBuffer(i.Value)
 	}
 
 	ui.PickerInit(
-		editor,
+		ctx.Editor,
 		action,
 		items,
 	)
 }
 
-func CmdCommandPalettePicker(editor *mcwig.Editor) {
+func CmdCommandPalettePicker(ctx mcwig.Context) {
 	items := make([]ui.PickerItem[CmdDefinition], 0, 128)
 
 	for k, v := range AllCommands {
@@ -48,157 +48,151 @@ func CmdCommandPalettePicker(editor *mcwig.Editor) {
 	}
 
 	action := func(p *ui.UiPicker[CmdDefinition], i *ui.PickerItem[CmdDefinition]) {
-		editor.PopUi()
+		ctx.Editor.PopUi()
 
 		if i == nil {
 			return
 		}
 
 		switch cmd := i.Value.Fn.(type) {
-		case func(e *mcwig.Editor, ch string):
-			editor.EchoMessage("unsupported")
-		case func(*mcwig.Editor):
-			cmd(editor)
+		case func(mcwig.Context):
+			cmd(ctx)
 		}
 	}
 
 	ui.PickerInit(
-		editor,
+		ctx.Editor,
 		action,
 		items,
 	)
 }
 
-func CmdExecute(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		if buf.Driver == nil {
-			buf.Driver = pipe.New(e)
-		}
-		buf.Driver.Exec(e, buf, line)
-	})
+func CmdExecute(ctx mcwig.Context) {
+	if ctx.Buf.Driver == nil {
+		ctx.Buf.Driver = pipe.New(ctx.Editor)
+	}
+	ctx.Buf.Driver.Exec(ctx.Editor, ctx.Buf, mcwig.CursorLine(ctx.Buf))
 }
 
-func CmdCurrentBufferDirFilePicker(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
-		rootDir := e.Projects.Dir(buf)
-		e.EchoMessage("listing dir: " + rootDir)
+func CmdCurrentBufferDirFilePicker(ctx mcwig.Context) {
+	rootDir := ctx.Editor.Projects.Dir(ctx.Buf)
+	ctx.Editor.EchoMessage("listing dir: " + rootDir)
 
-		getItems := func(dir string) []ui.PickerItem[string] {
-			cmd := exec.Command("ls", "-ap")
-			cmd.Dir = dir
-			stdout, err := cmd.Output()
-			if err != nil {
-				e.LogMessage(string(stdout))
-				e.LogError(err)
-				return nil
-			}
-
-			items := []ui.PickerItem[string]{}
-
-			for _, row := range strings.Split(string(stdout), "\n") {
-				row = strings.TrimSpace(row)
-				if len(row) == 0 {
-					continue
-				}
-				if row == "./" {
-					continue
-				}
-
-				items = append(items, ui.PickerItem[string]{
-					Name:  row,
-					Value: row,
-				})
-			}
-			return items
+	getItems := func(dir string) []ui.PickerItem[string] {
+		cmd := exec.Command("ls", "-ap")
+		cmd.Dir = dir
+		stdout, err := cmd.Output()
+		if err != nil {
+			ctx.Editor.LogMessage(string(stdout))
+			ctx.Editor.LogError(err)
+			return nil
 		}
 
-		action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
-			// create new file
-			if i == nil {
-				fp := path.Join(rootDir, p.GetInput())
-				e.ActiveWindow().VisitBuffer(e.OpenFile(fp))
-				e.PopUi()
-				return
+		items := []ui.PickerItem[string]{}
+
+		for _, row := range strings.Split(string(stdout), "\n") {
+			row = strings.TrimSpace(row)
+			if len(row) == 0 {
+				continue
+			}
+			if row == "./" {
+				continue
 			}
 
-			// list directory
-			if strings.HasSuffix(i.Name, "/") {
-				fp := path.Join(rootDir, i.Value)
-				e.EchoMessage("listing dir: " + fp)
-				rootDir = fp
-				p.SetItems(getItems(rootDir))
-				p.ClearInput()
-				return
-			}
-
-			buf := e.OpenFile(rootDir + "/" + i.Value)
-			e.ActiveWindow().VisitBuffer(buf)
-			e.PopUi()
+			items = append(items, ui.PickerItem[string]{
+				Name:  row,
+				Value: row,
+			})
 		}
+		return items
+	}
 
-		ui.PickerInit(
-			e,
-			action,
-			getItems(rootDir),
-		)
-	})
-}
-
-func CmdFormatBuffer(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, _ *mcwig.Element[mcwig.Line]) {
-		if strings.HasSuffix(buf.FilePath, ".go") {
-			formatcmd := fmt.Sprintf("cat %s | goimports", buf.FilePath)
-			cmd := exec.Command("bash", "-c", formatcmd)
-			stdout, err := cmd.Output()
-			if err != nil {
-				e.LogMessage(err.Error())
-				e.LogMessage(string(stdout))
-				return
-			}
-			buf.ResetLines()
-			lines := strings.Split(string(stdout), "\n")
-			for _, line := range lines {
-				buf.Append(line)
-			}
-		}
-	})
-}
-
-func CmdSearchWordUnderCursor(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		pat := ""
-		defer func() {
-			mcwig.LastSearchPattern = pat
-			mcwig.SearchNext(e, buf, line, pat)
-		}()
-
-		if mcwig.CursorChClass(buf) == 0 {
-			mcwig.CmdBackwardWord(e)
-		}
-
-		if buf.Selection != nil {
-			pat = mcwig.SelectionToString(buf)
-			mcwig.CmdNormalMode(e)
+	action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
+		// create new file
+		if i == nil {
+			fp := path.Join(rootDir, p.GetInput())
+			ctx.Editor.ActiveWindow().VisitBuffer(
+				ctx.Editor.OpenFile(fp),
+			)
+			ctx.Editor.PopUi()
 			return
 		}
 
-		start, end := mcwig.TextObjectWord(buf, true)
-		if end+1 > start {
-			pat = string(line.Value.Range(start, end+1))
+		// list directory
+		if strings.HasSuffix(i.Name, "/") {
+			fp := path.Join(rootDir, i.Value)
+			ctx.Editor.EchoMessage("listing dir: " + fp)
+			rootDir = fp
+			p.SetItems(getItems(rootDir))
+			p.ClearInput()
+			return
 		}
-	})
+
+		buf := ctx.Editor.OpenFile(rootDir + "/" + i.Value)
+		ctx.Editor.ActiveWindow().VisitBuffer(buf)
+		ctx.Editor.PopUi()
+	}
+
+	ui.PickerInit(
+		ctx.Editor,
+		action,
+		getItems(rootDir),
+	)
 }
 
-func CmdFormatBufferAndSave(e *mcwig.Editor) {
-	mcwig.CmdSaveFile(e)
-	CmdFormatBuffer(e)
-	mcwig.CmdSaveFile(e)
+func CmdFormatBuffer(ctx mcwig.Context) {
+	if strings.HasSuffix(ctx.Buf.FilePath, ".go") {
+		formatcmd := fmt.Sprintf("cat %s | goimports", ctx.Buf.FilePath)
+		cmd := exec.Command("bash", "-c", formatcmd)
+		stdout, err := cmd.Output()
+		if err != nil {
+			ctx.Editor.LogMessage(err.Error())
+			ctx.Editor.LogMessage(string(stdout))
+			return
+		}
+		// TODO: update only changed lines
+		ctx.Buf.ResetLines()
+		lines := strings.Split(string(stdout), "\n")
+		for _, line := range lines {
+			ctx.Buf.Append(line)
+		}
+	}
 }
 
-func CmdSearchLine(e *mcwig.Editor) {
+func CmdSearchWordUnderCursor(ctx mcwig.Context) {
+	pat := ""
+	defer func() {
+		mcwig.LastSearchPattern = pat
+		mcwig.SearchNext(ctx, pat)
+	}()
+
+	if mcwig.CursorChClass(ctx.Buf) == 0 {
+		mcwig.CmdBackwardWord(ctx)
+	}
+
+	if ctx.Buf.Selection != nil {
+		pat = mcwig.SelectionToString(ctx.Buf)
+		mcwig.CmdNormalMode(ctx)
+		return
+	}
+
+	start, end := mcwig.TextObjectWord(ctx.Buf, true)
+	if end+1 > start {
+		line := mcwig.CursorLine(ctx.Buf)
+		pat = string(line.Value.Range(start, end+1))
+	}
+}
+
+func CmdFormatBufferAndSave(ctx mcwig.Context) {
+	mcwig.CmdSaveFile(ctx)
+	CmdFormatBuffer(ctx)
+	mcwig.CmdSaveFile(ctx)
+}
+
+func CmdSearchLine(ctx mcwig.Context) {
 	items := make([]ui.PickerItem[int], 0, 256)
 
-	line := e.ActiveBuffer().Lines.First()
+	line := ctx.Buf.Lines.First()
 	i := 0
 	for line != nil {
 		items = append(items, ui.PickerItem[int]{
@@ -212,96 +206,84 @@ func CmdSearchLine(e *mcwig.Editor) {
 	}
 
 	action := func(p *ui.UiPicker[int], i *ui.PickerItem[int]) {
-		buf := e.ActiveBuffer()
+		buf := ctx.Buf
 
-		e.ActiveWindow().Jumps.Push(buf)
-		defer e.ActiveWindow().Jumps.Push(buf)
+		ctx.Editor.ActiveWindow().Jumps.Push(buf)
+		defer ctx.Editor.ActiveWindow().Jumps.Push(buf)
 		buf.Cursor.Line = i.Value
 		buf.Cursor.Char = 0
-		mcwig.CmdCursorBeginningOfTheLine(e)
-		mcwig.CmdCursorCenter(e)
-		e.PopUi()
+		mcwig.CmdCursorBeginningOfTheLine(ctx)
+		mcwig.CmdCursorCenter(ctx)
+		ctx.Editor.PopUi()
 	}
 
 	ui.PickerInit(
-		e,
+		ctx.Editor,
 		action,
 		items,
 	)
 }
 
-func CmdGotoDefinition(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		filePath, cursor := e.Lsp.Definition(buf, buf.Cursor)
-		if filePath == "" {
-			return
-		}
+func CmdGotoDefinition(ctx mcwig.Context) {
+	filePath, cursor := ctx.Editor.Lsp.Definition(ctx.Buf, ctx.Buf.Cursor)
+	if filePath == "" {
+		return
+	}
 
-		nbuf := e.OpenFile(filePath)
-		if nbuf == nil {
-			return
-		}
-		e.ActiveWindow().VisitBuffer(nbuf, cursor)
-		mcwig.CmdCursorCenter(e)
-	})
+	nbuf := ctx.Editor.OpenFile(filePath)
+	if nbuf == nil {
+		return
+	}
+	ctx.Editor.ActiveWindow().VisitBuffer(nbuf, cursor)
+	mcwig.CmdCursorCenter(ctx)
 }
 
-// TODO: fix when per-window cursors are ready
-func CmdGotoDefinitionOtherWindow(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		if len(e.Windows) == 1 {
-			mcwig.CmdWindowVSplit(e)
-		}
+// TODO: fix when per-window cursors
+func CmdGotoDefinitionOtherWindow(ctx mcwig.Context) {
+	if len(ctx.Editor.Windows) == 1 {
+		mcwig.CmdWindowVSplit(ctx)
+	}
 
-		mcwig.CmdWindowNext(e)
-		e.ActiveWindow().ShowBuffer(buf)
-		CmdGotoDefinition(e)
-	})
+	mcwig.CmdWindowNext(ctx)
+	ctx.Editor.ActiveWindow().ShowBuffer(ctx.Buf)
+	CmdGotoDefinition(ctx)
 }
 
-func CmdViewDefinitionOtherWindow(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		curWin := e.ActiveWindow()
+func CmdViewDefinitionOtherWindow(ctx mcwig.Context) {
+	curWin := ctx.Editor.ActiveWindow()
 
-		if len(e.Windows) == 1 {
-			mcwig.CmdWindowVSplit(e)
-		}
+	if len(ctx.Editor.Windows) == 1 {
+		mcwig.CmdWindowVSplit(ctx)
+	}
 
-		mcwig.CmdWindowNext(e)
-		e.ActiveWindow().ShowBuffer(buf)
-		CmdGotoDefinition(e)
-		e.SetActiveWindow(curWin)
-	})
+	mcwig.CmdWindowNext(ctx)
+	ctx.Editor.ActiveWindow().ShowBuffer(ctx.Buf)
+	CmdGotoDefinition(ctx)
+	ctx.Editor.SetActiveWindow(curWin)
 }
 
-func CmdLspShowSignature(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		sign := e.Lsp.Signature(buf, buf.Cursor)
-		if sign != "" {
-			e.EchoMessage(sign)
-		}
-	})
+func CmdLspShowSignature(ctx mcwig.Context) {
+	sign := ctx.Editor.Lsp.Signature(ctx.Buf, ctx.Buf.Cursor)
+	if sign != "" {
+		ctx.Editor.EchoMessage(sign)
+	}
 }
 
-func CmdLspHover(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		sign := e.Lsp.Hover(buf, buf.Cursor)
-		if sign != "" {
-			e.EchoMessage(sign)
-		}
-	})
+func CmdLspHover(ctx mcwig.Context) {
+	sign := ctx.Editor.Lsp.Hover(ctx.Buf, ctx.Buf.Cursor)
+	if sign != "" {
+		ctx.Editor.EchoMessage(sign)
+	}
 }
 
-func CmdReloadBuffer(e *mcwig.Editor) {
-	mcwig.Do(e, func(buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
-		err := mcwig.BufferReloadFile(buf)
-		if err != nil {
-			e.EchoMessage(err.Error())
-		}
-	})
+func CmdReloadBuffer(ctx mcwig.Context) {
+	err := mcwig.BufferReloadFile(ctx.Buf)
+	if err != nil {
+		ctx.Editor.EchoMessage(err.Error())
+	}
 }
 
-func CmdMakeRun(e *mcwig.Editor) {
+func CmdMakeRun(ctx mcwig.Context) {
 	cmd := exec.Command("tmux", "send-keys", "-t", "mcwig:1.2", "make run", "Enter")
 	cmd.Dir = "/home/andrew/code/mcwig"
 	cmd.Start()
