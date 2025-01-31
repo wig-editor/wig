@@ -49,6 +49,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			";":      commands.CmdBufferPicker,
 			"*":      commands.CmdSearchWordUnderCursor,
 			"c": mcwig.KeyMap{
+				"$": mcwig.CmdChangeEndOfLine,
 				"c": mcwig.CmdChangeLine,
 				"w": mcwig.CmdChangeWord,
 				"a": mcwig.KeyMap{
@@ -57,7 +58,6 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"i": mcwig.CmdChangeInsideBlock,
 				"f": mcwig.CmdChangeTo,
 				"t": mcwig.CmdChangeBefore,
-				"$": mcwig.CmdChangeEndOfLine,
 			},
 			"d": mcwig.KeyMap{
 				"d": mcwig.CmdDeleteLine,
@@ -118,10 +118,10 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"l":      mcwig.WithSelection(mcwig.CmdCursorRight),
 			"j":      mcwig.WithSelection(mcwig.CmdCursorLineDown),
 			"k":      mcwig.WithSelection(mcwig.CmdCursorLineUp),
-			"f":      mcwig.WithSelectionToChar(mcwig.CmdForwardToChar),
-			"t":      mcwig.WithSelectionToChar(mcwig.CmdForwardBeforeChar),
 			"$":      mcwig.WithSelection(mcwig.CmdGotoLineEnd),
 			"0":      mcwig.WithSelection(mcwig.CmdCursorBeginningOfTheLine),
+			"f":      mcwig.CmdForwardToChar,
+			"t":      mcwig.CmdForwardBeforeChar,
 			"x":      mcwig.CmdSelectinDelete,
 			"d":      mcwig.CmdSelectinDelete,
 			"y":      mcwig.CmdYank,

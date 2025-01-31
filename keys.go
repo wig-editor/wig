@@ -62,12 +62,12 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	var keySet KeyMap
 
 	ctx := editor.NewContext()
+	ctx.Count = uint32(k.GetCount())
 
 	switch v := k.waitingForInput.(type) {
-	case func(ctx Context, ch string):
-		for i := 0; i < k.GetTimes(); i++ {
-			v(ctx, key)
-		}
+	case func(ctx Context):
+		ctx.Char = key
+		v(ctx)
 		k.resetState()
 		return
 	case KeyMap:
@@ -92,13 +92,11 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 		switch action := action.(type) {
 		case KeyMap:
 			k.waitingForInput = action
-		case func(ctx Context, ch string):
-			k.waitingForInput = action
 		case func(Context):
-			for i := 0; i < k.GetTimes(); i++ {
-				action(ctx)
-			}
+			action(ctx)
 			k.resetState()
+		case func(Context) func(Context): // func return next func
+			k.waitingForInput = action(ctx)
 		default:
 			k.resetState()
 		}
@@ -149,8 +147,8 @@ func (k *KeyHandler) resetState() {
 	k.waitingForInput = nil
 }
 
-func (k *KeyHandler) GetTimes() int {
-	const max = 100000
+func (k *KeyHandler) GetCount() int {
+	const max = 10000
 	val := strings.Join(k.times, "")
 	if isNumeric(val) {
 		v, _ := strconv.ParseInt(val, 10, 64)

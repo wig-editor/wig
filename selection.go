@@ -89,6 +89,10 @@ func SelectionStart(buf *Buffer) {
 	}
 }
 
+func SelectionStop(buf *Buffer) {
+	buf.Selection.End = buf.Cursor
+}
+
 func WithSelection(fn func(Context)) func(Context) {
 	return func(ctx Context) {
 		fn(ctx)
@@ -115,10 +119,19 @@ func WithSelection(fn func(Context)) func(Context) {
 	}
 }
 
-func WithSelectionToChar(fn func(ctx Context)) func(ctx Context) {
-	return func(ctx Context) {
-		fn(ctx)
-		buf := ctx.Buf
-		buf.Selection.End = buf.Cursor
-	}
-}
+// func WithSelectionToChar(fn interface{}) func(ctx Context) {
+// 	switch fn := fn.(type) {
+// 	case func(ctx Context):
+// 		return func(ctx Context) {
+// 			fn(ctx)
+// 			ctx.Buf.Selection.End = ctx.Buf.Cursor
+// 		}
+// 	case func(ctx Context) func(Context):
+// 		return func(ctx Context) {
+// 			fn(ctx)
+// 			ctx.Buf.Selection.End = ctx.Buf.Cursor
+// 		}
+// 	}
+
+// 	return nil
+// }

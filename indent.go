@@ -3,31 +3,31 @@ package mcwig
 import "strings"
 
 func CmdIndent(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if !strings.HasSuffix(buf.FilePath, ".go") {
-			return
+	if !strings.HasSuffix(ctx.Buf.FilePath, ".go") {
+		return
+	}
+
+	line := CursorLine(ctx.Buf)
+
+	prevLine := line.Prev()
+	for prevLine != nil {
+		if prevLine.Value.IsEmpty() {
+			prevLine = prevLine.Prev()
+			continue
 		}
 
-		prevLine := line.Prev()
-		for prevLine != nil {
-			if prevLine.Value.IsEmpty() {
-				prevLine = prevLine.Prev()
-				continue
-			}
+		// TODO: optimize this chunk. do not copy full line.
+		line.Value = make([]rune, len(prevLine.Value))
+		copy(line.Value, prevLine.Value)
+		CmdCursorFirstNonBlank(ctx)
+		line.Value = line.Value[:ctx.Buf.Cursor.Char]
 
-			// TODO: optimize this chunk. do not copy full line.
-			line.Value = make([]rune, len(prevLine.Value))
-			copy(line.Value, prevLine.Value)
-			CmdCursorFirstNonBlank(ctx)
-			line.Value = line.Value[:buf.Cursor.Char]
-
-			if prevLine.Value[len(prevLine.Value)-1] == '{' {
-				line.Value = append(line.Value, '\t')
-				CmdCursorRight(ctx)
-			}
-			break
+		if prevLine.Value[len(prevLine.Value)-1] == '{' {
+			line.Value = append(line.Value, '\t')
+			CmdCursorRight(ctx)
 		}
-	})
+		break
+	}
 }
 
 // Get number if "indents" in provided line

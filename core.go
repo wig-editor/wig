@@ -17,62 +17,45 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	buf.Lines.Remove(next)
 }
 
-func Do(ctx Context, fn func(buf *Buffer, line *Element[Line])) {
-	if ctx.Buf.TxStart() {
-		defer ctx.Buf.TxEnd()
-	}
-
-	fn(ctx.Buf, CursorLine(ctx.Buf))
-}
-
 func CmdJoinNextLine(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		CmdGotoLineEnd(ctx)
-		lineJoinNext(buf, line)
-	})
+	CmdGotoLineEnd(ctx)
+	lineJoinNext(ctx.Buf, CursorLine(ctx.Buf))
 }
 
 func CmdScrollUp(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if buf.ScrollOffset > 0 {
-			buf.ScrollOffset--
+	if ctx.Buf.ScrollOffset > 0 {
+		ctx.Buf.ScrollOffset--
 
-			_, h := ctx.Editor.View.Size()
-			if buf.Cursor.Line > buf.ScrollOffset+h-minVisibleLines {
-				CmdCursorLineUp(ctx)
-			}
+		_, h := ctx.Editor.View.Size()
+		if ctx.Buf.Cursor.Line > ctx.Buf.ScrollOffset+h-minVisibleLines {
+			CmdCursorLineUp(ctx)
 		}
-	})
+	}
 }
 
 func CmdScrollDown(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if buf.ScrollOffset < buf.Lines.Len-minVisibleLines {
-			buf.ScrollOffset++
+	if ctx.Buf.ScrollOffset < ctx.Buf.Lines.Len-minVisibleLines {
+		ctx.Buf.ScrollOffset++
 
-			if buf.Cursor.Line <= buf.ScrollOffset+minVisibleLines {
-				CmdCursorLineDown(ctx)
-			}
+		if ctx.Buf.Cursor.Line <= ctx.Buf.ScrollOffset+minVisibleLines {
+			CmdCursorLineDown(ctx)
 		}
-	})
+	}
 }
 
 func CmdCursorLeft(ctx Context) {
-	Do(ctx, func(buf *Buffer, _ *Element[Line]) {
-		if buf.Cursor.Char > 0 {
-			buf.Cursor.Char--
-			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
-		}
-	})
+	if ctx.Buf.Cursor.Char > 0 {
+		ctx.Buf.Cursor.Char--
+		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
+	}
 }
 
 func CmdCursorRight(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if buf.Cursor.Char < len(line.Value) {
-			buf.Cursor.Char++
-			buf.Cursor.PreserveCharPosition = buf.Cursor.Char
-		}
-	})
+	line := CursorLine(ctx.Buf)
+	if ctx.Buf.Cursor.Char < len(line.Value) {
+		ctx.Buf.Cursor.Char++
+		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
+	}
 }
 
 func CmdCursorLineUp(ctx Context) {
@@ -80,11 +63,11 @@ func CmdCursorLineUp(ctx Context) {
 	if buf == nil {
 		return
 	}
-	if buf.Cursor.Line > 0 {
-		buf.Cursor.Line--
+	if ctx.Buf.Cursor.Line > 0 {
+		ctx.Buf.Cursor.Line--
 		restoreCharPosition(buf)
 
-		if buf.Cursor.Line < buf.ScrollOffset+minVisibleLines {
+		if ctx.Buf.Cursor.Line < ctx.Buf.ScrollOffset+minVisibleLines {
 			CmdScrollUp(ctx)
 		}
 	}
@@ -95,60 +78,52 @@ func CmdCursorLineDown(ctx Context) {
 	if buf == nil {
 		return
 	}
-	if buf.Cursor.Line < buf.Lines.Len-1 {
-		buf.Cursor.Line++
+	if ctx.Buf.Cursor.Line < ctx.Buf.Lines.Len-1 {
+		ctx.Buf.Cursor.Line++
 		restoreCharPosition(buf)
 
 		_, h := ctx.Editor.View.Size()
-		if buf.Cursor.Line-buf.ScrollOffset > h-minVisibleLines {
+		if ctx.Buf.Cursor.Line-ctx.Buf.ScrollOffset > h-minVisibleLines {
 			CmdScrollDown(ctx)
 		}
 	}
 }
 
 func CmdCursorBeginningOfTheLine(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		buf.Cursor.Char = 0
-		buf.Cursor.PreserveCharPosition = 0
-	})
+	ctx.Buf.Cursor.Char = 0
+	ctx.Buf.Cursor.PreserveCharPosition = 0
 }
 
 func CmdCursorFirstNonBlank(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		CmdCursorBeginningOfTheLine(ctx)
-		if len(line.Value) == 0 {
-			return
+	line := CursorLine(ctx.Buf)
+	CmdCursorBeginningOfTheLine(ctx)
+	if len(line.Value) == 0 {
+		return
+	}
+	for _, c := range line.Value {
+		if unicode.IsSpace(c) {
+			CmdCursorRight(ctx)
+		} else {
+			break
 		}
-		for _, c := range line.Value {
-			if unicode.IsSpace(c) {
-				CmdCursorRight(ctx)
-			} else {
-				break
-			}
-		}
-	})
+	}
 }
 
 func CmdEnterInsertMode(ctx Context) {
-	buf := ctx.Editor.ActiveBuffer()
-	if buf == nil {
-		return
-	}
-
-	line := CursorLine(buf)
+	line := CursorLine(ctx.Buf)
 	if line == nil {
 		return
 	}
 
-	if !buf.TxStart() {
+	if !ctx.Buf.TxStart() {
 		ctx.Editor.LogMessage("should not happen")
 	}
 
 	if len(line.Value) == 0 {
-		buf.Cursor.Char++
+		ctx.Buf.Cursor.Char++
 	}
 
-	buf.SetMode(MODE_INSERT)
+	ctx.Buf.SetMode(MODE_INSERT)
 }
 
 func CmdExitInsertMode(ctx Context) {
@@ -181,277 +156,248 @@ func CmdExitInsertMode(ctx Context) {
 }
 
 func CmdVisualMode(ctx Context) {
-	Do(ctx, func(buf *Buffer, _ *Element[Line]) {
-		SelectionStart(buf)
-		buf.SetMode(MODE_VISUAL)
-	})
+	SelectionStart(ctx.Buf)
+	ctx.Buf.SetMode(MODE_VISUAL)
 }
 func CmdNormalMode(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if buf.Mode() == MODE_INSERT {
-			CmdCursorLeft(ctx)
-			if buf.Cursor.Char >= len(line.Value) {
-				CmdGotoLineEnd(ctx)
-			}
+	if ctx.Buf.Mode() == MODE_INSERT {
+		line := CursorLine(ctx.Buf)
+		CmdCursorLeft(ctx)
+		if ctx.Buf.Cursor.Char >= len(line.Value) {
+			CmdGotoLineEnd(ctx)
 		}
-		buf.SetMode(MODE_NORMAL)
-		buf.Selection = nil
-	})
+	}
+	ctx.Buf.SetMode(MODE_NORMAL)
+	ctx.Buf.Selection = nil
 }
 
 func CmdVisualLineMode(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		SelectionStart(buf)
-		buf.Selection.Start.Char = 0
-		buf.Selection.End.Char = len(line.Value) - 1
-		buf.SetMode(MODE_VISUAL_LINE)
-	})
+	line := CursorLine(ctx.Buf)
+	SelectionStart(ctx.Buf)
+	ctx.Buf.Selection.Start.Char = 0
+	ctx.Buf.Selection.End.Char = len(line.Value) - 1
+	ctx.Buf.SetMode(MODE_VISUAL_LINE)
 }
 
 func CmdInsertModeAfter(ctx Context) {
-	Do(ctx, func(buf *Buffer, _ *Element[Line]) {
-		buf.Cursor.Char++
-		CmdEnterInsertMode(ctx)
-	})
+	ctx.Buf.Cursor.Char++
+	CmdEnterInsertMode(ctx)
 }
 
 func CmdGotoLine0(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		buf.Cursor.Line = 0
-		buf.ScrollOffset = 0
-		restoreCharPosition(buf)
-		ctx.Editor.ActiveWindow().Jumps.Push(buf)
-
-		if ctx.Editor.Keys.GetTimes() > 1 {
-			ln := ctx.Editor.Keys.GetTimes() - 1
-			if ln >= buf.Lines.Len {
-				ln = buf.Lines.Len - 1
-			}
-			buf.Cursor.Line = ln
-
-			_, h := ctx.Editor.View.Size()
-			if buf.Cursor.Line > buf.ScrollOffset+h-minVisibleLines {
-				buf.ScrollOffset = buf.Cursor.Line - h/2
-			}
-
-			if buf.Cursor.Line <= buf.ScrollOffset+h+minVisibleLines {
-				buf.ScrollOffset = buf.Cursor.Line - h/2
-			}
-
-			ctx.Editor.Keys.resetState()
-		}
-	})
+	ctx.Buf.Cursor.Line = 0
+	ctx.Buf.ScrollOffset = 0
+	restoreCharPosition(ctx.Buf)
+	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf)
 }
 
 func CmdGotoLineEnd(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if line == nil {
-			return
-		}
-		if len(line.Value) > 0 {
-			buf.Cursor.Char = len(line.Value) - 1
-		} else {
-			buf.Cursor.Char = 0
-		}
-		ctx.Editor.ActiveWindow().Jumps.Push(buf)
-	})
+	line := CursorLine(ctx.Buf)
+	if len(line.Value) > 0 {
+		ctx.Buf.Cursor.Char = len(line.Value) - 1
+	} else {
+		ctx.Buf.Cursor.Char = 0
+	}
+	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf)
 }
 
 func CmdForwardWord(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		defer func() {
-			_, h := ctx.Editor.View.Size()
-			if buf.Cursor.Line-buf.ScrollOffset > h-minVisibleLines {
-				CmdScrollDown(ctx)
+	defer func() {
+		CmdEnsureCursorVisible(ctx)
+	}()
+
+	line := CursorLine(ctx.Buf)
+
+	cls := CursorChClass(ctx.Buf)
+	CursorInc(ctx.Buf)
+
+	// return on line change
+	if line != CursorLine(ctx.Buf) {
+		return
+	}
+
+	if cls != chWhitespace {
+		for CursorChClass(ctx.Buf) == cls {
+			if !CursorInc(ctx.Buf) {
+				return
 			}
-		}()
+		}
+	}
 
-		cls := CursorChClass(buf)
-		CursorInc(buf)
-
-		// return on line change
-		if line != CursorLine(buf) {
+	// skip whitespace
+	line = CursorLine(ctx.Buf)
+	for CursorChClass(ctx.Buf) == chWhitespace {
+		if !CursorInc(ctx.Buf) {
 			return
 		}
-
-		if cls != chWhitespace {
-			for CursorChClass(buf) == cls {
-				if !CursorInc(buf) {
-					return
-				}
-			}
+		if line != CursorLine(ctx.Buf) {
+			return
 		}
-
-		// skip whitespace
-		line = CursorLine(buf)
-		for CursorChClass(buf) == chWhitespace {
-			if !CursorInc(buf) {
-				return
-			}
-			if line != CursorLine(buf) {
-				return
-			}
-		}
-	})
+	}
 }
 
 func CmdBackwardWord(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		defer func() {
-			if buf.Cursor.Line < buf.ScrollOffset+minVisibleLines {
-				CmdScrollUp(ctx)
-			}
-		}()
+	defer func() {
+		CmdEnsureCursorVisible(ctx)
+	}()
 
-		cls := CursorChClass(buf)
-		CursorDec(buf)
+	line := CursorLine(ctx.Buf)
+	cls := CursorChClass(ctx.Buf)
+	CursorDec(ctx.Buf)
 
-		// return on line change
-		if line != CursorLine(buf) {
-			return
-		}
+	// return on line change
+	if line != CursorLine(ctx.Buf) {
+		return
+	}
 
-		if cls != chWhitespace && CursorChClass(buf) == cls {
-			for {
-				if buf.Cursor.Char == 0 {
-					return
-				}
-				if CursorChClass(buf) != cls {
-					CursorInc(buf)
-					return
-				}
-
-				if !CursorDec(buf) {
-					return
-				}
-			}
-		}
-
-		// skip !=cls and whitespace
-		for CursorChClass(buf) == chWhitespace {
-			if !CursorDec(buf) {
-				return
-			}
-		}
-
-		cls = CursorChClass(buf)
+	if cls != chWhitespace && CursorChClass(ctx.Buf) == cls {
 		for {
-			if buf.Cursor.Char == 0 {
+			if ctx.Buf.Cursor.Char == 0 {
 				return
 			}
-			if CursorChClass(buf) == cls {
-				if !CursorDec(buf) {
-					return
-				}
-				continue
+			if CursorChClass(ctx.Buf) != cls {
+				CursorInc(ctx.Buf)
+				return
 			}
-			CursorInc(buf)
-			break
+
+			if !CursorDec(ctx.Buf) {
+				return
+			}
 		}
-	})
+	}
+
+	// skip !=cls and whitespace
+	for CursorChClass(ctx.Buf) == chWhitespace {
+		if !CursorDec(ctx.Buf) {
+			return
+		}
+	}
+
+	cls = CursorChClass(ctx.Buf)
+	for {
+		if ctx.Buf.Cursor.Char == 0 {
+			return
+		}
+		if CursorChClass(ctx.Buf) == cls {
+			if !CursorDec(ctx.Buf) {
+				return
+			}
+			continue
+		}
+		CursorInc(ctx.Buf)
+		break
+	}
 }
 
-func CmdReplaceChar(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
+func CmdReplaceChar(ctx Context) func(Context) {
+	return func(ctx Context) {
 		c := []rune(ctx.Char)
-		line.Value[buf.Cursor.Char] = c[0]
-	})
+		line := CursorLine(ctx.Buf)
+		line.Value[ctx.Buf.Cursor.Char] = c[0]
+	}
 }
 
-func CmdForwardToChar(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
+func CmdForwardToChar(_ Context) func(Context) {
+	return func(ctx Context) {
+		if ctx.Buf.Mode() == MODE_VISUAL {
+			defer SelectionStop(ctx.Buf)
+		}
+
+		line := CursorLine(ctx.Buf)
 		if line.Value.IsEmpty() {
 			return
 		}
-		for i := buf.Cursor.Char + 1; i < len(line.Value); i++ {
+		for i := ctx.Buf.Cursor.Char + 1; i < len(line.Value); i++ {
 			if strings.EqualFold(string(line.Value[i]), ctx.Char) {
-				buf.Cursor.Char = i
-				buf.Cursor.PreserveCharPosition = i
+				ctx.Buf.Cursor.Char = i
+				ctx.Buf.Cursor.PreserveCharPosition = i
 				break
 			}
 		}
-	})
+	}
 }
 
-func CmdForwardBeforeChar(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
+func CmdForwardBeforeChar(_ Context) func(Context) {
+	return func(ctx Context) {
+		if ctx.Buf.Mode() == MODE_VISUAL {
+			defer SelectionStop(ctx.Buf)
+		}
+
+		line := CursorLine(ctx.Buf)
 		if line.Value.IsEmpty() {
 			return
 		}
-		for i := buf.Cursor.Char + 1; i < len(line.Value); i++ {
+		for i := ctx.Buf.Cursor.Char + 1; i < len(line.Value); i++ {
 			if strings.EqualFold(string(line.Value[i]), ctx.Char) {
-				buf.Cursor.Char = i - 1
-				buf.Cursor.PreserveCharPosition = i - 1
+				ctx.Buf.Cursor.Char = i - 1
+				ctx.Buf.Cursor.PreserveCharPosition = i - 1
 				break
 			}
 		}
-	})
+	}
 }
 
 func CmdBackwardChar(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if len(line.Value) == 0 {
-			return
-		}
+	line := CursorLine(ctx.Buf)
+	if len(line.Value) == 0 {
+		return
+	}
 
-		for i := buf.Cursor.Char - 1; i >= 0; i-- {
-			if string(line.Value[i]) == ctx.Char {
-				buf.Cursor.Char = i
-				buf.Cursor.PreserveCharPosition = i
-				break
-			}
+	for i := ctx.Buf.Cursor.Char - 1; i >= 0; i-- {
+		if string(line.Value[i]) == ctx.Char {
+			ctx.Buf.Cursor.Char = i
+			ctx.Buf.Cursor.PreserveCharPosition = i
+			break
 		}
-	})
+	}
 }
 
 func CmdDeleteCharForward(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if len(line.Value) == 0 {
-			CmdGotoLineEnd(ctx)
-			lineJoinNext(buf, line)
-			CmdCursorBeginningOfTheLine(ctx)
-			return
-		}
-		line.Value = append(line.Value[:buf.Cursor.Char], line.Value[buf.Cursor.Char+1:]...)
-		if buf.Cursor.Char >= len(line.Value) {
-			CmdCursorLeft(ctx)
-		}
-	})
+	line := CursorLine(ctx.Buf)
+	if len(line.Value) == 0 {
+		CmdGotoLineEnd(ctx)
+		lineJoinNext(ctx.Buf, line)
+		CmdCursorBeginningOfTheLine(ctx)
+		return
+	}
+	line.Value = append(line.Value[:ctx.Buf.Cursor.Char], line.Value[ctx.Buf.Cursor.Char+1:]...)
+	if ctx.Buf.Cursor.Char >= len(line.Value) {
+		CmdCursorLeft(ctx)
+	}
 }
 
 func CmdDeleteCharBackward(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if buf.Cursor.Line == 0 && buf.Cursor.Char == 0 {
-			return
-		}
+	if ctx.Buf.Cursor.Line == 0 && ctx.Buf.Cursor.Char == 0 {
+		return
+	}
 
-		if len(line.Value) == 0 {
-			if buf.Lines.Len > 1 {
-				buf.Lines.Remove(line)
-			}
-			CmdCursorLineUp(ctx)
-			CmdAppendLine(ctx)
-			return
+	line := CursorLine(ctx.Buf)
+	if len(line.Value) == 0 {
+		if ctx.Buf.Lines.Len > 1 {
+			ctx.Buf.Lines.Remove(line)
 		}
+		CmdCursorLineUp(ctx)
+		CmdAppendLine(ctx)
+		return
+	}
 
-		if buf.Cursor.Char == 0 {
-			CmdCursorLineUp(ctx)
-			line = CursorLine(buf)
-			pos := len(line.Value)
-			lineJoinNext(buf, line)
-			cursorGotoChar(buf, pos)
-			return
-		}
+	if ctx.Buf.Cursor.Char == 0 {
+		CmdCursorLineUp(ctx)
+		line = CursorLine(ctx.Buf)
+		pos := len(line.Value)
+		lineJoinNext(ctx.Buf, line)
+		cursorGotoChar(ctx.Buf, pos)
+		return
+	}
 
-		if buf.Cursor.Char >= len(line.Value) && len(line.Value) > 0 {
-			line.Value = line.Value[:len(line.Value)-1]
-			CmdCursorLeft(ctx)
-			return
-		}
-
+	if ctx.Buf.Cursor.Char >= len(line.Value) && len(line.Value) > 0 {
+		line.Value = line.Value[:len(line.Value)-1]
 		CmdCursorLeft(ctx)
-		CmdDeleteCharForward(ctx)
-	})
+		return
+	}
+
+	CmdCursorLeft(ctx)
+	CmdDeleteCharForward(ctx)
 }
 
 func CmdAppendLine(ctx Context) {
@@ -460,24 +406,23 @@ func CmdAppendLine(ctx Context) {
 }
 
 func CmdNewLine(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		// EOL
-		if (buf.Cursor.Char) >= len(line.Value) {
-			buf.Lines.insertValueAfter(Line{}, line)
-			buf.Cursor.Line++
-			buf.Cursor.Char = 1
-			buf.Cursor.PreserveCharPosition = 0
-			return
-		}
+	line := CursorLine(ctx.Buf)
+	// EOL
+	if (ctx.Buf.Cursor.Char) >= len(line.Value) {
+		ctx.Buf.Lines.insertValueAfter(Line{}, line)
+		ctx.Buf.Cursor.Line++
+		ctx.Buf.Cursor.Char = 1
+		ctx.Buf.Cursor.PreserveCharPosition = 0
+		return
+	}
 
-		// split line
-		tmpData := make([]rune, len(line.Value[buf.Cursor.Char:]))
-		copy(tmpData, line.Value[buf.Cursor.Char:])
-		line.Value = line.Value[:buf.Cursor.Char]
-		buf.Lines.insertValueAfter(tmpData, line)
-		CmdCursorLineDown(ctx)
-		CmdCursorBeginningOfTheLine(ctx)
-	})
+	// split line
+	tmpData := make([]rune, len(line.Value[ctx.Buf.Cursor.Char:]))
+	copy(tmpData, line.Value[ctx.Buf.Cursor.Char:])
+	line.Value = line.Value[:ctx.Buf.Cursor.Char]
+	ctx.Buf.Lines.insertValueAfter(tmpData, line)
+	CmdCursorLineDown(ctx)
+	CmdCursorBeginningOfTheLine(ctx)
 }
 
 func CmdLineOpenBelow(ctx Context) {
@@ -488,217 +433,199 @@ func CmdLineOpenBelow(ctx Context) {
 }
 
 func CmdLineOpenAbove(ctx Context) {
-	Do(ctx, func(buf *Buffer, _ *Element[Line]) {
-		if buf.Cursor.Line == 0 {
-			buf.Lines.PushFront(Line{})
-			CmdCursorBeginningOfTheLine(ctx)
-			CmdInsertModeAfter(ctx)
-			return
-		}
-		CmdCursorLineUp(ctx)
-		CmdLineOpenBelow(ctx)
-	})
+	if ctx.Buf.Cursor.Line == 0 {
+		ctx.Buf.Lines.PushFront(Line{})
+		CmdCursorBeginningOfTheLine(ctx)
+		CmdInsertModeAfter(ctx)
+		return
+	}
+	CmdCursorLineUp(ctx)
+	CmdLineOpenBelow(ctx)
 }
 
 func CmdDeleteLine(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		CmdVisualLineMode(ctx)
-		CmdSelectinDelete(ctx)
-		CmdNormalMode(ctx)
-	})
+	CmdVisualLineMode(ctx)
+	ctx.Buf.Selection.End.Line = ctx.Buf.Selection.Start.Line + int(ctx.Count)
+	ctx.Buf.Selection.End.Char = len(CursorLineByNum(ctx.Buf, ctx.Buf.Selection.End.Line).Value)
+	CmdSelectinDelete(ctx)
+	CmdNormalMode(ctx)
 }
 
 func CmdDeleteWord(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		_, end := TextObjectWord(buf, false)
-		buf.Selection = &Selection{
-			Start: buf.Cursor,
-			End:   Cursor{Line: buf.Cursor.Line, Char: end},
-		}
-		CmdSelectinDelete(ctx)
-	})
+	_, end := TextObjectWord(ctx.Buf, false)
+	ctx.Buf.Selection = &Selection{
+		Start: ctx.Buf.Cursor,
+		End:   Cursor{Line: ctx.Buf.Cursor.Line, Char: end},
+	}
+	CmdSelectinDelete(ctx)
 }
 
 func CmdChangeWord(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		_, end := TextObjectWord(buf, false)
-		buf.Selection = &Selection{
-			Start: buf.Cursor,
-			End:   Cursor{Line: buf.Cursor.Line, Char: end},
-		}
-		CmdSelectinDelete(ctx)
-		CmdEnterInsertMode(ctx)
-	})
+	_, end := TextObjectWord(ctx.Buf, false)
+	ctx.Buf.Selection = &Selection{
+		Start: ctx.Buf.Cursor,
+		End:   Cursor{Line: ctx.Buf.Cursor.Line, Char: end},
+	}
+	CmdSelectinDelete(ctx)
+	CmdEnterInsertMode(ctx)
 }
 
 func CmdChangeWORD(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		start, end := TextObjectWord(buf, true)
-		buf.Cursor.Char = start
-		buf.Selection = &Selection{
-			Start: buf.Cursor,
-			End:   Cursor{Line: buf.Cursor.Line, Char: end},
-		}
-		CmdSelectinDelete(ctx)
-		CmdEnterInsertMode(ctx)
-	})
+	start, end := TextObjectWord(ctx.Buf, true)
+	ctx.Buf.Cursor.Char = start
+	ctx.Buf.Selection = &Selection{
+		Start: ctx.Buf.Cursor,
+		End:   Cursor{Line: ctx.Buf.Cursor.Line, Char: end},
+	}
+	CmdSelectinDelete(ctx)
+	CmdEnterInsertMode(ctx)
 }
 
-func CmdChangeTo(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		SelectionStart(buf)
-		WithSelectionToChar(CmdForwardToChar)(ctx)
+func CmdChangeTo(_ Context) func(Context) {
+	return func(ctx Context) {
+		SelectionStart(ctx.Buf)
+		CmdForwardToChar(ctx)(ctx)
+		SelectionStop(ctx.Buf)
 		CmdSelectionChange(ctx)
-	})
+	}
 }
 
-func CmdChangeBefore(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		SelectionStart(buf)
-		WithSelectionToChar(CmdForwardBeforeChar)(ctx)
+func CmdChangeBefore(_ Context) func(Context) {
+	return func(ctx Context) {
+		SelectionStart(ctx.Buf)
+		CmdForwardBeforeChar(ctx)(ctx)
+		SelectionStop(ctx.Buf)
 		CmdSelectionChange(ctx)
-	})
+	}
 }
 
 func CmdChangeEndOfLine(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		SelectionStart(buf)
-		buf.Selection.End.Char = len(line.Value) - 1
-		CmdSelectionChange(ctx)
-	})
+	SelectionStart(ctx.Buf)
+	CmdGotoLineEnd(ctx)
+	SelectionStop(ctx.Buf)
+	CmdSelectionChange(ctx)
 }
 
 func CmdChangeLine(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		CmdInsertModeAfter(ctx)
-		line.Value = nil
-	})
+	CmdInsertModeAfter(ctx)
+	line := CursorLine(ctx.Buf)
+	line.Value = nil
 }
 
-func CmdDeleteTo(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		SelectionStart(buf)
-		WithSelectionToChar(CmdForwardToChar)(ctx)
+func CmdDeleteTo(_ Context) func(Context) {
+	return func(ctx Context) {
+		SelectionStart(ctx.Buf)
+		CmdForwardToChar(ctx)(ctx)
+		SelectionStop(ctx.Buf)
 		CmdSelectinDelete(ctx)
-	})
+	}
 }
 
 func CmdDeleteBefore(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		SelectionStart(buf)
-		WithSelectionToChar(CmdForwardBeforeChar)(ctx)
-		CmdSelectinDelete(ctx)
-	})
+	SelectionStart(ctx.Buf)
+	CmdForwardBeforeChar(ctx)(ctx)
+	CmdSelectinDelete(ctx)
 }
 
 func CmdSelectionChange(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		CmdSelectinDelete(ctx)
-		CmdEnterInsertMode(ctx)
-	})
+	CmdSelectinDelete(ctx)
+	CmdEnterInsertMode(ctx)
 }
 
 func CmdToggleComment(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		comment := []rune("// ")
-		cmAppend := func(line *Element[Line]) {
-			idx := 0
-			for i, c := range line.Value {
-				if !unicode.IsSpace(c) {
-					idx = i
-					break
-				}
+	comment := []rune("// ")
+	cmAppend := func(line *Element[Line]) {
+		idx := 0
+		for i, c := range line.Value {
+			if !unicode.IsSpace(c) {
+				idx = i
+				break
 			}
-			tmpData := make([]rune, 0, len(line.Value)+len(comment))
-			tmpData = append(tmpData, line.Value[:idx]...)
-			tmpData = append(tmpData, comment...)
-			tmpData = append(tmpData, line.Value[idx:]...)
-			line.Value = tmpData
-
 		}
-		cmAppend(line)
-	})
+		tmpData := make([]rune, 0, len(line.Value)+len(comment))
+		tmpData = append(tmpData, line.Value[:idx]...)
+		tmpData = append(tmpData, comment...)
+		tmpData = append(tmpData, line.Value[idx:]...)
+		line.Value = tmpData
+
+	}
+	line := CursorLine(ctx.Buf)
+	cmAppend(line)
 }
 
 func CmdSelectinDelete(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		defer func() {
-			buf.Selection = nil
-		}()
-		if buf.Selection == nil {
+	defer func() {
+		ctx.Buf.Selection = nil
+	}()
+	if ctx.Buf.Selection == nil {
+		return
+	}
+
+	sel := SelectionNormalize(ctx.Buf.Selection)
+
+	yankSave(ctx)
+
+	lineStart := CursorLineByNum(ctx.Buf, sel.Start.Line)
+	lineEnd := CursorLineByNum(ctx.Buf, sel.End.Line)
+
+	if sel.Start.Line == sel.End.Line {
+		if len(lineStart.Value) == 0 || ctx.Buf.Mode() == MODE_VISUAL_LINE {
+			ctx.Buf.Lines.Remove(lineStart)
+			CmdCursorBeginningOfTheLine(ctx)
 			return
 		}
 
-		sel := SelectionNormalize(buf.Selection)
-
-		yankSave(ctx)
-
-		lineStart := CursorLineByNum(buf, sel.Start.Line)
-		lineEnd := CursorLineByNum(buf, sel.End.Line)
-
-		if sel.Start.Line == sel.End.Line {
-			if len(lineStart.Value) == 0 || buf.Mode() == MODE_VISUAL_LINE {
-				buf.Lines.Remove(lineStart)
-				CmdCursorBeginningOfTheLine(ctx)
-				return
-			}
-
-			if sel.End.Char < len(lineStart.Value) {
-				lineStart.Value = append(lineStart.Value[:sel.Start.Char], lineStart.Value[sel.End.Char+1:]...)
-			} else {
-				lineStart.Value = lineStart.Value[:sel.Start.Char]
-			}
-
-			cursorGotoChar(buf, sel.Start.Char)
+		if sel.End.Char < len(lineStart.Value) {
+			lineStart.Value = append(lineStart.Value[:sel.Start.Char], lineStart.Value[sel.End.Char+1:]...)
 		} else {
-			// delete all lines between start and end line
-			for lineStart.Next() != lineEnd {
-				buf.Lines.Remove(lineStart.Next())
-			}
-
 			lineStart.Value = lineStart.Value[:sel.Start.Char]
-
-			if sel.End.Char+1 <= len(lineEnd.Value) {
-				lineEnd.Value = lineEnd.Value[sel.End.Char+1:]
-			}
-
-			if len(lineEnd.Value) == 0 {
-				buf.Lines.Remove(lineEnd)
-			}
-
-			lineJoinNext(buf, lineStart)
-
-			buf.Cursor.Line = sel.Start.Line
-			if lineStart != nil && sel.Start.Char < len(lineStart.Value) {
-				cursorGotoChar(buf, sel.Start.Char)
-			} else {
-				CmdGotoLineEnd(ctx)
-			}
 		}
-	})
+
+		cursorGotoChar(ctx.Buf, sel.Start.Char)
+	} else {
+		// delete all lines between start and end line
+		for lineStart.Next() != lineEnd {
+			ctx.Buf.Lines.Remove(lineStart.Next())
+		}
+
+		lineStart.Value = lineStart.Value[:sel.Start.Char]
+
+		if sel.End.Char+1 <= len(lineEnd.Value) {
+			lineEnd.Value = lineEnd.Value[sel.End.Char+1:]
+		}
+
+		if len(lineEnd.Value) == 0 {
+			ctx.Buf.Lines.Remove(lineEnd)
+		}
+
+		lineJoinNext(ctx.Buf, lineStart)
+
+		ctx.Buf.Cursor.Line = sel.Start.Line
+		if lineStart != nil && sel.Start.Char < len(lineStart.Value) {
+			cursorGotoChar(ctx.Buf, sel.Start.Char)
+		} else {
+			CmdGotoLineEnd(ctx)
+		}
+	}
 }
 
 func CmdSaveFile(ctx Context) {
-	Do(ctx, func(buf *Buffer, _ *Element[Line]) {
-		err := buf.Save()
-		var msg string
-		if err == nil {
-			msg = fmt.Sprintf("Saved file %s. Lines: %d.", buf.FilePath, buf.Lines.Len)
-		} else {
-			msg = err.Error()
-		}
+	err := ctx.Buf.Save()
+	var msg string
+	if err == nil {
+		msg = fmt.Sprintf("Saved file %s. Lines: %d.", ctx.Buf.FilePath, ctx.Buf.Lines.Len)
+	} else {
+		msg = err.Error()
+	}
 
-		ctx.Editor.LogMessage(msg)
-		ctx.Editor.EchoMessage(msg)
-	})
+	ctx.Editor.LogMessage(msg)
+	ctx.Editor.EchoMessage(msg)
 }
 
 func CmdWindowVSplit(ctx Context) {
-	Do(ctx, func(buf *Buffer, _ *Element[Line]) {
-		nwin := CreateWindow()
-		nwin.VisitBuffer(buf)
-		ctx.Editor.Windows = append(ctx.Editor.Windows, nwin)
-	})
+	nwin := CreateWindow()
+	nwin.VisitBuffer(ctx.Buf)
+	ctx.Editor.Windows = append(ctx.Editor.Windows, nwin)
 }
 
 func CmdWindowNext(ctx Context) {
@@ -745,54 +672,48 @@ func CmdExit(ctx Context) {
 }
 
 func CmdYank(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		defer func() {
-			if buf.Selection != nil {
-				buf.Cursor = buf.Selection.Start
-			}
-			CmdExitInsertMode(ctx)
-		}()
-		yankSave(ctx)
-	})
+	defer func() {
+		if ctx.Buf.Selection != nil {
+			ctx.Buf.Cursor = ctx.Buf.Selection.Start
+		}
+		CmdExitInsertMode(ctx)
+	}()
+	yankSave(ctx)
 }
 
 func CmdYankPut(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if ctx.Editor.Yanks.Len == 0 {
-			return
-		}
+	if ctx.Editor.Yanks.Len == 0 {
+		return
+	}
 
+	CmdCursorRight(ctx)
+	v := ctx.Editor.Yanks.Last()
+
+	if v.Value.isLine {
+		CmdGotoLineEnd(ctx)
 		CmdCursorRight(ctx)
-		v := ctx.Editor.Yanks.Last()
+		CmdNewLine(ctx)
+		CmdEnsureCursorVisible(ctx)
+		defer CmdCursorBeginningOfTheLine(ctx)
+	}
 
-		if v.Value.isLine {
-			CmdGotoLineEnd(ctx)
-			CmdCursorRight(ctx)
-			CmdNewLine(ctx)
-			CmdEnsureCursorVisible(ctx)
-			defer CmdCursorBeginningOfTheLine(ctx)
-		}
-
-		yankPut(ctx)
-	})
+	yankPut(ctx)
 }
 
 func CmdYankPutBefore(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		if ctx.Editor.Yanks.Len == 0 {
-			return
-		}
+	if ctx.Editor.Yanks.Len == 0 {
+		return
+	}
 
-		v := ctx.Editor.Yanks.Last()
-		if v.Value.isLine {
-			CmdLineOpenAbove(ctx)
-			CmdExitInsertMode(ctx)
-			yankPut(ctx)
-			CmdCursorBeginningOfTheLine(ctx)
-		} else {
-			yankPut(ctx)
-		}
-	})
+	v := ctx.Editor.Yanks.Last()
+	if v.Value.isLine {
+		CmdLineOpenAbove(ctx)
+		CmdExitInsertMode(ctx)
+		yankPut(ctx)
+		CmdCursorBeginningOfTheLine(ctx)
+	} else {
+		yankPut(ctx)
+	}
 }
 
 func CmdKillBuffer(ctx Context) {
@@ -838,54 +759,42 @@ func CmdIndentOrComplete(ctx Context) {
 }
 
 func CmdEnsureCursorVisible(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		_, h := ctx.Editor.View.Size()
-		if buf.Cursor.Line > buf.ScrollOffset+h-minVisibleLines {
-			buf.ScrollOffset = buf.Cursor.Line - h + minVisibleLines
-		}
+	_, h := ctx.Editor.View.Size()
+	if ctx.Buf.Cursor.Line > ctx.Buf.ScrollOffset+h-minVisibleLines {
+		ctx.Buf.ScrollOffset = ctx.Buf.Cursor.Line - h + minVisibleLines
+	}
 
-		if buf.Cursor.Line < buf.ScrollOffset+minVisibleLines {
-			buf.ScrollOffset = buf.Cursor.Line - minVisibleLines
-		}
-	})
+	if ctx.Buf.Cursor.Line < ctx.Buf.ScrollOffset+minVisibleLines {
+		ctx.Buf.ScrollOffset = ctx.Buf.Cursor.Line - minVisibleLines
+	}
 }
 
 func CmdCursorCenter(ctx Context) {
-	Do(ctx, func(buf *Buffer, line *Element[Line]) {
-		_, h := ctx.Editor.View.Size()
-		buf.ScrollOffset = buf.Cursor.Line - (h / 2) + minVisibleLines
-	})
+	_, h := ctx.Editor.View.Size()
+	ctx.Buf.ScrollOffset = ctx.Buf.Cursor.Line - (h / 2) + minVisibleLines
 }
 
 func CmdChangeInsideBlock(ctx Context) {
-	Do(ctx, func(buf *Buffer, _ *Element[Line]) {
-		switch ctx.Char {
-		case "w":
-			CmdChangeWORD(ctx)
-		case "(", "[", "{", "'", "\"":
-			found, sel, cur := TextObjectBlock(buf, rune(ctx.Char[0]), false) // TODO: handle unicode
-			if !found {
-				return
-			}
-			buf.Selection = sel
-			buf.Cursor = cur
-			CmdSelectionChange(ctx)
+	switch ctx.Char {
+	case "w":
+		CmdChangeWORD(ctx)
+	case "(", "[", "{", "'", "\"":
+		found, sel, cur := TextObjectBlock(ctx.Buf, rune(ctx.Char[0]), false) // TODO: handle unicode
+		if !found {
+			return
 		}
-	})
+		ctx.Buf.Selection = sel
+		ctx.Buf.Cursor = cur
+		CmdSelectionChange(ctx)
+	}
 }
 
 func CmdUndo(ctx Context) {
-	buf := ctx.Editor.ActiveBuffer()
-	if buf != nil {
-		buf.UndoRedo.Undo()
-	}
+	ctx.Buf.UndoRedo.Undo()
 }
 
 func CmdRedo(ctx Context) {
-	buf := ctx.Editor.ActiveBuffer()
-	if buf != nil {
-		buf.UndoRedo.Redo()
-	}
+	ctx.Buf.UndoRedo.Redo()
 }
 
 func CmdJumpBack(ctx Context) {
