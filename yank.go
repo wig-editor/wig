@@ -11,6 +11,51 @@ type Yanks struct {
 	items List[yank]
 }
 
+func CmdYank(ctx Context) {
+	defer func() {
+		if ctx.Buf.Selection != nil {
+			ctx.Buf.Cursor = ctx.Buf.Selection.Start
+		}
+		CmdExitInsertMode(ctx)
+	}()
+	yankSave(ctx)
+}
+
+func CmdYankPut(ctx Context) {
+	if ctx.Editor.Yanks.Len == 0 {
+		return
+	}
+
+	CmdCursorRight(ctx)
+	v := ctx.Editor.Yanks.Last()
+
+	if v.Value.isLine {
+		CmdGotoLineEnd(ctx)
+		CmdCursorRight(ctx)
+		CmdNewLine(ctx)
+		CmdEnsureCursorVisible(ctx)
+		defer CmdCursorBeginningOfTheLine(ctx)
+	}
+
+	yankPut(ctx)
+}
+
+func CmdYankPutBefore(ctx Context) {
+	if ctx.Editor.Yanks.Len == 0 {
+		return
+	}
+
+	v := ctx.Editor.Yanks.Last()
+	if v.Value.isLine {
+		CmdLineOpenAbove(ctx)
+		CmdExitInsertMode(ctx)
+		yankPut(ctx)
+		CmdCursorBeginningOfTheLine(ctx)
+	} else {
+		yankPut(ctx)
+	}
+}
+
 func yankSave(ctx Context) {
 	var y yank
 	line := CursorLine(ctx.Buf)
