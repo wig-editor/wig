@@ -11,10 +11,6 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 
 	ch := ev.Rune()
 
-	// TODO: this is why we need to send partial changes!
-	// defer e.Lsp.DidChange(buf)
-
-	// check for CTRL modifier
 	if ev.Modifiers()&tcell.ModCtrl != 0 {
 		return
 	}
