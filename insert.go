@@ -4,9 +4,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// TODO: optimize:
-// - remove cmd calls
-// - do not search for line "every" time.
 func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 	if ctx.Buf.Mode() != MODE_INSERT {
 		return
