@@ -602,6 +602,7 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
 		data := map[string]interface{}{}
 		json.Unmarshal(req.Params(), &data)
+
 		return reply(ctx, nil, nil)
 	}
 	c.Go(context.Background(), handler)
@@ -615,7 +616,7 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	if err != nil {
 		l.e.LogError(err)
 	}
-	fmt.Printf("%+v", result)
+	// fmt.Printf("%+v", result)
 
 	_, err = c.Call(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{}, nil)
 	if err != nil {

@@ -36,6 +36,7 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		CmdDeleteCharBackward(ctx)
 		return
 	}
+
 	if ev.Key() == tcell.KeyEnter {
 		newLine(ctx.Buf, line)
 		CmdCursorLineDown(ctx)

@@ -41,7 +41,11 @@ func TestSelectionDelete(t *testing.T) {
 		Start: Cursor{Line: 0, Char: 0},
 		End:   Cursor{Line: 1, Char: 0},
 	}
-	CmdSelectinDelete(e)
+	ctx := Context{
+		Editor: e,
+		Buf:    buf,
+	}
+	SelectionDelete(ctx)
 	line := CursorLineByNum(buf, 0)
 	assert.Equal(t, "ine two", string(line.Value))
 }
@@ -75,7 +79,11 @@ func TestWordUnderCusor(t *testing.T) {
 		Start: Cursor{Line: 0, Char: 0},
 		End:   Cursor{Line: 1, Char: 0},
 	}
-	CmdSelectinDelete(e)
+	ctx := Context{
+		Editor: e,
+		Buf:    buf,
+	}
+	SelectionDelete(ctx)
 	line := CursorLineByNum(buf, 0)
 	assert.Equal(t, "ine two", string(line.Value))
 }

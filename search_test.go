@@ -9,18 +9,22 @@ import (
 
 func TestSearch(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
-	buf := e.Buffers[0]
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
 
-	SearchNext(e, buf, buf.Lines.First(), "one")
+	ctx := Context{
+		Editor: e,
+		Buf:    buf,
+	}
+
+	SearchNext(ctx, "one")
 	require.Equal(t, 0, buf.Cursor.Line)
 	require.Equal(t, 5, buf.Cursor.Char)
 
-	SearchNext(e, buf, buf.Lines.First(), "three")
+	SearchNext(ctx, "three")
 	require.Equal(t, 2, buf.Cursor.Line)
 	require.Equal(t, 5, buf.Cursor.Char)
 
-	SearchPrev(e, buf, CursorLineByNum(buf, 2), "one")
+	SearchPrev(ctx, "one")
 	require.Equal(t, 0, buf.Cursor.Line)
 	require.Equal(t, 5, buf.Cursor.Char)
 }

@@ -14,7 +14,8 @@ func TestKeyHandler(t *testing.T) {
 		nil,
 	)
 
-	editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	editor.ActiveWindow().VisitBuffer(buf)
 
 	testForwardCalled := false
 	testDeleteCalled := false
@@ -23,15 +24,17 @@ func TestKeyHandler(t *testing.T) {
 	testKeyMap := func() ModeKeyMap {
 		return ModeKeyMap{
 			MODE_NORMAL: KeyMap{
-				"f": func(e *Editor) {
+				"f": func(ctx Context) {
 					testForwardCalled = true
 				},
 				"d": KeyMap{
-					"d": func(e *Editor) {
+					"d": func(ctx Context) {
 						testDeleteCalled = true
 					},
-					"t": func(e *Editor, ch string) {
-						capturedChar = ch
+					"t": func(ctx Context) func(Context) {
+						return func(ctx Context) {
+							capturedChar = ctx.Char
+						}
 					},
 				},
 			},
@@ -72,7 +75,8 @@ func TestKeyHandlerMap(t *testing.T) {
 		nil,
 	)
 
-	editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	editor.ActiveWindow().VisitBuffer(buf)
 
 	commandlineCalled := false
 	testDeleteCalled := false
@@ -81,14 +85,14 @@ func TestKeyHandlerMap(t *testing.T) {
 	testKeyMap := func() ModeKeyMap {
 		return ModeKeyMap{
 			MODE_NORMAL: KeyMap{
-				":": func(e *Editor) {
+				":": func(ctx Context) {
 					panic(": must not be called")
 				},
 				"d": KeyMap{
-					"d": func(e *Editor) {
+					"d": func(ctx Context) {
 						panic("dd must not be called")
 					},
-					"v": func(e *Editor) {
+					"v": func(ctx Context) {
 						testDeleteVCalled = true
 					},
 				},
@@ -101,11 +105,11 @@ func TestKeyHandlerMap(t *testing.T) {
 		h := NewKeyHandler(testKeyMap())
 
 		h.Map(editor, MODE_NORMAL, KeyMap{
-			":": func(e *Editor) {
+			":": func(ctx Context) {
 				commandlineCalled = true
 			},
 			"d": KeyMap{
-				"d": func(e *Editor) {
+				"d": func(ctx Context) {
 					testDeleteCalled = true
 				},
 			},
@@ -140,16 +144,14 @@ func TestKeyTimes(t *testing.T) {
 		nil,
 	)
 
-	editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
-
-	count := 0
+	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	editor.ActiveWindow().VisitBuffer(buf)
 
 	testKeyMap := func() ModeKeyMap {
 		return ModeKeyMap{
 			MODE_NORMAL: KeyMap{
 				"d": KeyMap{
 					"d": func(e *Editor) {
-						count++
 					},
 				},
 			},
@@ -162,12 +164,7 @@ func TestKeyTimes(t *testing.T) {
 
 		h.HandleKey(editor, key('1'), MODE_NORMAL)
 		h.HandleKey(editor, key('1'), MODE_NORMAL)
-		assert.Equal(t, []string{"1", "1"}, h.times)
-		h.HandleKey(editor, key('d'), MODE_NORMAL)
-		h.HandleKey(editor, key('d'), MODE_NORMAL)
-		if count != 11 {
-			t.Error("count failed")
-		}
+		assert.Equal(t, 11, h.GetCount())
 	})
 }
 

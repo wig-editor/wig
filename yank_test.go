@@ -11,15 +11,21 @@ import (
 func TestYankSingleLine(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
 	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	ctx := Context{
+		Editor: e,
+		Buf:    buf,
+	}
+
 	e.ActiveWindow().ShowBuffer(buf)
 	buf.Selection = nil
-	CmdYank(e)
-	CmdYank(e)
-	CmdYank(e)
+
+	CmdYank(ctx)
+	CmdYank(ctx)
+	CmdYank(ctx)
 
 	assert.Equal(t, 1, e.Yanks.Len)
 
-	CmdYankPut(e)
+	CmdYankPut(ctx)
 
 	expected := `line one
 line one
@@ -34,15 +40,19 @@ line five
 func TestYankSelection(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
 	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	ctx := Context{
+		Editor: e,
+		Buf:    buf,
+	}
 	e.ActiveWindow().ShowBuffer(buf)
 	// "ine thre"
 	buf.Selection = &Selection{Start: Cursor{Line: 2, Char: 1}, End: Cursor{Line: 2, Char: 8}}
-	CmdYank(e)
+	CmdYank(ctx)
 	buf.Cursor = Cursor{Line: 0, Char: 3}
 
 	assert.Equal(t, 1, e.Yanks.Len)
 
-	CmdYankPut(e)
+	CmdYankPut(ctx)
 
 	expected := `lineine thre one
 line two
@@ -55,8 +65,8 @@ line five
 	// test line paste
 	buf.Cursor = Cursor{Line: 2, Char: 3}
 	buf.Selection = nil
-	CmdYank(e)
-	CmdYankPut(e)
+	CmdYank(ctx)
+	CmdYankPut(ctx)
 	expected = `lineine thre one
 line two
 line three
@@ -69,9 +79,9 @@ line five
 	// put above
 	buf.Cursor = Cursor{Line: 1, Char: 3}
 	buf.Selection = nil
-	CmdYank(e)
+	CmdYank(ctx)
 	buf.Cursor = Cursor{Line: 5, Char: 3}
-	CmdYankPutBefore(e)
+	CmdYankPutBefore(ctx)
 	expected = `lineine thre one
 line two
 line three
