@@ -34,7 +34,7 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		newLine(ctx.Buf, line)
 		CmdCursorLineDown(ctx)
 		CmdCursorBeginningOfTheLine(ctx)
-		indent(ctx)
+		// indent(ctx) // TODO: fix
 		return
 	}
 
