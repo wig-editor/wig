@@ -148,7 +148,7 @@ func (k *KeyHandler) resetState() {
 }
 
 func (k *KeyHandler) GetCount() int {
-	const max = 10000
+	const max = 1000000
 	val := strings.Join(k.times, "")
 	if isNumeric(val) {
 		v, _ := strconv.ParseInt(val, 10, 64)

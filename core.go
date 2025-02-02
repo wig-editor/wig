@@ -6,7 +6,7 @@ import (
 	"unicode"
 )
 
-const minVisibleLines = 6
+const minVisibleLines = 5
 
 func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	next := line.Next()
@@ -190,7 +190,10 @@ func CmdDeleteLine(ctx Context) {
 	}
 
 	CmdVisualLineMode(ctx)
-	ctx.Buf.Selection.End.Line = ctx.Buf.Selection.Start.Line + int(ctx.Count)
+	ctx.Buf.Selection.End.Line = min(
+		ctx.Buf.Lines.Len-1,
+		ctx.Buf.Selection.Start.Line+int(ctx.Count),
+	)
 	ctx.Buf.Selection.End.Char = len(CursorLineByNum(ctx.Buf, ctx.Buf.Selection.End.Line).Value)
 	SelectionDelete(ctx)
 	CmdNormalMode(ctx)
