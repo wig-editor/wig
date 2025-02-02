@@ -47,7 +47,6 @@ var AllCommands = map[string]CmdDefinition{
 	"CmdDeleteTo":                   {Desc: "", Fn: mcwig.CmdDeleteTo},
 	"CmdDeleteBefore":               {Desc: "", Fn: mcwig.CmdDeleteBefore},
 	"CmdSelectionChange":            {Desc: "", Fn: mcwig.CmdSelectionChange},
-	"CmdSelectinDelete":             {Desc: "", Fn: mcwig.CmdSelectinDelete},
 	"CmdSaveFile":                   {Desc: "", Fn: mcwig.CmdSaveFile},
 	"CmdWindowVSplit":               {Desc: "", Fn: mcwig.CmdWindowVSplit},
 	"CmdWindowNext":                 {Desc: "", Fn: mcwig.CmdWindowNext},
