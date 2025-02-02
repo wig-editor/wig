@@ -301,8 +301,12 @@ func CmdToggleComment(ctx Context) {
 	}
 
 	cmUncomment := func(line *Element[Line]) {
-		// TODO: peek for space after comment
-		r := strings.Replace(string(line.Value), comment, "", 1)
+		var r string
+		if strings.HasPrefix(strings.TrimSpace(string(line.Value)), comment+" ") {
+			r = strings.Replace(string(line.Value), comment+" ", "", 1)
+		} else {
+			r = strings.Replace(string(line.Value), comment, "", 1)
+		}
 		line.Value = []rune(r)
 	}
 
