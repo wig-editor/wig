@@ -123,6 +123,7 @@ func SelectionDelete(ctx Context) {
 	defer func() {
 		ctx.Buf.Selection = nil
 	}()
+
 	if ctx.Buf.Selection == nil {
 		return
 	}

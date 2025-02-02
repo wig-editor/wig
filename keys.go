@@ -157,7 +157,7 @@ func (k *KeyHandler) GetCount() int {
 		}
 		return int(v)
 	}
-	return 1
+	return 0
 }
 
 func isNumeric(s string) bool {

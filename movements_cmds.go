@@ -44,7 +44,7 @@ func CmdCursorRight(ctx Context) {
 
 func CmdCursorLineUp(ctx Context) {
 	ctx.Buf.Cursor.Line = max(
-		ctx.Buf.Cursor.Line-int(ctx.Count),
+		ctx.Buf.Cursor.Line-int(ctx.Count+1),
 		0,
 	)
 	restoreCharPosition(ctx.Buf)
@@ -53,7 +53,7 @@ func CmdCursorLineUp(ctx Context) {
 
 func CmdCursorLineDown(ctx Context) {
 	ctx.Buf.Cursor.Line = min(
-		ctx.Buf.Cursor.Line+int(ctx.Count),
+		ctx.Buf.Cursor.Line+int(ctx.Count+1),
 		ctx.Buf.Lines.Len-1,
 	)
 	restoreCharPosition(ctx.Buf)
@@ -81,9 +81,12 @@ func CmdCursorFirstNonBlank(ctx Context) {
 }
 
 func CmdGotoLine0(ctx Context) {
-	ctx.Buf.Cursor.Line = 0
-	ctx.Buf.ScrollOffset = 0
-	restoreCharPosition(ctx.Buf)
+	defer CmdEnsureCursorVisible(ctx)
+	ctx.Buf.Cursor.Line = min(
+		int(ctx.Count),
+		ctx.Buf.Lines.Len-1,
+	)
+
 	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf)
 }
 

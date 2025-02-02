@@ -189,12 +189,16 @@ func CmdDeleteLine(ctx Context) {
 		defer ctx.Buf.TxEnd()
 	}
 
+	if ctx.Count == 0 {
+		ctx.Count = 1
+	}
+
 	CmdVisualLineMode(ctx)
 	ctx.Buf.Selection.End.Line = min(
 		ctx.Buf.Lines.Len-1,
-		ctx.Buf.Selection.Start.Line+int(ctx.Count),
+		ctx.Buf.Selection.Start.Line+int(ctx.Count)-1,
 	)
-	ctx.Buf.Selection.End.Char = len(CursorLineByNum(ctx.Buf, ctx.Buf.Selection.End.Line).Value)
+	ctx.Buf.Selection.End.Char = len(CursorLineByNum(ctx.Buf, ctx.Buf.Selection.End.Line).Value) - 1
 	SelectionDelete(ctx)
 	CmdNormalMode(ctx)
 }
