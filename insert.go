@@ -30,12 +30,12 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		return
 	}
 
-	line := CursorLine(ctx.Buf)
-
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 		CmdDeleteCharBackward(ctx)
 		return
 	}
+
+	line := CursorLine(ctx.Buf)
 
 	if ev.Key() == tcell.KeyEnter {
 		newLine(ctx.Buf, line)
