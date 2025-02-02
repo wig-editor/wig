@@ -16,11 +16,6 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	buf.Lines.Remove(next)
 }
 
-func CmdJoinNextLine(ctx Context) {
-	CmdGotoLineEnd(ctx)
-	lineJoinNext(ctx.Buf, CursorLine(ctx.Buf))
-}
-
 func CmdEnterInsertMode(ctx Context) {
 	line := CursorLine(ctx.Buf)
 	if line == nil {
@@ -67,33 +62,14 @@ func CmdExitInsertMode(ctx Context) {
 	}
 }
 
-func CmdVisualMode(ctx Context) {
-	SelectionStart(ctx.Buf)
-	ctx.Buf.SetMode(MODE_VISUAL)
-}
-func CmdNormalMode(ctx Context) {
-	if ctx.Buf.Mode() == MODE_INSERT {
-		line := CursorLine(ctx.Buf)
-		CmdCursorLeft(ctx)
-		if ctx.Buf.Cursor.Char >= len(line.Value) {
-			CmdGotoLineEnd(ctx)
-		}
-	}
-	ctx.Buf.SetMode(MODE_NORMAL)
-	ctx.Buf.Selection = nil
-}
-
-func CmdVisualLineMode(ctx Context) {
-	line := CursorLine(ctx.Buf)
-	SelectionStart(ctx.Buf)
-	ctx.Buf.Selection.Start.Char = 0
-	ctx.Buf.Selection.End.Char = len(line.Value) - 1
-	ctx.Buf.SetMode(MODE_VISUAL_LINE)
-}
-
 func CmdInsertModeAfter(ctx Context) {
 	ctx.Buf.Cursor.Char++
 	CmdEnterInsertMode(ctx)
+}
+
+func CmdJoinNextLine(ctx Context) {
+	CmdGotoLineEnd(ctx)
+	lineJoinNext(ctx.Buf, CursorLine(ctx.Buf))
 }
 
 func CmdReplaceChar(ctx Context) func(Context) {
