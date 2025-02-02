@@ -47,18 +47,15 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 
 	if ctx.Buf.Cursor.Char >= len(line.Value) {
 		line.Value = append(line.Value, ch)
-		if ctx.Buf.Cursor.Char < len(line.Value) {
-			ctx.Buf.Cursor.Char++
-			ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
-		}
 	} else {
 		tmp := []rune{ch}
 		tmp = append(tmp, line.Value[ctx.Buf.Cursor.Char:]...)
 		line.Value = append(line.Value[:ctx.Buf.Cursor.Char], tmp...)
 		tmp = nil
-		if ctx.Buf.Cursor.Char < len(line.Value) {
-			ctx.Buf.Cursor.Char++
-			ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
-		}
+	}
+
+	if ctx.Buf.Cursor.Char < len(line.Value) {
+		ctx.Buf.Cursor.Char++
+		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
 	}
 }
