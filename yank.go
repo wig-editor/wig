@@ -32,7 +32,9 @@ func CmdYankPut(ctx Context) {
 	if v.Value.isLine {
 		CmdGotoLineEnd(ctx)
 		CmdCursorRight(ctx)
-		CmdNewLine(ctx)
+		newLine(ctx.Buf, CursorLine(ctx.Buf))
+		CmdCursorLineDown(ctx)
+		CmdCursorBeginningOfTheLine(ctx)
 		CmdEnsureCursorVisible(ctx)
 		defer CmdCursorBeginningOfTheLine(ctx)
 	}

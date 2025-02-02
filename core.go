@@ -17,6 +17,20 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	buf.Lines.Remove(next)
 }
 
+func newLine(buf *Buffer, curLine *Element[Line]) {
+	// EOL - insert new empty line
+	if (buf.Cursor.Char) >= len(curLine.Value) {
+		buf.Lines.insertValueAfter(Line{}, curLine)
+		return
+	}
+
+	// split line
+	tmpData := make([]rune, len(curLine.Value[buf.Cursor.Char:]))
+	copy(tmpData, curLine.Value[buf.Cursor.Char:])
+	curLine.Value = curLine.Value[:buf.Cursor.Char]
+	buf.Lines.insertValueAfter(tmpData, curLine)
+}
+
 func CmdEnterInsertMode(ctx Context) {
 	line := CursorLine(ctx.Buf)
 	if line == nil {
@@ -104,15 +118,28 @@ func CmdDeleteCharBackward(ctx Context) {
 		return
 	}
 
-	if ctx.Buf.Cursor.Char == 0 {
-		return
-	}
-
 	if ctx.Buf.TxStart() {
 		defer ctx.Buf.TxEnd()
 	}
 
 	line := CursorLine(ctx.Buf)
+
+	if len(line.Value) == 0 {
+		ctx.Buf.Lines.Remove(line)
+		CmdCursorLineUp(ctx)
+		CmdGotoLineEnd(ctx)
+		CmdCursorRight(ctx)
+		return
+	}
+
+	if ctx.Buf.Cursor.Char == 0 {
+		prevLine := line.Prev()
+		prevLineLen := len(prevLine.Value)
+		lineJoinNext(ctx.Buf, prevLine)
+		CmdCursorLineUp(ctx)
+		ctx.Buf.Cursor.Char = prevLineLen
+		return
+	}
 
 	if ctx.Buf.Cursor.Char >= len(line.Value) {
 		line.Value = line.Value[:len(line.Value)-1]
@@ -133,23 +160,8 @@ func CmdNewLine(ctx Context) {
 	if ctx.Buf.TxStart() {
 		defer ctx.Buf.TxEnd()
 	}
-	line := CursorLine(ctx.Buf)
 
-	// EOL
-	if (ctx.Buf.Cursor.Char) >= len(line.Value) {
-		ctx.Buf.Lines.insertValueAfter(Line{}, line)
-		ctx.Buf.Cursor.Line++
-		ctx.Buf.Cursor.Char = 1
-		ctx.Buf.Cursor.PreserveCharPosition = 0
-		return
-	}
-
-	// split line
-	tmpData := make([]rune, len(line.Value[ctx.Buf.Cursor.Char:]))
-	copy(tmpData, line.Value[ctx.Buf.Cursor.Char:])
-	line.Value = line.Value[:ctx.Buf.Cursor.Char]
-	ctx.Buf.Lines.insertValueAfter(tmpData, line)
-
+	newLine(ctx.Buf, CursorLine(ctx.Buf))
 	CmdCursorLineDown(ctx)
 	CmdCursorBeginningOfTheLine(ctx)
 }
@@ -158,7 +170,7 @@ func CmdLineOpenBelow(ctx Context) {
 	CmdGotoLineEnd(ctx)
 	CmdInsertModeAfter(ctx)
 	CmdNewLine(ctx)
-	CmdIndent(ctx)
+	indent(ctx)
 }
 
 func CmdLineOpenAbove(ctx Context) {

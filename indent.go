@@ -2,7 +2,7 @@ package mcwig
 
 import "strings"
 
-func CmdIndent(ctx Context) {
+func indent(ctx Context) {
 	if !strings.HasSuffix(ctx.Buf.FilePath, ".go") {
 		return
 	}
