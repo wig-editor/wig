@@ -356,8 +356,21 @@ func CmdKillBuffer(ctx Context) {
 		return
 	}
 
-	// creates [No Name] buffer
-	defer ctx.Editor.ActiveBuffer()
+	// cleanup all nodes
+	{
+		l := ctx.Buf.Lines.First()
+		for l != nil {
+			next := l.Next()
+			l.Value = nil
+			ctx.Buf.Lines.Remove(l)
+			l = next
+		}
+		ctx.Buf.Selection = nil
+		ctx.Buf.Highlighter = nil
+		ctx.Buf.UndoRedo = nil
+		ctx.Buf.Tx = nil
+
+	}
 
 	// remove from buffers list
 	// ands moves to the next buffer
@@ -374,15 +387,13 @@ func CmdKillBuffer(ctx Context) {
 		}
 	}
 
-	// cleanup all nodes
-	{
-		l := ctx.Buf.Lines.First()
-		for l != nil {
-			next := l.Next()
-			l.Value = nil
-			ctx.Buf.Lines.Remove(l)
-			l = next
-		}
+	ctx.Editor.Buffers = buffers
+
+	if len(buffers) == 0 {
+		buf := NewBuffer()
+		buf.FilePath = "[No Name]"
+		ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)
+		ctx.Editor.ActiveWindow().ShowBuffer(buf)
 	}
 
 	ctx.Editor.Lsp.DidClose(ctx.Buf)

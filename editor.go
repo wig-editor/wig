@@ -123,13 +123,6 @@ func (e *Editor) BufferFindByFilePath(fp string, create bool) *Buffer {
 
 // Returns active window buffer
 func (e *Editor) ActiveBuffer() *Buffer {
-	if len(e.Buffers) == 0 {
-		buf := NewBuffer()
-		buf.FilePath = "[No Name]"
-		e.Buffers = append(e.Buffers, buf)
-		e.ActiveWindow().ShowBuffer(buf)
-	}
-
 	return e.ActiveWindow().Buffer()
 }
 
