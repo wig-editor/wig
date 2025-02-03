@@ -303,7 +303,7 @@ func CmdSelectionChange(ctx Context) {
 	SelectionDelete(ctx)
 }
 
-// TODO: implement correct toggle comment logic: if all lines are commented - then uncomment.
+// TODO: implement correct toggle comment logic: check if all lines are commented - then uncomment.
 // else, append comment to each uncommted line.
 func CmdToggleComment(ctx Context) {
 	if ctx.Buf.TxStart() {
@@ -314,18 +314,18 @@ func CmdToggleComment(ctx Context) {
 	comment := "//"
 
 	cmComment := func(line *Element[Line]) {
-		idx := 0
+		spacePos := 0
 		for i, c := range line.Value {
 			if !unicode.IsSpace(c) {
-				idx = i
+				spacePos = i
 				break
 			}
 		}
 		tmpData := make([]rune, 0, len(line.Value)+len(comment)+1)
-		tmpData = append(tmpData, line.Value[:idx]...)
+		tmpData = append(tmpData, line.Value[:spacePos]...)
 		tmpData = append(tmpData, []rune(comment)...)
 		tmpData = append(tmpData, rune(' '))
-		tmpData = append(tmpData, line.Value[idx:]...)
+		tmpData = append(tmpData, line.Value[spacePos:]...)
 		line.Value = tmpData
 
 	}

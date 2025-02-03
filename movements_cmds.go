@@ -43,8 +43,9 @@ func CmdCursorRight(ctx Context) {
 }
 
 func CmdCursorLineUp(ctx Context) {
+	count := max(ctx.Count, 1)
 	ctx.Buf.Cursor.Line = max(
-		ctx.Buf.Cursor.Line-int(ctx.Count+1),
+		ctx.Buf.Cursor.Line-int(count),
 		0,
 	)
 	restoreCharPosition(ctx.Buf)
@@ -52,8 +53,9 @@ func CmdCursorLineUp(ctx Context) {
 }
 
 func CmdCursorLineDown(ctx Context) {
+	count := max(ctx.Count, 1)
 	ctx.Buf.Cursor.Line = min(
-		ctx.Buf.Cursor.Line+int(ctx.Count+1),
+		ctx.Buf.Cursor.Line+int(count),
 		ctx.Buf.Lines.Len-1,
 	)
 	restoreCharPosition(ctx.Buf)
