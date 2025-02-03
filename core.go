@@ -303,10 +303,14 @@ func CmdSelectionChange(ctx Context) {
 	SelectionDelete(ctx)
 }
 
+// TODO: implement correct toggle comment logic: if all lines are commented - then uncomment.
+// else, append comment to each uncommted line.
 func CmdToggleComment(ctx Context) {
 	if ctx.Buf.TxStart() {
 		defer ctx.Buf.TxEnd()
 	}
+	defer CmdNormalMode(ctx)
+
 	comment := "//"
 
 	cmComment := func(line *Element[Line]) {
@@ -331,25 +335,36 @@ func CmdToggleComment(ctx Context) {
 		line.Value = []rune(r)
 	}
 
-	if ctx.Buf.Selection != nil {
-		selection := SelectionNormalize(ctx.Buf.Selection)
-
-		lineStart := CursorLine(ctx.Buf)
-		lineEnd := CursorLineByNum(ctx.Buf, selection.End.Line)
-
-		for lineStart != lineEnd {
-
+	toggleCommentForLine := func(line *Element[Line]) {
+		trimmed := strings.TrimSpace(string(line.Value))
+		if strings.HasPrefix(trimmed, comment+" ") {
+			cmUncomment(line, comment+" ")
+		} else if strings.HasPrefix(trimmed, comment) {
+			cmUncomment(line, comment)
+		} else {
+			cmComment(line)
 		}
 	}
 
-	line := CursorLine(ctx.Buf)
-	if strings.HasPrefix(strings.TrimSpace(string(line.Value)), comment+" ") {
-		cmUncomment(line, comment+" ")
-	} else if strings.HasPrefix(strings.TrimSpace(string(line.Value)), comment) {
-		cmUncomment(line, comment)
-	} else {
-		cmComment(line)
+	if ctx.Buf.Selection != nil {
+		selection := SelectionNormalize(ctx.Buf.Selection)
+
+		lineStart := CursorLineByNum(ctx.Buf, selection.Start.Line)
+		count := selection.End.Line - selection.Start.Line
+
+		for i := 0; i <= count; i++ {
+			line := lineStart
+			lineStart = lineStart.Next()
+			if len(line.Value) == 0 {
+				continue
+			}
+			toggleCommentForLine(line)
+		}
+		return
 	}
+
+	line := CursorLine(ctx.Buf)
+	toggleCommentForLine(line)
 }
 
 func CmdSelectionDelete(ctx Context) {

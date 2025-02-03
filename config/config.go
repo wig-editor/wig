@@ -142,6 +142,10 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"x":   mcwig.CmdSelectionDelete,
 			"d":   mcwig.CmdSelectionDelete,
 			"y":   mcwig.CmdYank,
+			"g": mcwig.KeyMap{
+				"g": mcwig.WithSelection(mcwig.CmdGotoLine0),
+				"c": mcwig.CmdToggleComment,
+			},
 		},
 		mcwig.MODE_INSERT: mcwig.KeyMap{
 			"Esc":    mcwig.CmdExitInsertMode,
