@@ -97,7 +97,7 @@ func (e *Editor) NewContext() Context {
 	return Context{
 		Editor: e,
 		Buf:    e.ActiveBuffer(),
-		Count:  1,
+		Count:  0,
 	}
 }
 

@@ -235,7 +235,7 @@ func CmdGotoDefinition(ctx mcwig.Context) {
 		return
 	}
 	ctx.Editor.ActiveWindow().VisitBuffer(nbuf, cursor)
-	mcwig.CmdCursorCenter(ctx)
+	mcwig.CmdCursorCenter(ctx.Editor.NewContext())
 }
 
 // TODO: fix when per-window cursors
