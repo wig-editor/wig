@@ -265,9 +265,16 @@ func CmdChangeEndOfLine(ctx Context) {
 }
 
 func CmdChangeLine(ctx Context) {
-	CmdInsertModeAfter(ctx)
 	line := CursorLine(ctx.Buf)
-	line.Value = nil
+	idx := 0
+	for i, c := range line.Value {
+		if !unicode.IsSpace(c) {
+			idx = i
+			break
+		}
+	}
+	CmdInsertModeAfter(ctx)
+	line.Value = line.Value[:idx]
 }
 
 func CmdDeleteTo(_ Context) func(Context) {
