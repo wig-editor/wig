@@ -326,19 +326,27 @@ func CmdToggleComment(ctx Context) {
 
 	}
 
-	cmUncomment := func(line *Element[Line]) {
-		var r string
-		if strings.HasPrefix(strings.TrimSpace(string(line.Value)), comment+" ") {
-			r = strings.Replace(string(line.Value), comment+" ", "", 1)
-		} else {
-			r = strings.Replace(string(line.Value), comment, "", 1)
-		}
+	cmUncomment := func(line *Element[Line], comment string) {
+		r := strings.Replace(string(line.Value), comment, "", 1)
 		line.Value = []rune(r)
 	}
 
+	if ctx.Buf.Selection != nil {
+		selection := SelectionNormalize(ctx.Buf.Selection)
+
+		lineStart := CursorLine(ctx.Buf)
+		lineEnd := CursorLineByNum(ctx.Buf, selection.End.Line)
+
+		for lineStart != lineEnd {
+
+		}
+	}
+
 	line := CursorLine(ctx.Buf)
-	if strings.HasPrefix(strings.TrimSpace(string(line.Value)), comment) {
-		cmUncomment(line)
+	if strings.HasPrefix(strings.TrimSpace(string(line.Value)), comment+" ") {
+		cmUncomment(line, comment+" ")
+	} else if strings.HasPrefix(strings.TrimSpace(string(line.Value)), comment) {
+		cmUncomment(line, comment)
 	} else {
 		cmComment(line)
 	}
