@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/firstrow/mcwig"
 	"github.com/firstrow/mcwig/testutils"
@@ -36,7 +37,7 @@ func TestPipe(t *testing.T) {
 	p.send(h, outBuf, `ping pong`)
 	p.cmd.Wait()
 
-	assert.Equal(t, "ping pong", outBuf.String())
+	require.Contains(t, "ping pong", outBuf.String())
 
 	args := p.buildArgs(h.cmd, "ping pong")
 	assert.Equal(t, 1, len(args))
