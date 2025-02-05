@@ -68,15 +68,6 @@ func TextDelete(buf *Buffer, selection *Selection) {
 	lineStart.Value = slices.Concat(lineStart.Value[:start], lineEnd.Value[end:])
 }
 
-func lineJoinNext(buf *Buffer, line *Element[Line]) {
-	next := line.Next()
-	if next == nil {
-		return
-	}
-	line.Value = append(line.Value, next.Value...)
-	buf.Lines.Remove(next)
-}
-
 func CmdEnterInsertMode(ctx Context) {
 	line := CursorLine(ctx.Buf)
 	if line == nil {
@@ -124,7 +115,11 @@ func CmdJoinNextLine(ctx Context) {
 		defer ctx.Buf.TxEnd()
 	}
 
-	lineJoinNext(ctx.Buf, CursorLine(ctx.Buf))
+	line := CursorLine(ctx.Buf)
+	TextDelete(ctx.Buf, &Selection{
+		Start: Cursor{Line: ctx.Buf.Cursor.Line, Char: len(line.Value) - 1},
+		End:   Cursor{Line: ctx.Buf.Cursor.Line, Char: len(line.Value)},
+	})
 }
 
 func CmdReplaceChar(ctx Context) func(Context) {
