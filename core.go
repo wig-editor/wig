@@ -11,9 +11,12 @@ import (
 const minVisibleLines = 5
 
 func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
-	size := len(line.Value)
 	if pos < 0 {
 		pos = 0
+	}
+	size := len(line.Value)
+	if pos >= size {
+		pos = size - 1
 	}
 
 	s := scanner.Scanner{}
@@ -504,4 +507,3 @@ func CmdVisualLineMode(ctx Context) {
 	ctx.Buf.Selection.End.Char = len(line.Value) - 1
 	ctx.Buf.SetMode(MODE_VISUAL_LINE)
 }
-
