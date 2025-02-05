@@ -40,6 +40,12 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 }
 
 func TextDelete(buf *Buffer, selection *Selection) {
+	defer func() {
+		if buf.Lines.Len == 1 && len(buf.Lines.First().Value) == 0 {
+			buf.Lines.First().Value = []rune{'\n'}
+		}
+	}()
+
 	sel := SelectionNormalize(selection)
 
 	lineStart := CursorLineByNum(buf, sel.Start.Line)
@@ -60,11 +66,12 @@ func TextDelete(buf *Buffer, selection *Selection) {
 		for lineStart.Next() != lineEnd {
 			buf.Lines.Remove(lineStart.Next())
 		}
-		defer buf.Lines.Remove(lineEnd)
+		buf.Lines.Remove(lineEnd)
 	}
 
-	start := sel.Start.Char
+	start := max(0, sel.Start.Char)
 	end := min(len(lineEnd.Value), sel.End.Char)
+
 	lineStart.Value = slices.Concat(lineStart.Value[:start], lineEnd.Value[end:])
 }
 
@@ -157,7 +164,6 @@ func CmdDeleteCharForward(ctx Context) {
 	}
 
 	SelectionDelete(ctx)
-
 }
 
 func CmdDeleteCharBackward(ctx Context) {
