@@ -53,9 +53,9 @@ func SelectionToString(buf *Buffer) string {
 	currentLine := lineStart.Next()
 	for currentLine != nil {
 		if currentLine != lineEnd {
-			acc += "\n" + string(currentLine.Value)
+			acc += string(currentLine.Value)
 		} else {
-			acc += "\n" + string(currentLine.Value[:endCh])
+			acc += string(currentLine.Value[:endCh])
 			break
 		}
 		currentLine = currentLine.Next()
@@ -120,58 +120,14 @@ func WithSelection(fn func(Context)) func(Context) {
 }
 
 func SelectionDelete(ctx Context) {
-	defer func() {
-		ctx.Buf.Selection = nil
-	}()
-
 	if ctx.Buf.Selection == nil {
 		return
 	}
-
+	defer func() {
+		ctx.Buf.Selection = nil
+	}()
 	sel := SelectionNormalize(ctx.Buf.Selection)
-
-	yankSave(ctx)
-
-	lineStart := CursorLineByNum(ctx.Buf, sel.Start.Line)
-	lineEnd := CursorLineByNum(ctx.Buf, sel.End.Line)
-
-	if sel.Start.Line == sel.End.Line {
-		if len(lineStart.Value) == 0 || ctx.Buf.Mode() == MODE_VISUAL_LINE {
-			ctx.Buf.Lines.Remove(lineStart)
-			CmdCursorBeginningOfTheLine(ctx)
-			return
-		}
-
-		if sel.End.Char < len(lineStart.Value) {
-			lineStart.Value = append(lineStart.Value[:sel.Start.Char], lineStart.Value[sel.End.Char+1:]...)
-		} else {
-			lineStart.Value = lineStart.Value[:sel.Start.Char]
-		}
-
-		cursorGotoChar(ctx.Buf, sel.Start.Char)
-	} else {
-		// delete all lines between start and end line
-		for lineStart.Next() != lineEnd {
-			ctx.Buf.Lines.Remove(lineStart.Next())
-		}
-
-		lineStart.Value = lineStart.Value[:sel.Start.Char]
-
-		if sel.End.Char+1 <= len(lineEnd.Value) {
-			lineEnd.Value = lineEnd.Value[sel.End.Char+1:]
-		}
-
-		if len(lineEnd.Value) == 0 {
-			ctx.Buf.Lines.Remove(lineEnd)
-		}
-
-		lineJoinNext(ctx.Buf, lineStart)
-
-		ctx.Buf.Cursor.Line = sel.Start.Line
-		if lineStart != nil && sel.Start.Char < len(lineStart.Value) {
-			cursorGotoChar(ctx.Buf, sel.Start.Char)
-		} else {
-			CmdGotoLineEnd(ctx)
-		}
-	}
+	sel.End.Char++
+	TextDelete(ctx.Buf, &sel)
+	ctx.Buf.Cursor = sel.Start
 }

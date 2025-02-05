@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"text/scanner"
 	"unicode"
 )
 
@@ -12,12 +13,30 @@ const minVisibleLines = 5
 func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	size := len(line.Value)
 	if pos >= size {
-		pos = size
+		pos = size - 1
 	}
 	if pos < 0 {
 		pos = 0
 	}
-	line.Value = slices.Concat(line.Value[:pos], []rune(text), line.Value[pos:])
+
+	s := scanner.Scanner{}
+	s.Init(strings.NewReader(text))
+	s.Whitespace = 0
+
+	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+		switch tok {
+		case '\n':
+			prefix := string(line.Value[:pos])
+			suffix := string(line.Value[pos:])
+			line.Value = []rune(prefix + "\n")
+			buf.Lines.insertValueAfter([]rune(suffix), line)
+			line = line.Next()
+			pos = 0
+		default:
+			line.Value = slices.Concat(line.Value[:pos], []rune(s.TokenText()), line.Value[pos:])
+			pos += len(s.TokenText())
+		}
+	}
 }
 
 func TextDelete(buf *Buffer, selection *Selection) {
@@ -28,10 +47,13 @@ func TextDelete(buf *Buffer, selection *Selection) {
 
 	// if request is to delete more chars then len(end) - we must connect next line
 	// since we delete "\n"
-	if sel.End.Char > len(lineEnd.Value) {
-		sel.End.Line++
-		sel.End.Char = 0
-		lineEnd = CursorLineByNum(buf, sel.End.Line)
+	if sel.End.Char >= len(lineEnd.Value) {
+		tmpLine := CursorLineByNum(buf, sel.End.Line+1)
+		if tmpLine != nil {
+			sel.End.Line++
+			sel.End.Char = 0
+			lineEnd = tmpLine
+		}
 	}
 
 	if lineStart != lineEnd {
@@ -42,9 +64,7 @@ func TextDelete(buf *Buffer, selection *Selection) {
 	}
 
 	start := sel.Start.Char
-	end := sel.End.Char
-
-	end = min(len(lineEnd.Value), end)
+	end := min(len(lineEnd.Value), sel.End.Char)
 	lineStart.Value = slices.Concat(lineStart.Value[:start], lineEnd.Value[end:])
 }
 
@@ -55,20 +75,6 @@ func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	}
 	line.Value = append(line.Value, next.Value...)
 	buf.Lines.Remove(next)
-}
-
-func newLine(buf *Buffer, curLine *Element[Line]) {
-	// EOL - insert new empty line
-	if (buf.Cursor.Char) >= len(curLine.Value) {
-		buf.Lines.insertValueAfter(Line{}, curLine)
-		return
-	}
-
-	// split line
-	tmpData := make([]rune, len(curLine.Value[buf.Cursor.Char:]))
-	copy(tmpData, curLine.Value[buf.Cursor.Char:])
-	curLine.Value = curLine.Value[:buf.Cursor.Char]
-	buf.Lines.insertValueAfter(tmpData, curLine)
 }
 
 func CmdEnterInsertMode(ctx Context) {
@@ -107,7 +113,7 @@ func CmdExitInsertMode(ctx Context) {
 }
 
 func CmdInsertModeAfter(ctx Context) {
-	ctx.Buf.Cursor.Char++
+	CmdCursorRight(ctx)
 	CmdEnterInsertMode(ctx)
 }
 
@@ -139,54 +145,27 @@ func CmdDeleteCharForward(ctx Context) {
 	}
 
 	line := CursorLine(ctx.Buf)
-	if len(line.Value) == 0 {
-		CmdGotoLineEnd(ctx)
-		lineJoinNext(ctx.Buf, line)
-		CmdCursorBeginningOfTheLine(ctx)
+	if len(line.Value) <= 1 {
 		return
 	}
 
-	line.Value = append(line.Value[:ctx.Buf.Cursor.Char], line.Value[ctx.Buf.Cursor.Char+1:]...)
-
-	if ctx.Buf.Cursor.Char >= len(line.Value) {
+	if ctx.Buf.Cursor.Char >= len(line.Value)-1 {
 		CmdCursorLeft(ctx)
 	}
+
+	ctx.Buf.Selection = &Selection{
+		Start: ctx.Buf.Cursor,
+		End:   ctx.Buf.Cursor,
+	}
+
+	SelectionDelete(ctx)
+
 }
 
 func CmdDeleteCharBackward(ctx Context) {
-	if ctx.Buf.Cursor.Line == 0 && ctx.Buf.Cursor.Char == 0 {
-		return
-	}
-
-	if ctx.Buf.TxStart() {
-		defer ctx.Buf.TxEnd()
-	}
-
-	line := CursorLine(ctx.Buf)
-
-	if len(line.Value) == 0 {
-		ctx.Buf.Lines.Remove(line)
-		CmdCursorLineUp(ctx)
-		CmdGotoLineEnd(ctx)
-		CmdCursorRight(ctx)
-		return
-	}
-
 	if ctx.Buf.Cursor.Char == 0 {
-		prevLine := line.Prev()
-		prevLineLen := len(prevLine.Value)
-		lineJoinNext(ctx.Buf, prevLine)
-		CmdCursorLineUp(ctx)
-		ctx.Buf.Cursor.Char = prevLineLen
 		return
 	}
-
-	if ctx.Buf.Cursor.Char >= len(line.Value) {
-		line.Value = line.Value[:len(line.Value)-1]
-		CmdCursorLeft(ctx)
-		return
-	}
-
 	CmdCursorLeft(ctx)
 	CmdDeleteCharForward(ctx)
 }
@@ -196,27 +175,19 @@ func CmdAppendLine(ctx Context) {
 	CmdInsertModeAfter(ctx)
 }
 
-func CmdNewLine(ctx Context) {
-	if ctx.Buf.TxStart() {
-		defer ctx.Buf.TxEnd()
-	}
-
-	newLine(ctx.Buf, CursorLine(ctx.Buf))
+func CmdLineOpenBelow(ctx Context) {
+	CmdInsertModeAfter(ctx)
+	CmdGotoLineEnd(ctx)
+	TextInsert(ctx.Buf, CursorLine(ctx.Buf), ctx.Buf.Cursor.Char, "\n")
 	CmdCursorLineDown(ctx)
 	CmdCursorBeginningOfTheLine(ctx)
-}
-
-func CmdLineOpenBelow(ctx Context) {
-	CmdGotoLineEnd(ctx)
-	CmdInsertModeAfter(ctx)
-	CmdNewLine(ctx)
-	indent(ctx)
+	// indent(ctx)
 }
 
 func CmdLineOpenAbove(ctx Context) {
 	if ctx.Buf.Cursor.Line == 0 {
-		CmdInsertModeAfter(ctx)
-		ctx.Buf.Lines.PushFront(Line{})
+		CmdEnterInsertMode(ctx)
+		TextInsert(ctx.Buf, CursorLine(ctx.Buf), 0, "\n")
 		CmdCursorBeginningOfTheLine(ctx)
 		return
 	}

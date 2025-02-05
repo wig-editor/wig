@@ -37,7 +37,7 @@ func TestPipe(t *testing.T) {
 	p.send(h, outBuf, `ping pong`)
 	p.cmd.Wait()
 
-	require.Contains(t, "ping pong", outBuf.String())
+	require.Contains(t, outBuf.String(), "ping pong")
 
 	args := p.buildArgs(h.cmd, "ping pong")
 	assert.Equal(t, 1, len(args))

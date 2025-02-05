@@ -1,6 +1,7 @@
 package mcwig
 
 import (
+	"bufio"
 	"bytes"
 	"os"
 	"strings"
@@ -69,10 +70,11 @@ func NewBuffer() *Buffer {
 }
 
 func BufferReadFile(path string) (*Buffer, error) {
-	data, err := os.ReadFile(path)
+	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	buf := NewBuffer()
 	buf.FilePath = path
@@ -80,24 +82,29 @@ func BufferReadFile(path string) (*Buffer, error) {
 	buf.Selection = nil
 	buf.ResetLines()
 
-	for _, line := range bytes.Split(data, []byte("\n")) {
-		buf.Lines.PushBack([]rune(string(line)))
+	newLine := "\n"
+	sc := bufio.NewScanner(file)
+	for sc.Scan() {
+		buf.Lines.PushBack([]rune(string(sc.Bytes()) + newLine))
 	}
 
 	return buf, nil
 }
 
 func BufferReloadFile(buf *Buffer) error {
-	data, err := os.ReadFile(buf.FilePath)
+	file, err := os.OpenFile(buf.FilePath, os.O_RDONLY, 0644)
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	buf.Selection = nil
 	buf.Lines = List[Line]{}
 
-	for _, line := range bytes.Split(data, []byte("\n")) {
-		buf.Lines.PushBack([]rune(string(line)))
+	newLine := "\n"
+	sc := bufio.NewScanner(file)
+	for sc.Scan() {
+		buf.Lines.PushBack([]rune(string(sc.Bytes()) + newLine))
 	}
 
 	return nil
@@ -142,26 +149,20 @@ func (b *Buffer) Save() error {
 	if err != nil {
 		return err
 	}
-
 	line := b.Lines.First()
-	sep := "\n"
 	for line != nil {
-		if line.Next() == nil {
-			sep = ""
-		}
-		_, err := f.WriteString(string(line.Value) + sep)
+		_, err := f.WriteString(string(line.Value))
 		if err != nil {
 			return err
 		}
 		line = line.Next()
 	}
-
 	return nil
 }
 
 func (b *Buffer) Append(s string) {
 	for _, line := range strings.Split(s, "\n") {
-		b.Lines.PushBack([]rune(line))
+		b.Lines.PushBack([]rune(line + "\n"))
 	}
 }
 
@@ -179,16 +180,10 @@ func (b *Buffer) ResetLines() {
 
 func (b *Buffer) String() string {
 	buf := bytes.NewBuffer(nil)
-
 	line := b.Lines.First()
-	sep := "\n"
 	for line != nil {
-		if line.Next() == nil {
-			sep = ""
-		}
-		buf.WriteString(string(line.Value) + sep)
+		buf.WriteString(string(line.Value))
 		line = line.Next()
 	}
-
 	return buf.String()
 }

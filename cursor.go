@@ -96,6 +96,7 @@ func CursorLineByNum(buf *Buffer, num int) *Element[Line] {
 		currentLine = currentLine.Next()
 		i++
 	}
+
 	return currentLine
 }
 

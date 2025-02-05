@@ -21,7 +21,7 @@ func TestBufferReadFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
-	assert.Equal(t, 6, buf.Lines.Len)
+	assert.Equal(t, 5, buf.Lines.Len)
 }
 
 func TestLineByNum(t *testing.T) {
@@ -31,7 +31,7 @@ func TestLineByNum(t *testing.T) {
 	}
 
 	line := CursorLineByNum(buf, 1)
-	assert.Equal(t, "line two", string(line.Value))
+	assert.Equal(t, "line two\n", string(line.Value))
 }
 
 func TestSelectionDelete(t *testing.T) {
@@ -48,7 +48,7 @@ func TestSelectionDelete(t *testing.T) {
 	}
 	SelectionDelete(ctx)
 	line := CursorLineByNum(buf, 0)
-	assert.Equal(t, "ine two", string(line.Value))
+	assert.Equal(t, "ine two\n", string(line.Value))
 }
 
 func TestSaveFile(t *testing.T) {
@@ -69,7 +69,7 @@ func TestSaveFile(t *testing.T) {
 
 	buf, err = BufferReadFile(tmpFilePath)
 	assert.NoError(t, err)
-	assert.Equal(t, 6, buf.Lines.Len)
+	assert.Equal(t, 5, buf.Lines.Len)
 }
 
 func TestWordUnderCusor(t *testing.T) {
@@ -86,7 +86,25 @@ func TestWordUnderCusor(t *testing.T) {
 	}
 	SelectionDelete(ctx)
 	line := CursorLineByNum(buf, 0)
-	assert.Equal(t, "ine two", string(line.Value))
+	assert.Equal(t, "ine two\n", string(line.Value))
+}
+
+func TestTextInsertNewLine(t *testing.T) {
+	e := NewEditor(testutils.Viewport, nil)
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
+	defer CmdKillBuffer(e.NewContext())
+
+	expected := `line
+ one
+line two
+line three
+line four
+line five
+`
+
+	TextInsert(buf, buf.Lines.First(), 4, "\n")
+	require.Equal(t, expected, string(buf.String()))
 }
 
 func TestTextInsertDelete(t *testing.T) {
@@ -96,13 +114,13 @@ func TestTextInsertDelete(t *testing.T) {
 	defer CmdKillBuffer(e.NewContext())
 
 	TextInsert(buf, buf.Lines.First(), 4, " test")
-	require.Equal(t, "line test one", string(buf.Lines.First().Value))
+	require.Equal(t, "line test one\n", string(buf.Lines.First().Value))
 
 	TextDelete(buf, &Selection{
 		Start: Cursor{Line: 0, Char: 4},
 		End:   Cursor{Line: 0, Char: 9},
 	})
-	require.Equal(t, "line one", string(buf.Lines.First().Value))
+	require.Equal(t, "line one\n", string(buf.Lines.First().Value))
 }
 
 func TestTextDeleteMultiline(t *testing.T) {

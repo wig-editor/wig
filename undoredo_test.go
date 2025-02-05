@@ -33,12 +33,8 @@ func linesToString(l List[Line]) string {
 	buf := bytes.NewBuffer(nil)
 
 	line := l.First()
-	sep := "\n"
 	for line != nil {
-		if line.Next() == nil {
-			sep = ""
-		}
-		buf.WriteString(string(line.Value) + sep)
+		buf.WriteString(string(line.Value))
 		line = line.Next()
 	}
 

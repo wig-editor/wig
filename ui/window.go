@@ -3,6 +3,7 @@ package ui
 import (
 	str "github.com/boyter/go-string"
 	"github.com/firstrow/mcwig"
+	"github.com/mattn/go-runewidth"
 )
 
 func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
@@ -40,7 +41,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 	for currentLine != nil {
 		if lineNum >= offset && y <= termHeight {
 			// render each character in the line separately
-			x := 0
+			x := 0 // onscreen position
 
 			// highlight search
 			searchMatches := [][]int{}
@@ -54,6 +55,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				textStyle := mcwig.Color("default")
 				tempColor := 0
 
+				// TODO: search highlight and selection check must be moved out of the loop
 				// highlight search
 				if len(searchMatches) > 0 {
 					for _, m := range searchMatches {
@@ -63,7 +65,6 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 						}
 					}
 				}
-
 				// selection
 				if buf.Selection != nil {
 					if mcwig.SelectionCursorInRange(buf.Selection, mcwig.Cursor{Line: lineNum, Char: i}) {
@@ -91,7 +92,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 					}
 				}
 
-				x += len(ch)
+				x += chlen(currentLine.Value[i])
 			}
 
 			// render cursor after the end of the line in insert mode
@@ -107,12 +108,22 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 	}
 }
 
-func getRenderChar(ch rune) string {
-	if ch == '\t' {
+func chlen(c rune) int {
+	if c == '\t' {
+		return 4
+	}
+	if c == '\n' {
+		return 0
+	}
+	return runewidth.RuneWidth(c)
+}
+
+func getRenderChar(c rune) string {
+	if c == '\t' {
 		return "    "
 	}
-	if ch == '\n' {
-		return " "
+	if c == '\n' {
+		return "_"
 	}
-	return string(ch)
+	return string(c)
 }

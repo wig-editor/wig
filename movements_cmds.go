@@ -36,7 +36,7 @@ func CmdCursorLeft(ctx Context) {
 
 func CmdCursorRight(ctx Context) {
 	line := CursorLine(ctx.Buf)
-	if ctx.Buf.Cursor.Char < len(line.Value) {
+	if ctx.Buf.Cursor.Char < len(line.Value)-1 {
 		ctx.Buf.Cursor.Char++
 		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
 	}
@@ -94,11 +94,7 @@ func CmdGotoLine0(ctx Context) {
 
 func CmdGotoLineEnd(ctx Context) {
 	line := CursorLine(ctx.Buf)
-	if len(line.Value) > 0 {
-		ctx.Buf.Cursor.Char = len(line.Value) - 1
-	} else {
-		ctx.Buf.Cursor.Char = 0
-	}
+	ctx.Buf.Cursor.Char = len(line.Value) - 2
 	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf)
 }
 

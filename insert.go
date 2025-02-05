@@ -10,6 +10,9 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 	}
 
 	ch := ev.Rune()
+	if ev.Key() == tcell.KeyEnter {
+		ch = '\n'
+	}
 
 	if ev.Modifiers()&tcell.ModCtrl != 0 {
 		return
@@ -29,16 +32,13 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 	}
 
 	line := CursorLine(ctx.Buf)
+	TextInsert(ctx.Buf, line, ctx.Buf.Cursor.Char, string(ch))
 
 	if ev.Key() == tcell.KeyEnter {
-		newLine(ctx.Buf, line)
 		CmdCursorLineDown(ctx)
 		CmdCursorBeginningOfTheLine(ctx)
-		// indent(ctx) // TODO: fix
 		return
 	}
-
-	TextInsert(ctx.Buf, line, ctx.Buf.Cursor.Char, string(ch))
 
 	if ctx.Buf.Cursor.Char < len(line.Value) {
 		ctx.Buf.Cursor.Char++
