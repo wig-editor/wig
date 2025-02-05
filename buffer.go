@@ -151,6 +151,21 @@ func (b *Buffer) Save() error {
 	}
 	line := b.Lines.First()
 	for line != nil {
+		// temp check
+		{
+			count := 0
+			for _, c := range line.Value {
+				if c == '\n' {
+					count++
+				}
+			}
+			if count != 1 {
+				EditorInst.LogMessage("wrong number of new limes")
+				buf := EditorInst.BufferFindByFilePath("[Messages]", true)
+				EditorInst.EnsureBufferIsVisible(buf)
+			}
+		}
+
 		_, err := f.WriteString(string(line.Value))
 		if err != nil {
 			return err
@@ -161,6 +176,7 @@ func (b *Buffer) Save() error {
 }
 
 func (b *Buffer) Append(s string) {
+	// TODO: rewrite. use TextInsert
 	for _, line := range strings.Split(s, "\n") {
 		b.Lines.PushBack([]rune(line + "\n"))
 	}
@@ -187,3 +203,4 @@ func (b *Buffer) String() string {
 	}
 	return buf.String()
 }
+

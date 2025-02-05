@@ -131,6 +131,7 @@ func rgDoSearch(ctx mcwig.Context, pat string) {
 				Char: i.Value.Data.Submatches[0].Start,
 			},
 		)
+		ctx.Buf = buf
 		mcwig.CmdCursorCenter(ctx)
 	}
 
@@ -166,3 +167,4 @@ func CmdProjectSearchWordUnderCursor(ctx mcwig.Context) {
 
 	rgDoSearch(ctx, pat)
 }
+

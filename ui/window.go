@@ -123,7 +123,7 @@ func getRenderChar(c rune) string {
 		return "    "
 	}
 	if c == '\n' {
-		return "_"
+		return " "
 	}
 	return string(c)
 }

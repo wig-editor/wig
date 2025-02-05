@@ -150,7 +150,7 @@ func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
 			return
 		}
 	}
-	if len(e.Windows) >= 1 {
+	if len(e.Windows) > 1 {
 		e.Windows[len(e.Windows)-1].ShowBuffer(b)
 		return
 	}
@@ -197,3 +197,4 @@ func (e *Editor) Redraw() {
 func (e *Editor) ScreenSync() {
 	e.ScreenSyncCh <- 1
 }
+
