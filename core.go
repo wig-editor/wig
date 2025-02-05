@@ -2,11 +2,51 @@ package mcwig
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"unicode"
 )
 
 const minVisibleLines = 5
+
+func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
+	size := len(line.Value)
+	if pos >= size {
+		pos = size
+	}
+	if pos < 0 {
+		pos = 0
+	}
+	line.Value = slices.Concat(line.Value[:pos], []rune(text), line.Value[pos:])
+}
+
+func TextDelete(buf *Buffer, selection *Selection) {
+	sel := SelectionNormalize(selection)
+
+	lineStart := CursorLineByNum(buf, sel.Start.Line)
+	lineEnd := CursorLineByNum(buf, sel.End.Line)
+
+	// if request is to delete more chars then len(end) - we must connect next line
+	// since we delete "\n"
+	if sel.End.Char > len(lineEnd.Value) {
+		sel.End.Line++
+		sel.End.Char = 0
+		lineEnd = CursorLineByNum(buf, sel.End.Line)
+	}
+
+	if lineStart != lineEnd {
+		for lineStart.Next() != lineEnd {
+			buf.Lines.Remove(lineStart.Next())
+		}
+		defer buf.Lines.Remove(lineEnd)
+	}
+
+	start := sel.Start.Char
+	end := sel.End.Char
+
+	end = min(len(lineEnd.Value), end)
+	lineStart.Value = slices.Concat(lineStart.Value[:start], lineEnd.Value[end:])
+}
 
 func lineJoinNext(buf *Buffer, line *Element[Line]) {
 	next := line.Next()

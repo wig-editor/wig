@@ -75,7 +75,6 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				ch := getRenderChar(currentLine.Value[i])
 
 				if tsNodeCursor != nil {
-
 					colorNode, ok := tsNodeCursor.Seek(uint32(lineNum), uint32(i))
 					if ok && tempColor == 0 {
 						textStyle = mcwig.NodeToColor(colorNode)
@@ -111,6 +110,9 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 func getRenderChar(ch rune) string {
 	if ch == '\t' {
 		return "    "
+	}
+	if ch == '\n' {
+		return " "
 	}
 	return string(ch)
 }

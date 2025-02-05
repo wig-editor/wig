@@ -6,6 +6,7 @@ import (
 
 	"github.com/firstrow/mcwig/testutils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBuffer(t *testing.T) {
@@ -86,6 +87,108 @@ func TestWordUnderCusor(t *testing.T) {
 	SelectionDelete(ctx)
 	line := CursorLineByNum(buf, 0)
 	assert.Equal(t, "ine two", string(line.Value))
+}
+
+func TestTextInsertDelete(t *testing.T) {
+	e := NewEditor(testutils.Viewport, nil)
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
+	defer CmdKillBuffer(e.NewContext())
+
+	TextInsert(buf, buf.Lines.First(), 4, " test")
+	require.Equal(t, "line test one", string(buf.Lines.First().Value))
+
+	TextDelete(buf, &Selection{
+		Start: Cursor{Line: 0, Char: 4},
+		End:   Cursor{Line: 0, Char: 9},
+	})
+	require.Equal(t, "line one", string(buf.Lines.First().Value))
+}
+
+func TestTextDeleteMultiline(t *testing.T) {
+	e := NewEditor(testutils.Viewport, nil)
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
+	defer CmdKillBuffer(e.NewContext())
+	TextDelete(buf, &Selection{
+		Start: Cursor{Line: 0, Char: 0},
+		End:   Cursor{Line: 1, Char: 0},
+	})
+	expected := `line two
+line three
+line four
+line five
+`
+	require.Equal(t, expected, buf.String())
+}
+
+func TestTextDeleteMultiline2(t *testing.T) {
+	e := NewEditor(testutils.Viewport, nil)
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
+	defer CmdKillBuffer(e.NewContext())
+	TextDelete(buf, &Selection{
+		Start: Cursor{Line: 0, Char: 0},
+		End:   Cursor{Line: 2, Char: 5},
+	})
+	expected := `three
+line four
+line five
+`
+	require.Equal(t, expected, buf.String())
+}
+
+func TestTextDeleteToEOL(t *testing.T) {
+	e := NewEditor(testutils.Viewport, nil)
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
+	defer CmdKillBuffer(e.NewContext())
+	TextDelete(buf, &Selection{
+		Start: Cursor{Line: 0, Char: 0},
+		End:   Cursor{Line: 0, Char: 8},
+	})
+	expected := `
+line two
+line three
+line four
+line five
+`
+	require.Equal(t, expected, buf.String())
+}
+
+func TestTextDelete_EOL(t *testing.T) {
+	e := NewEditor(testutils.Viewport, nil)
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
+	defer CmdKillBuffer(e.NewContext())
+	TextDelete(buf, &Selection{
+		Start: Cursor{Line: 0, Char: 0},
+		End:   Cursor{Line: 0, Char: 9},
+	})
+	expected := `line two
+line three
+line four
+line five
+`
+	require.Equal(t, expected, buf.String())
+}
+
+func TestTextDelete_EOL_EOF(t *testing.T) {
+	e := NewEditor(testutils.Viewport, nil)
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
+	defer CmdKillBuffer(e.NewContext())
+	// delete last line
+	TextDelete(buf, &Selection{
+		Start: Cursor{Line: 4, Char: 0},
+		End:   Cursor{Line: 4, Char: 10},
+	})
+	expected := `line one
+line two
+line three
+line four
+`
+	require.Equal(t, expected, buf.String())
 }
 
 func copyFile(src string, dst string) error {
