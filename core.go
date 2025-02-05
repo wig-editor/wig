@@ -127,10 +127,13 @@ func CmdReplaceChar(ctx Context) func(Context) {
 		if ctx.Buf.TxStart() {
 			defer ctx.Buf.TxEnd()
 		}
-
-		c := []rune(ctx.Char)
 		line := CursorLine(ctx.Buf)
-		line.Value[ctx.Buf.Cursor.Char] = c[0]
+		ctx.Buf.Selection = &Selection{
+			Start: ctx.Buf.Cursor,
+			End:   ctx.Buf.Cursor,
+		}
+		SelectionDelete(ctx)
+		TextInsert(ctx.Buf, line, ctx.Buf.Cursor.Char, ctx.Char)
 	}
 }
 
@@ -171,9 +174,9 @@ func CmdAppendLine(ctx Context) {
 }
 
 func CmdLineOpenBelow(ctx Context) {
+	line := CursorLine(ctx.Buf)
 	CmdInsertModeAfter(ctx)
-	CmdGotoLineEnd(ctx)
-	TextInsert(ctx.Buf, CursorLine(ctx.Buf), ctx.Buf.Cursor.Char, "\n")
+	TextInsert(ctx.Buf, line, len(line.Value), "\n")
 	CmdCursorLineDown(ctx)
 	CmdCursorBeginningOfTheLine(ctx)
 	// indent(ctx)
