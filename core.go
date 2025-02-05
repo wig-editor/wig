@@ -12,16 +12,13 @@ const minVisibleLines = 5
 
 func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	size := len(line.Value)
-	if pos >= size {
-		pos = size - 1
-	}
 	if pos < 0 {
 		pos = 0
 	}
 
 	s := scanner.Scanner{}
 	s.Init(strings.NewReader(text))
-	s.Whitespace = 0
+	s.Whitespace ^= 1<<'\t' | 1<<'\n' | 1<<' '
 
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		switch tok {
@@ -185,7 +182,7 @@ func CmdLineOpenBelow(ctx Context) {
 	TextInsert(ctx.Buf, line, len(line.Value), "\n")
 	CmdCursorLineDown(ctx)
 	CmdCursorBeginningOfTheLine(ctx)
-	// indent(ctx)
+	indent(ctx)
 }
 
 func CmdLineOpenAbove(ctx Context) {
@@ -507,3 +504,4 @@ func CmdVisualLineMode(ctx Context) {
 	ctx.Buf.Selection.End.Char = len(line.Value) - 1
 	ctx.Buf.SetMode(MODE_VISUAL_LINE)
 }
+

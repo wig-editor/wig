@@ -1,6 +1,9 @@
 package mcwig
 
-import "math"
+import (
+	"math"
+	"strings"
+)
 
 // Thanks: https://gist.github.com/pje/90e727f80685c78a6c1cfff35f62155a
 
@@ -9,7 +12,8 @@ type Line []rune
 var EOL int = math.MinInt32
 
 func (l Line) IsEmpty() bool {
-	return len(l) == 0
+	s := strings.TrimSpace(string(l))
+	return len(s) == 0
 }
 
 func (l Line) String() string {
@@ -141,3 +145,4 @@ func (l *List[T]) remove(e *Element[T]) {
 	e.list = nil
 	l.Len--
 }
+

@@ -94,7 +94,7 @@ func CmdGotoLine0(ctx Context) {
 
 func CmdGotoLineEnd(ctx Context) {
 	line := CursorLine(ctx.Buf)
-	ctx.Buf.Cursor.Char = len(line.Value) - 2
+	ctx.Buf.Cursor.Char = len(line.Value) - 1
 	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf)
 }
 
@@ -330,3 +330,4 @@ func CmdBufferCycle(ctx Context) {
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
 }
+

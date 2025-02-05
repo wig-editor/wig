@@ -1,6 +1,9 @@
 package mcwig
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+)
 
 func indent(ctx Context) {
 	if !strings.HasSuffix(ctx.Buf.FilePath, ".go") {
@@ -16,16 +19,23 @@ func indent(ctx Context) {
 			continue
 		}
 
-		// TODO: optimize this chunk. do not copy full line.
-		line.Value = make([]rune, len(prevLine.Value))
-		copy(line.Value, prevLine.Value)
-		CmdCursorFirstNonBlank(ctx)
-		line.Value = line.Value[:ctx.Buf.Cursor.Char]
-
-		if prevLine.Value[len(prevLine.Value)-1] == '{' {
-			line.Value = append(line.Value, '\t')
-			CmdCursorRight(ctx)
+		idx := 0
+		for i, c := range prevLine.Value {
+			if !unicode.IsSpace(c) {
+				idx = i
+				break
+			}
 		}
+
+		trimmed := strings.TrimSpace(string(prevLine.Value))
+		if strings.HasSuffix(trimmed, "{") {
+			idx += 1
+		}
+
+		ch := strings.Repeat("\t", idx)
+		TextInsert(ctx.Buf, line, 0, ch)
+		CmdGotoLineEnd(ctx)
+
 		break
 	}
 }
@@ -57,3 +67,4 @@ func IndentGetNumber(line []rune, indentUnit []rune) int {
 
 	return count
 }
+
