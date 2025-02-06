@@ -160,7 +160,7 @@ func (b *Buffer) Save() error {
 				}
 			}
 			if count != 1 {
-				EditorInst.LogMessage("wrong number of new limes")
+				EditorInst.LogMessage("wrong number of new lines")
 				buf := EditorInst.BufferFindByFilePath("[Messages]", true)
 				EditorInst.EnsureBufferIsVisible(buf)
 			}
@@ -203,4 +203,3 @@ func (b *Buffer) String() string {
 	}
 	return buf.String()
 }
-
