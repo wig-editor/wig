@@ -333,6 +333,7 @@ func CmdToggleComment(ctx Context) {
 
 	comment := "//"
 
+	// TODO: improve. make comments like all other normal editors!
 	cmComment := func(line *Element[Line]) {
 		spacePos := 0
 		for i, c := range line.Value {
