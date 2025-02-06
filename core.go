@@ -214,6 +214,7 @@ func CmdDeleteLine(ctx Context) {
 		ctx.Buf.Selection.Start.Line+int(ctx.Count)-1,
 	)
 	ctx.Buf.Selection.End.Char = len(CursorLineByNum(ctx.Buf, ctx.Buf.Selection.End.Line).Value) - 1
+	yankSave(ctx)
 	SelectionDelete(ctx)
 	CmdNormalMode(ctx)
 }
@@ -237,6 +238,7 @@ func CmdChangeWord(ctx Context) {
 		End:   Cursor{Line: ctx.Buf.Cursor.Line, Char: end},
 	}
 	CmdEnterInsertMode(ctx)
+	yankSave(ctx)
 	SelectionDelete(ctx)
 }
 
@@ -247,7 +249,9 @@ func CmdChangeWORD(ctx Context) {
 		Start: ctx.Buf.Cursor,
 		End:   Cursor{Line: ctx.Buf.Cursor.Line, Char: end},
 	}
+
 	CmdEnterInsertMode(ctx)
+	yankSave(ctx)
 	SelectionDelete(ctx)
 }
 
@@ -257,6 +261,7 @@ func CmdChangeTo(_ Context) func(Context) {
 		CmdForwardToChar(ctx)(ctx)
 		SelectionStop(ctx.Buf)
 		CmdEnterInsertMode(ctx)
+		yankSave(ctx)
 		SelectionDelete(ctx)
 	}
 }
@@ -267,6 +272,7 @@ func CmdChangeBefore(_ Context) func(Context) {
 		CmdForwardBeforeChar(ctx)(ctx)
 		SelectionStop(ctx.Buf)
 		CmdEnterInsertMode(ctx)
+		yankSave(ctx)
 		SelectionDelete(ctx)
 	}
 }
@@ -276,6 +282,7 @@ func CmdChangeEndOfLine(ctx Context) {
 	CmdGotoLineEnd(ctx)
 	SelectionStop(ctx.Buf)
 	CmdEnterInsertMode(ctx)
+	yankSave(ctx)
 	SelectionDelete(ctx)
 }
 
@@ -289,7 +296,7 @@ func CmdChangeLine(ctx Context) {
 		}
 	}
 	CmdInsertModeAfter(ctx)
-	line.Value = line.Value[:idx]
+	line.Value = line.Value[:idx] // TODO: use text delete
 }
 
 func CmdDeleteTo(_ Context) func(Context) {
@@ -300,21 +307,27 @@ func CmdDeleteTo(_ Context) func(Context) {
 		SelectionStart(ctx.Buf)
 		CmdForwardToChar(ctx)(ctx)
 		SelectionStop(ctx.Buf)
+		yankSave(ctx)
 		SelectionDelete(ctx)
 	}
 }
 
-func CmdDeleteBefore(ctx Context) {
-	if ctx.Buf.TxStart() {
-		defer ctx.Buf.TxEnd()
+func CmdDeleteBefore(ctx Context) func(Context) {
+	return func(ctx Context) {
+		if ctx.Buf.TxStart() {
+			defer ctx.Buf.TxEnd()
+		}
+		SelectionStart(ctx.Buf)
+		CmdForwardBeforeChar(ctx)(ctx)
+		SelectionStop(ctx.Buf)
+		yankSave(ctx)
+		SelectionDelete(ctx)
 	}
-	SelectionStart(ctx.Buf)
-	CmdForwardBeforeChar(ctx)(ctx)
-	SelectionDelete(ctx)
 }
 
 func CmdSelectionChange(ctx Context) {
 	CmdEnterInsertMode(ctx)
+	yankSave(ctx)
 	SelectionDelete(ctx)
 }
 
@@ -386,6 +399,7 @@ func CmdSelectionDelete(ctx Context) {
 	if ctx.Buf.TxStart() {
 		defer ctx.Buf.TxEnd()
 	}
+	yankSave(ctx)
 	SelectionDelete(ctx)
 }
 
