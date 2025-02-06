@@ -82,11 +82,6 @@ func CmdEnterInsertMode(ctx Context) {
 	}
 
 	ctx.Buf.TxStart()
-
-	if len(line.Value) == 0 {
-		ctx.Buf.Cursor.Char++
-	}
-
 	ctx.Buf.SetMode(MODE_INSERT)
 }
 
@@ -278,12 +273,8 @@ func CmdChangeBefore(_ Context) func(Context) {
 }
 
 func CmdChangeEndOfLine(ctx Context) {
-	SelectionStart(ctx.Buf)
-	CmdGotoLineEnd(ctx)
-	SelectionStop(ctx.Buf)
-	CmdEnterInsertMode(ctx)
-	yankSave(ctx)
-	SelectionDelete(ctx)
+	ctx.Char = "\n"
+	CmdChangeBefore(ctx)(ctx)
 }
 
 func CmdChangeLine(ctx Context) {

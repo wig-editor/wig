@@ -156,3 +156,4 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 		},
 	}
 }
+

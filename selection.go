@@ -131,3 +131,4 @@ func SelectionDelete(ctx Context) {
 	TextDelete(ctx.Buf, &sel)
 	ctx.Buf.Cursor = sel.Start
 }
+
