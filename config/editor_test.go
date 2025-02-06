@@ -86,6 +86,28 @@ line four
 	require.Equal(t, expected, buf.String())
 }
 
+func TestComment(t *testing.T) {
+	keys := mcwig.NewKeyHandler(DefaultKeyMap())
+	e := mcwig.NewEditor(
+		testutils.Viewport,
+		keys,
+	)
+	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	e.ActiveWindow().ShowBuffer(buf)
+
+	expected := `line one
+// line two
+line three
+line four
+line five
+`
+
+	keys.HandleKey(e, key('j'), buf.Mode())
+	keys.HandleKey(e, key('g'), buf.Mode())
+	keys.HandleKey(e, key('c'), buf.Mode())
+	require.Equal(t, expected, buf.String())
+}
+
 func key(ch rune) *tcell.EventKey {
 	return tcell.NewEventKey(tcell.KeyRune, ch, tcell.ModNone)
 }

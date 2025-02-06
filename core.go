@@ -22,6 +22,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	s := scanner.Scanner{}
 	s.Init(strings.NewReader(text))
 	s.Whitespace ^= 1<<'\t' | 1<<'\n' | 1<<' '
+	s.Mode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scanner.ScanStrings | scanner.ScanRawStrings | scanner.ScanComments
 
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		switch tok {
@@ -340,18 +341,17 @@ func CmdToggleComment(ctx Context) {
 				break
 			}
 		}
-		tmpData := make([]rune, 0, len(line.Value)+len(comment)+1)
-		tmpData = append(tmpData, line.Value[:spacePos]...)
-		tmpData = append(tmpData, []rune(comment)...)
-		tmpData = append(tmpData, rune(' '))
-		tmpData = append(tmpData, line.Value[spacePos:]...)
-		line.Value = tmpData
-
+		TextInsert(ctx.Buf, line, spacePos, comment+" ")
 	}
 
 	cmUncomment := func(line *Element[Line], comment string) {
 		r := strings.Replace(string(line.Value), comment, "", 1)
-		line.Value = []rune(r)
+		lineNum := CursorNumByLine(ctx.Buf, line)
+		TextDelete(ctx.Buf, &Selection{
+			Start: Cursor{Line: lineNum, Char: 0},
+			End:   Cursor{Line: lineNum, Char: len(line.Value) - 1},
+		})
+		TextInsert(ctx.Buf, line, 0, r[:len(r)-1])
 	}
 
 	toggleCommentForLine := func(line *Element[Line]) {
@@ -374,7 +374,7 @@ func CmdToggleComment(ctx Context) {
 		for i := 0; i <= count; i++ {
 			line := lineStart
 			lineStart = lineStart.Next()
-			if len(line.Value) == 0 {
+			if line.Value.IsEmpty() {
 				continue
 			}
 			toggleCommentForLine(line)
@@ -512,4 +512,3 @@ func CmdVisualLineMode(ctx Context) {
 	ctx.Buf.Selection.End.Char = len(line.Value) - 1
 	ctx.Buf.SetMode(MODE_VISUAL_LINE)
 }
-

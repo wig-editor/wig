@@ -100,6 +100,20 @@ func CursorLineByNum(buf *Buffer, num int) *Element[Line] {
 	return currentLine
 }
 
+func CursorNumByLine(buf *Buffer, lookie *Element[Line]) int {
+	i := 0
+	currentLine := buf.Lines.First()
+	for currentLine != nil {
+		if currentLine == lookie {
+			return i
+		}
+		currentLine = currentLine.Next()
+		i++
+	}
+
+	return 0
+}
+
 // class of char under cursor
 type chClass int
 
