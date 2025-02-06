@@ -55,30 +55,29 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				textStyle := mcwig.Color("default")
 				tempColor := 0
 
-				// TODO: search highlight and selection check must be moved out of the loop
-				// highlight search
-				if len(searchMatches) > 0 {
-					for _, m := range searchMatches {
-						if i >= m[0] && i < m[1] {
-							textStyle = mcwig.Color("ui.cursor.match")
-							tempColor = 1
-						}
-					}
-				}
-				// selection
-				if buf.Selection != nil {
-					if mcwig.SelectionCursorInRange(buf.Selection, mcwig.Cursor{Line: lineNum, Char: i}) {
-						textStyle = mcwig.Color("ui.selection")
-						tempColor = 1
-					}
-				}
-
 				ch := getRenderChar(currentLine.Value[i])
 
 				if tsNodeCursor != nil {
 					colorNode, ok := tsNodeCursor.Seek(uint32(lineNum), uint32(i))
 					if ok && tempColor == 0 {
 						textStyle = mcwig.NodeToColor(colorNode)
+					}
+				}
+
+				// selection
+				if buf.Selection != nil {
+					if mcwig.SelectionCursorInRange(buf.Selection, mcwig.Cursor{Line: lineNum, Char: i}) {
+						textStyle = mcwig.ApplyBg("ui.selection.primary", textStyle)
+					}
+				}
+
+				// TODO: search highlight and selection check must be moved out of the loop
+				// highlight search
+				if len(searchMatches) > 0 {
+					for _, m := range searchMatches {
+						if i >= m[0] && i < m[1] {
+							textStyle = mcwig.ApplyBg("ui.selection", textStyle)
+						}
 					}
 				}
 
@@ -127,4 +126,3 @@ func getRenderChar(c rune) string {
 	}
 	return string(c)
 }
-

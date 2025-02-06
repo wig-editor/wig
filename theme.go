@@ -23,7 +23,8 @@ var colors AllConfig
 
 func init() {
 	colors = AllConfig{}
-	colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/solarized_dark.toml"
+	// colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/solarized_dark.toml"
+	colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/zenburn.toml"
 	theme, err := os.ReadFile(colorThemeFile)
 	if err != nil {
 		panic(err.Error())
@@ -46,11 +47,16 @@ func Color(color string) tcell.Style {
 	}
 
 	if val, ok := colors.Colors[color]; ok {
-		fgPaletteKey := val.Fg
-		bgPaletteKey := val.Bg
+		fgColor := val.Fg
+		bgColor := val.Bg
 
-		fgColor := colors.Palette[fgPaletteKey]
-		bgColor := colors.Palette[bgPaletteKey]
+		if !strings.HasPrefix(fgColor, "#") {
+			fgColor = colors.Palette[fgColor]
+		}
+
+		if !strings.HasPrefix(bgColor, "#") {
+			bgColor = colors.Palette[bgColor]
+		}
 
 		if fgColor == "" {
 			fgColor = defaultFg
@@ -70,3 +76,9 @@ func Color(color string) tcell.Style {
 
 	return tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
 }
+
+func ApplyBg(color string, style tcell.Style) tcell.Style {
+	_, bg, _ := Color(color).Decompose()
+	return style.Background(bg)
+}
+

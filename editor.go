@@ -46,7 +46,7 @@ type Editor struct {
 	Projects     ProjectManager
 	Message      string // display in echo area
 	Lsp          *LspManager
-
+	Events       *EventsManager
 	activeWindow *Window
 }
 
@@ -197,4 +197,3 @@ func (e *Editor) Redraw() {
 func (e *Editor) ScreenSync() {
 	e.ScreenSyncCh <- 1
 }
-
