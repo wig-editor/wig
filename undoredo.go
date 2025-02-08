@@ -37,8 +37,6 @@ func (tx *Transaction) End() {
 		if tx.buf.Highlighter != nil {
 			tx.buf.Highlighter.Build()
 		}
-
-		EditorInst.Lsp.DidChange(tx.buf)
 	}
 
 	tx.buf = nil
@@ -85,6 +83,7 @@ func (u *UndoRedo) Push(edits EditDiff) {
 }
 
 func (u *UndoRedo) Undo() {
+	return
 	if !u.checkPosition() || u.Position < 0 {
 		return
 	}
@@ -108,6 +107,7 @@ func (u *UndoRedo) Undo() {
 }
 
 func (u *UndoRedo) Redo() {
+	return
 	if !u.checkPosition() {
 		return
 	}
@@ -128,3 +128,4 @@ func (u *UndoRedo) Redo() {
 		u.Buf.Highlighter.Build()
 	}
 }
+

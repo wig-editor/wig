@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/pkg/errors"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/golang"
 )
@@ -49,7 +50,7 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 	var err error
 	h.q, err = sitter.NewQuery(highlightQ, golang.GetLanguage())
 	if err != nil {
-		h.e.LogError(err)
+		h.e.LogError(errors.Wrap(err, "tree sitter query error"))
 		return
 	}
 

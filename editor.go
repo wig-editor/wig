@@ -68,6 +68,7 @@ func NewEditor(
 		ExitCh:       make(chan int),
 		RedrawCh:     make(chan int),
 		ScreenSyncCh: make(chan int),
+		Events:       NewEventsManager(),
 	}
 	EditorInst.Lsp = NewLspManager(EditorInst)
 

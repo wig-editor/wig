@@ -16,262 +16,6 @@ import (
 	"go.lsp.dev/uri"
 )
 
-var lspServerInitJson = `{
-  "processId": null,
-  "rootPath": "/home/andrew/code/mcwig",
-  "clientInfo": {
-    "name": "mcwig",
-    "version": "001"
-  },
-  "rootUri": "file:///home/andrew/code/mcwig",
-  "capabilities": {
-    "general": {
-      "positionEncodings": [
-        "utf-32",
-        "utf-16"
-      ]
-    },
-    "workspace": {
-      "workspaceEdit": {
-        "documentChanges": true,
-        "resourceOperations": [
-          "create",
-          "rename",
-          "delete"
-        ]
-      },
-      "applyEdit": true,
-      "symbol": {
-        "symbolKind": {
-          "valueSet": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26
-          ]
-        }
-      },
-      "executeCommand": {
-        "dynamicRegistration": false
-      },
-      "didChangeWatchedFiles": {
-        "dynamicRegistration": true
-      },
-      "workspaceFolders": true,
-      "configuration": true,
-      "diagnostics": {
-        "refreshSupport": false
-      },
-      "fileOperations": {
-        "didCreate": false,
-        "willCreate": false,
-        "didRename": true,
-        "willRename": true,
-        "didDelete": false,
-        "willDelete": false
-      }
-    },
-    "textDocument": {
-      "declaration": {
-        "dynamicRegistration": true,
-        "linkSupport": true
-      },
-      "references": {
-        "dynamicRegistration": true
-      },
-      "implementation": {
-        "dynamicRegistration": true,
-        "linkSupport": true
-      },
-      "typeDefinition": {
-        "dynamicRegistration": true,
-        "linkSupport": true
-      },
-      "synchronization": {
-        "willSave": true,
-        "didSave": true,
-        "willSaveWaitUntil": true
-      },
-      "documentSymbol": {
-        "symbolKind": {
-          "valueSet": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            24,
-            25,
-            26
-          ]
-        },
-        "hierarchicalDocumentSymbolSupport": true
-      },
-      "formatting": {
-        "dynamicRegistration": true
-      },
-      "rangeFormatting": {
-        "dynamicRegistration": true
-      },
-      "onTypeFormatting": {
-        "dynamicRegistration": true
-      },
-      "rename": {
-        "dynamicRegistration": true,
-        "prepareSupport": true
-      },
-      "codeAction": {
-        "dynamicRegistration": true,
-        "isPreferredSupport": true,
-        "codeActionLiteralSupport": {
-          "codeActionKind": {
-            "valueSet": [
-              "",
-              "quickfix",
-              "refactor",
-              "refactor.extract",
-              "refactor.inline",
-              "refactor.rewrite",
-              "source",
-              "source.organizeImports"
-            ]
-          }
-        },
-        "resolveSupport": {
-          "properties": [
-            "edit",
-            "command"
-          ]
-        },
-        "dataSupport": true
-      },
-      "completion": {
-        "completionItem": {
-          "snippetSupport": true,
-          "documentationFormat": [
-            "markdown",
-            "plaintext"
-          ],
-          "resolveAdditionalTextEditsSupport": true,
-          "insertReplaceSupport": true,
-          "deprecatedSupport": true,
-          "resolveSupport": {
-            "properties": [
-              "documentation",
-              "detail",
-              "additionalTextEdits",
-              "command",
-              "insertTextFormat",
-              "insertTextMode"
-            ]
-          },
-          "insertTextModeSupport": {
-            "valueSet": [
-              1,
-              2
-            ]
-          }
-        },
-        "contextSupport": true,
-        "dynamicRegistration": true
-      },
-      "signatureHelp": {
-        "signatureInformation": {
-          "parameterInformation": {
-            "labelOffsetSupport": true
-          }
-        },
-        "dynamicRegistration": true
-      },
-      "documentLink": {
-        "dynamicRegistration": true,
-        "tooltipSupport": true
-      },
-      "hover": {
-        "contentFormat": [
-          "markdown",
-          "plaintext"
-        ],
-        "dynamicRegistration": true
-      },
-      "selectionRange": {
-        "dynamicRegistration": true
-      },
-      "callHierarchy": {
-        "dynamicRegistration": false
-      },
-      "typeHierarchy": {
-        "dynamicRegistration": true
-      },
-      "publishDiagnostics": {
-        "relatedInformation": true,
-        "tagSupport": {
-          "valueSet": [
-            1,
-            2
-          ]
-        },
-        "versionSupport": true
-      },
-      "diagnostic": {
-        "dynamicRegistration": false,
-        "relatedDocumentSupport": false
-      },
-      "linkedEditingRange": {
-        "dynamicRegistration": true
-      }
-    },
-    "window": {
-      "workDoneProgress": true,
-      "showDocument": {
-        "support": true
-      }
-    }
-  },
-  "initializationOptions": null,
-  "workDoneToken": "1"
-}`
-
 type LspServerConfig struct {
 	Cmd  []string // gopls serve -listen=127.0.0.1:101010
 	Type string   // unix or tcp
@@ -303,11 +47,28 @@ type LspManager struct {
 }
 
 func NewLspManager(e *Editor) *LspManager {
-	return &LspManager{
+	r := &LspManager{
 		e:      e,
 		conns:  map[string]*lspConn{},
 		ignore: map[string]bool{},
 	}
+
+	go func() {
+		events := e.Events.Subscribe()
+		for {
+			select {
+			case msg := <-events:
+				switch event := msg.(type) {
+				case EventTextChange:
+					fmt.Println("change:", event.Start, event.End, "text", event.Text)
+					r.DidChange(event)
+				}
+
+			}
+		}
+	}()
+
+	return r
 }
 
 // TODO: check for supported file extension before doing anything
@@ -346,8 +107,8 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 	client.didOpen(buf)
 }
 
-func (l *LspManager) DidChange(buf *Buffer) {
-	root, _ := l.e.Projects.FindRoot(buf)
+func (l *LspManager) DidChange(event EventTextChange) {
+	root, _ := l.e.Projects.FindRoot(event.Buf)
 
 	_, ignore := l.ignore[root]
 	if ignore {
@@ -362,13 +123,17 @@ func (l *LspManager) DidChange(buf *Buffer) {
 	req := protocol.DidChangeTextDocumentParams{
 		TextDocument: protocol.VersionedTextDocumentIdentifier{
 			TextDocumentIdentifier: protocol.TextDocumentIdentifier{
-				URI: protocol.DocumentURI(fmt.Sprintf("file://%s", buf.FilePath)),
+				URI: protocol.DocumentURI(fmt.Sprintf("file://%s", event.Buf.FilePath)),
 			},
 			Version: int32(time.Now().Unix()),
 		},
 		ContentChanges: []protocol.TextDocumentContentChangeEvent{
 			{
-				Text: buf.String(),
+				Range: protocol.Range{
+					Start: protocol.Position{Line: uint32(event.Start.Line), Character: uint32(event.Start.Char)},
+					End:   protocol.Position{Line: uint32(event.End.Line), Character: uint32(event.End.Char)},
+				},
+				Text: event.Text,
 			},
 		},
 	}
@@ -571,13 +336,13 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	go func() {
 		scanner := bufio.NewScanner(pout)
 		for scanner.Scan() {
-			l.e.LogMessage(scanner.Text())
+			l.e.LogMessage("lsp:" + scanner.Text())
 		}
 	}()
 	go func() {
 		scanner := bufio.NewScanner(perr)
 		for scanner.Scan() {
-			l.e.LogMessage(scanner.Text())
+			l.e.LogMessage("lsp:" + scanner.Text())
 		}
 	}()
 
@@ -602,6 +367,9 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
 		data := map[string]interface{}{}
 		json.Unmarshal(req.Params(), &data)
+
+		l.e.LogMessage(fmt.Sprintf("lsp: %s: %+v", req.Method(), data))
+		// l.e.Redraw()
 
 		return reply(ctx, nil, nil)
 	}

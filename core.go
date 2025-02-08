@@ -11,6 +11,14 @@ import (
 const minVisibleLines = 5
 
 func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
+	sline := CursorNumByLine(buf, line)
+	event := EventTextChange{
+		Buf:   buf,
+		Start: Position{Line: sline, Char: pos},
+		End:   Position{Line: sline, Char: pos},
+		Text:  text,
+	}
+
 	if pos < 0 {
 		pos = 0
 	}
@@ -33,11 +41,17 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 			buf.Lines.insertValueAfter([]rune(suffix), line)
 			line = line.Next()
 			pos = 0
+			// event.End.Line++
+			// event.End.Char = 0
 		default:
 			line.Value = slices.Concat(line.Value[:pos], []rune(s.TokenText()), line.Value[pos:])
 			pos += len(s.TokenText())
+			// event.End.Char = pos
 		}
 	}
+
+	// Complete following code, populate EventTextChange struct with proper ranges:
+	EditorInst.Events.Broadcast(event)
 }
 
 func TextDelete(buf *Buffer, selection *Selection) {
@@ -55,7 +69,7 @@ func TextDelete(buf *Buffer, selection *Selection) {
 	// if request is to delete more chars then len(end) - we must connect next line
 	// since we delete "\n"
 	if sel.End.Char >= len(lineEnd.Value) {
-		tmpLine := CursorLineByNum(buf, sel.End.Line+1)
+		tmpLine := lineEnd.Next()
 		if tmpLine != nil {
 			sel.End.Line++
 			sel.End.Char = 0
@@ -74,6 +88,15 @@ func TextDelete(buf *Buffer, selection *Selection) {
 	end := min(len(lineEnd.Value), sel.End.Char)
 
 	lineStart.Value = slices.Concat(lineStart.Value[:start], lineEnd.Value[end:])
+
+	event := EventTextChange{
+		Buf:   buf,
+		Start: Position{Line: sel.Start.Line, Char: sel.Start.Char},
+		End:   Position{Line: sel.End.Line, Char: sel.End.Char},
+		Text:  "",
+	}
+
+	EditorInst.Events.Broadcast(event)
 }
 
 func CmdEnterInsertMode(ctx Context) {
@@ -178,7 +201,7 @@ func CmdAppendLine(ctx Context) {
 func CmdLineOpenBelow(ctx Context) {
 	line := CursorLine(ctx.Buf)
 	CmdInsertModeAfter(ctx)
-	TextInsert(ctx.Buf, line, len(line.Value), "\n")
+	TextInsert(ctx.Buf, line, len(line.Value)-1, "\n")
 	CmdCursorLineDown(ctx)
 	CmdCursorBeginningOfTheLine(ctx)
 	indent(ctx)

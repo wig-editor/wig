@@ -74,3 +74,4 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
 	}
 }
+

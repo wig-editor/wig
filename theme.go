@@ -23,8 +23,8 @@ var colors AllConfig
 
 func init() {
 	colors = AllConfig{}
-	// colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/solarized_dark.toml"
-	colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/zenburn.toml"
+	colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/solarized_dark.toml"
+	// colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/zenburn.toml"
 	theme, err := os.ReadFile(colorThemeFile)
 	if err != nil {
 		panic(err.Error())
