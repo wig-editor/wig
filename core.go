@@ -28,7 +28,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	}
 
 	s := scanner.Scanner{}
-	s.Init(strings.NewReader(text))
+	s.Init(strings.NewReader())
 	s.Whitespace ^= 1<<'\t' | 1<<'\n' | 1<<' '
 	s.Mode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scanner.ScanStrings | scanner.ScanRawStrings | scanner.ScanComments
 
@@ -41,16 +41,12 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 			buf.Lines.insertValueAfter([]rune(suffix), line)
 			line = line.Next()
 			pos = 0
-			// event.End.Line++
-			// event.End.Char = 0
 		default:
 			line.Value = slices.Concat(line.Value[:pos], []rune(s.TokenText()), line.Value[pos:])
 			pos += len(s.TokenText())
-			// event.End.Char = pos
 		}
 	}
 
-	// Complete following code, populate EventTextChange struct with proper ranges:
 	EditorInst.Events.Broadcast(event)
 }
 
@@ -536,4 +532,3 @@ func CmdVisualLineMode(ctx Context) {
 	ctx.Buf.Selection.End.Char = len(line.Value) - 1
 	ctx.Buf.SetMode(MODE_VISUAL_LINE)
 }
-

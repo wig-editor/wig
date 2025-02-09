@@ -13,6 +13,9 @@ func StatuslineRender(
 	win *mcwig.Window,
 ) {
 	buf := win.Buffer()
+	if buf == nil {
+		return
+	}
 
 	w, h := view.Size()
 	h -= 1

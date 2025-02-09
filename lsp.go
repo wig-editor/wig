@@ -388,8 +388,7 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 			}
 		}
 
-		// l.e.LogMessage(fmt.Sprintf("lsp: %s: %+v", req.Method(), data))
-		// l.e.Redraw()
+		l.e.Redraw()
 
 		return reply(ctx, nil, nil)
 	}
