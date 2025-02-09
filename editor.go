@@ -66,7 +66,7 @@ func NewEditor(
 		Layout:       LayoutVertical,
 		Projects:     NewProjectManager(),
 		ExitCh:       make(chan int),
-		RedrawCh:     make(chan int),
+		RedrawCh:     make(chan int, 10),
 		ScreenSyncCh: make(chan int),
 		Events:       NewEventsManager(),
 	}

@@ -49,21 +49,21 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				searchMatches = str.IndexAllIgnoreCase(string(currentLine.Value), mcwig.LastSearchPattern, -1)
 			}
 
+			diagnostics := e.Lsp.Diagnostics(buf, lineNum)
+
 			// render line
 			for i := skip; i < len(currentLine.Value); i++ {
 				// render selection
 				textStyle := mcwig.Color("default")
-				tempColor := 0
-
-				ch := getRenderChar(currentLine.Value[i])
 
 				if tsNodeCursor != nil {
 					colorNode, ok := tsNodeCursor.Seek(uint32(lineNum), uint32(i))
-					if ok && tempColor == 0 {
+					if ok {
 						textStyle = mcwig.NodeToColor(colorNode)
 					}
 				}
 
+				// Colors and styles
 				// selection
 				if buf.Selection != nil {
 					if mcwig.SelectionCursorInRange(buf.Selection, mcwig.Cursor{Line: lineNum, Char: i}) {
@@ -71,7 +71,6 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 					}
 				}
 
-				// TODO: search highlight and selection check must be moved out of the loop
 				// highlight search
 				if len(searchMatches) > 0 {
 					for _, m := range searchMatches {
@@ -80,6 +79,19 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 						}
 					}
 				}
+
+				// lsp errors
+				if len(diagnostics) > 0 {
+					for _, info := range diagnostics {
+						if i >= int(info.Range.Start.Character) && i <= int(info.Range.End.Character) {
+							textStyle = mcwig.Color("error")
+						}
+					}
+				}
+
+				/////////////////////////////////
+
+				ch := getRenderChar(currentLine.Value[i])
 
 				// todo: handle tabs colors?
 				view.SetContent(x, y, string(ch), textStyle)

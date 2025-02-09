@@ -41,16 +41,18 @@ func LspConfigByFileName(file string) (conf LspServerConfig, found bool) {
 }
 
 type LspManager struct {
-	e      *Editor
-	conns  map[string]*lspConn
-	ignore map[string]bool
+	e           *Editor
+	conns       map[string]*lspConn
+	ignore      map[string]bool
+	diagnostics map[string]map[uint32][]protocol.Diagnostic
 }
 
 func NewLspManager(e *Editor) *LspManager {
 	r := &LspManager{
-		e:      e,
-		conns:  map[string]*lspConn{},
-		ignore: map[string]bool{},
+		e:           e,
+		conns:       map[string]*lspConn{},
+		ignore:      map[string]bool{},
+		diagnostics: map[string]map[uint32][]protocol.Diagnostic{},
 	}
 
 	go func() {
@@ -322,6 +324,13 @@ func (l *LspManager) Completion(buf *Buffer) (sign string) {
 	return ""
 }
 
+func (m *LspManager) Diagnostics(buf *Buffer, lineNum int) []protocol.Diagnostic {
+	if val, ok := m.diagnostics[buf.FilePath]; ok {
+		return val[uint32(lineNum)]
+	}
+	return nil
+}
+
 func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspConn, err error) {
 	cmd := exec.Command(conf.Cmd[0], conf.Cmd[1:]...)
 
@@ -365,10 +374,21 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	c := jsonrpc2.NewConn(s)
 
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
-		data := map[string]interface{}{}
-		json.Unmarshal(req.Params(), &data)
+		// data := map[string]interface{}{}
+		// json.Unmarshal(req.Params(), &data)
+		if req.Method() == "textDocument/publishDiagnostics" {
+			rest := protocol.PublishDiagnosticsParams{}
+			json.Unmarshal(req.Params(), &rest)
 
-		l.e.LogMessage(fmt.Sprintf("lsp: %s: %+v", req.Method(), data))
+			filepath := rest.URI.Filename()
+			l.diagnostics[filepath] = map[uint32][]protocol.Diagnostic{}
+
+			for _, r := range rest.Diagnostics {
+				l.diagnostics[filepath][r.Range.Start.Line] = append(l.diagnostics[filepath][r.Range.Start.Line], r)
+			}
+		}
+
+		// l.e.LogMessage(fmt.Sprintf("lsp: %s: %+v", req.Method(), data))
 		// l.e.Redraw()
 
 		return reply(ctx, nil, nil)

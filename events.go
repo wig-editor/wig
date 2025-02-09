@@ -27,7 +27,7 @@ type EventsManager struct {
 func NewEventsManager() *EventsManager {
 	e := &EventsManager{
 		source:         make(chan any, 32),
-		listeners:      make([]chan any, 0, 32),
+		listeners:      make([]chan any, 32),
 		newListener:    make(chan chan any, 32),
 		removeListener: make(chan (<-chan any)),
 	}

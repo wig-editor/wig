@@ -25,10 +25,10 @@ func add(a int, b int) {
 	buf.Append(source)
 	require.Equal(t, source+"\n", buf.String())
 
+	events := e.Events.Subscribe()
+
 	line := CursorLineByNum(buf, 4)
 	TextInsert(buf, line, 22, " int")
-
-	events := e.Events.Subscribe()
 	require.Equal(t, "func add(a int, b int) int {\n", line.Value.String())
 
 	msg := <-events
