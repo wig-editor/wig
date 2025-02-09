@@ -98,6 +98,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"`": mcwig.CmdBufferCycle,
 				"*": commands.CmdProjectSearchWordUnderCursor,
 				"h": commands.CmdLspHover,
+				"e": commands.CmdLspShowDiagnostics,
 				"b": mcwig.KeyMap{
 					"b": commands.CmdBufferPicker,
 					"k": mcwig.CmdKillBuffer,
@@ -156,4 +157,3 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 		},
 	}
 }
-

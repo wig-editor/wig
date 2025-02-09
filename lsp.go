@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"go.lsp.dev/jsonrpc2"
@@ -41,6 +42,7 @@ func LspConfigByFileName(file string) (conf LspServerConfig, found bool) {
 }
 
 type LspManager struct {
+	rw          sync.Mutex
 	e           *Editor
 	conns       map[string]*lspConn
 	ignore      map[string]bool
@@ -62,7 +64,6 @@ func NewLspManager(e *Editor) *LspManager {
 			case msg := <-events:
 				switch event := msg.(type) {
 				case EventTextChange:
-					fmt.Println("change:", event.Start, event.End, "text", event.Text)
 					r.DidChange(event)
 				}
 
@@ -325,6 +326,9 @@ func (l *LspManager) Completion(buf *Buffer) (sign string) {
 }
 
 func (m *LspManager) Diagnostics(buf *Buffer, lineNum int) []protocol.Diagnostic {
+	m.rw.Lock()
+	defer m.rw.Unlock()
+
 	if val, ok := m.diagnostics[buf.FilePath]; ok {
 		return val[uint32(lineNum)]
 	}
@@ -374,9 +378,10 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	c := jsonrpc2.NewConn(s)
 
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
-		// data := map[string]interface{}{}
-		// json.Unmarshal(req.Params(), &data)
 		if req.Method() == "textDocument/publishDiagnostics" {
+			l.rw.Lock()
+			defer l.rw.Unlock()
+
 			rest := protocol.PublishDiagnosticsParams{}
 			json.Unmarshal(req.Params(), &rest)
 

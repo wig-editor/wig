@@ -276,6 +276,20 @@ func CmdLspHover(ctx mcwig.Context) {
 	}
 }
 
+func CmdLspShowDiagnostics(ctx mcwig.Context) {
+	diagnostics := ctx.Editor.Lsp.Diagnostics(ctx.Buf, ctx.Buf.Cursor.Line)
+	if len(diagnostics) == 0 {
+		return
+	}
+
+	for _, info := range diagnostics {
+		if ctx.Buf.Cursor.Char >= int(info.Range.Start.Character) && ctx.Buf.Cursor.Char < int(info.Range.End.Character) {
+			ctx.Editor.EchoMessage(info.Message)
+			return
+		}
+	}
+}
+
 func CmdReloadBuffer(ctx mcwig.Context) {
 	err := mcwig.BufferReloadFile(ctx.Buf)
 	if err != nil {
