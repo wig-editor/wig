@@ -2,6 +2,7 @@ package render
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -14,6 +15,7 @@ import (
 )
 
 type Renderer struct {
+	rw     sync.Mutex
 	e      *mcwig.Editor
 	screen tcell.Screen
 }
@@ -27,6 +29,9 @@ func New(e *mcwig.Editor, screen tcell.Screen) *Renderer {
 }
 
 func (r *Renderer) Render() {
+	r.rw.Lock()
+	defer r.rw.Unlock()
+
 	r.screen.Fill(' ', mcwig.Color("ui.background"))
 
 	w, h := r.screen.Size()

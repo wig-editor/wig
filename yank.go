@@ -24,19 +24,17 @@ func CmdYankPut(ctx Context) {
 		return
 	}
 
+	v := ctx.Editor.Yanks.Last()
+	if v.Value.isLine {
+		CmdCursorLineDown(ctx)
+		CmdYankPutBefore(ctx)
+		return
+	}
+
 	CmdEnterInsertMode(ctx)
 	defer CmdExitInsertMode(ctx)
 
 	CmdCursorRight(ctx)
-	v := ctx.Editor.Yanks.Last()
-
-	if v.Value.isLine {
-		CmdGotoLineEnd(ctx)
-		CmdCursorLineDown(ctx)
-		CmdCursorBeginningOfTheLine(ctx)
-		defer CmdEnsureCursorVisible(ctx)
-	}
-
 	yankPut(ctx)
 }
 
@@ -77,7 +75,7 @@ func yankSave(ctx Context) {
 		}
 		y = yank{val: st}
 	}
-	y.isLine = ctx.Buf.Mode() == MODE_VISUAL_LINE
+	y.isLine = (ctx.Buf.Mode() == MODE_VISUAL_LINE) || ctx.Buf.Selection == nil
 
 	if ctx.Editor.Yanks.Len == 0 {
 		ctx.Editor.Yanks.PushBack(y)
@@ -98,4 +96,3 @@ func yankPut(ctx Context) {
 		CursorInc(ctx.Buf)
 	}
 }
-

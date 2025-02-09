@@ -408,7 +408,6 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	if err != nil {
 		l.e.LogError(err)
 	}
-	// fmt.Printf("%+v", result)
 
 	_, err = c.Call(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{}, nil)
 	if err != nil {

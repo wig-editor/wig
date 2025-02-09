@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/pkg/errors"
@@ -28,6 +29,9 @@ type Highlighter struct {
 	tree       *sitter.Tree
 	sourceCode []byte
 }
+
+// TODO: rewrite treesitter to use channel and scheduled parsing
+var tslock sync.Mutex
 
 // TODO: highlighter parser and query MUST be request
 // for every buffer
@@ -62,6 +66,9 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 // so we can do full rebuild and query syntax ranges only
 // for lines on the screen.
 func (h *Highlighter) Build() {
+	tslock.Lock()
+	defer tslock.Unlock()
+
 	h.nodes = List[TreeSitterRangeNode]{}
 
 	if h.tree != nil {
@@ -82,6 +89,9 @@ func (h *Highlighter) RootNode() *Element[TreeSitterRangeNode] {
 }
 
 func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
+	tslock.Lock()
+	defer tslock.Unlock()
+
 	h.nodes = List[TreeSitterRangeNode]{}
 
 	qc := sitter.NewQueryCursor()
