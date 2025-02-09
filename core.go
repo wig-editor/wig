@@ -28,7 +28,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	}
 
 	s := scanner.Scanner{}
-	s.Init(strings.NewReader())
+	s.Init(strings.NewReader(text))
 	s.Whitespace ^= 1<<'\t' | 1<<'\n' | 1<<' '
 	s.Mode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scanner.ScanStrings | scanner.ScanRawStrings | scanner.ScanComments
 
