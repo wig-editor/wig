@@ -498,10 +498,20 @@ func CmdChangeInsideBlock(ctx Context) {
 
 func CmdUndo(ctx Context) {
 	ctx.Buf.UndoRedo.Undo()
+	// TODO: undo/redo does not support lsp change text events.
+	// so we simply reload how buffer for now.
+	{
+		ctx.Editor.Lsp.DidClose(ctx.Buf)
+		ctx.Editor.Lsp.DidOpen(ctx.Buf)
+	}
 }
 
 func CmdRedo(ctx Context) {
 	ctx.Buf.UndoRedo.Redo()
+	{
+		ctx.Editor.Lsp.DidClose(ctx.Buf)
+		ctx.Editor.Lsp.DidOpen(ctx.Buf)
+	}
 }
 
 func CmdExit(ctx Context) {
