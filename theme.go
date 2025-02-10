@@ -118,10 +118,6 @@ func getColor(color string) tcell.Style {
 	defaultBg := colors.Palette[colors.Colors["ui.background"].Bg]
 	defaultFg := colors.Palette[colors.Colors["ui.text"].Fg]
 
-	if color == "default" {
-		return tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
-	}
-
 	if val, ok := colors.Colors[color]; ok {
 		fgColor := val.Fg
 		bgColor := val.Bg
