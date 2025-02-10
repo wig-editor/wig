@@ -1,11 +1,11 @@
 package mcwig
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
-
 	"github.com/pelletier/go-toml"
 )
 
@@ -19,26 +19,102 @@ type ColorConfig struct {
 	Bg string
 }
 
+var styles map[string]tcell.Style
 var colors AllConfig
 
 func init() {
-	colors = AllConfig{}
-	colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/solarized_dark.toml"
-	// colorThemeFile := "/home/andrew/code/mcwig/runtime/helix/go/zenburn.toml"
+	loadTheme("yo")
+}
+
+func loadTheme(name string) {
+	tname := fmt.Sprintf("/home/andrew/code/mcwig/runtime/helix/themes/%s.toml", name)
+	colorThemeFile := tname
 	theme, err := os.ReadFile(colorThemeFile)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	err = toml.Unmarshal(theme, &colors)
-
+	c := map[string]any{}
+	err = toml.Unmarshal(theme, &c)
 	if err != nil {
 		panic(err.Error())
 	}
+	colors.Colors = parseColors(c["colors"].(map[string]any))
+	colors.Palette = parsePalette(c["palette"].(map[string]any))
+
+	buildStyles()
 }
 
-// TODO: handle nested color names. like keyword.some.type
+func buildStyles() {
+	styles = map[string]tcell.Style{}
+	for k := range colors.Colors {
+		styles[k] = getColor(k)
+	}
+
+	defaultBg := colors.Palette[colors.Colors["ui.background"].Bg]
+	defaultFg := colors.Palette[colors.Colors["ui.text"].Fg]
+	styles["default"] = tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
+}
+
+func parseColors(m map[string]any) map[string]ColorConfig {
+	result := map[string]ColorConfig{}
+
+	for k, v := range m {
+		var conf ColorConfig
+
+		switch v.(type) {
+		case string:
+			conf = ColorConfig{Fg: v.(string), Bg: ""}
+		case map[string]any:
+			values := v.(map[string]any)
+			var bg string
+			var fg string
+
+			if values["bg"] != nil {
+				bg = values["bg"].(string)
+			}
+			if values["fg"] != nil {
+				fg = values["fg"].(string)
+			}
+			conf = ColorConfig{Fg: fg, Bg: bg}
+		}
+
+		result[k] = conf
+	}
+
+	return result
+}
+
+func parsePalette(m map[string]any) map[string]string {
+	result := map[string]string{}
+
+	for k, v := range m {
+		switch v.(type) {
+		case string:
+			result[k] = v.(string)
+		}
+	}
+
+	return result
+}
+
 func Color(color string) tcell.Style {
+	s, ok := styles[color]
+	if ok {
+		return s
+	}
+
+	sections := strings.Split(color, ".")
+	if len(sections) > 1 {
+		r := Color(sections[0])
+		styles[color] = r
+		return r
+	}
+
+	return styles["default"]
+}
+
+func getColor(color string) tcell.Style {
 	defaultBg := colors.Palette[colors.Colors["ui.background"].Bg]
 	defaultFg := colors.Palette[colors.Colors["ui.text"].Fg]
 
@@ -65,13 +141,7 @@ func Color(color string) tcell.Style {
 			bgColor = defaultBg
 		}
 
-		// return tcell.StyleDefault.Background(tcell.GetColor(bgColor)).Foreground(tcell.GetColor(fgColor)).Underline(tcell.UnderlineStyleDashed, tcell.ColorFireBrick)
 		return tcell.StyleDefault.Background(tcell.GetColor(bgColor)).Foreground(tcell.GetColor(fgColor))
-	} else {
-		sections := strings.Split(color, ".")
-		if len(sections) > 1 {
-			return Color(sections[0])
-		}
 	}
 
 	return tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))

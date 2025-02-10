@@ -84,8 +84,13 @@ func BufferReadFile(path string) (*Buffer, error) {
 
 	newLine := "\n"
 	sc := bufio.NewScanner(file)
+	i := 0
 	for sc.Scan() {
 		buf.Lines.PushBack([]rune(string(sc.Bytes()) + newLine))
+		i++
+	}
+	if i == 0 {
+		buf.Lines.PushBack([]rune(newLine))
 	}
 
 	return buf, nil
@@ -203,3 +208,4 @@ func (b *Buffer) String() string {
 	}
 	return buf.String()
 }
+
