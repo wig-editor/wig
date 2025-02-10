@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"cmp"
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -17,6 +19,7 @@ type PickerItem[T any] struct {
 	Name   string
 	Value  T
 	Active bool
+	Score  int
 }
 
 type PickerAction[T any] func(p *UiPicker[T], i *PickerItem[T])
@@ -152,9 +155,15 @@ func (u *UiPicker[T]) filterItems() {
 		chars := util.ToChars([]byte(row.Name))
 		res, _ := algo.FuzzyMatchV1(false, false, true, &chars, []rune(pattern), true, nil)
 		if res.Start >= 0 {
-			u.filtered = append(u.filtered, u.items[i])
+			item := u.items[i]
+			item.Score = res.Score
+			u.filtered = append(u.filtered, item)
 		}
 	}
+
+	slices.SortFunc(u.filtered, func(a, b PickerItem[T]) int {
+		return cmp.Compare(b.Score, a.Score)
+	})
 
 	u.activeItem = 0
 }

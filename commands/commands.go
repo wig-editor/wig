@@ -187,6 +187,9 @@ func CmdFormatBufferAndSave(ctx mcwig.Context) {
 	mcwig.CmdSaveFile(ctx)
 	CmdFormatBuffer(ctx)
 	mcwig.CmdSaveFile(ctx)
+
+	ctx.Editor.Lsp.DidClose(ctx.Buf)
+	ctx.Editor.Lsp.DidOpen(ctx.Buf)
 }
 
 func CmdSearchLine(ctx mcwig.Context) {
@@ -206,12 +209,10 @@ func CmdSearchLine(ctx mcwig.Context) {
 	}
 
 	action := func(p *ui.UiPicker[int], i *ui.PickerItem[int]) {
-		buf := ctx.Buf
-
-		ctx.Editor.ActiveWindow().Jumps.Push(buf)
-		defer ctx.Editor.ActiveWindow().Jumps.Push(buf)
-		buf.Cursor.Line = i.Value
-		buf.Cursor.Char = 0
+		ctx.Editor.ActiveWindow().VisitBuffer(ctx.Buf, mcwig.Cursor{
+			Line: i.Value,
+			Char: 0,
+		})
 		mcwig.CmdCursorBeginningOfTheLine(ctx)
 		mcwig.CmdCursorCenter(ctx)
 		ctx.Editor.PopUi()
