@@ -10,6 +10,7 @@ import (
 
 type ModeKeyMap map[Mode]KeyMap
 type KeyMap map[string]interface{}
+type KeyFallbackFn func(ctx Context, ev *tcell.EventKey)
 
 const kspace = "Space"
 
@@ -17,7 +18,7 @@ type KeyHandler struct {
 	keymap ModeKeyMap
 
 	// if key has been not found in KeyMap, fallback will be called.
-	fallback func(ctx Context, ev *tcell.EventKey)
+	fallback KeyFallbackFn
 
 	// KeyMap or func(Context)
 	waitingForInput interface{}
@@ -54,6 +55,10 @@ func mergeKeyMaps(k1 KeyMap, k2 KeyMap) {
 
 func (k *KeyHandler) Fallback(fn func(ctx Context, ev *tcell.EventKey)) {
 	k.fallback = fn
+}
+
+func (k *KeyHandler) GetFallback() KeyFallbackFn {
+	return k.fallback
 }
 
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
@@ -164,3 +169,4 @@ func isNumeric(s string) bool {
 	_, err := strconv.ParseInt(s, 10, 64)
 	return err == nil
 }
+

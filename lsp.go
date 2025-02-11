@@ -66,7 +66,6 @@ func NewLspManager(e *Editor) *LspManager {
 				case EventTextChange:
 					r.DidChange(event)
 				}
-
 			}
 		}
 	}()
@@ -325,6 +324,7 @@ func (l *LspManager) Completion(buf *Buffer) (sign string) {
 	return ""
 }
 
+// TODO: return copy of diagnostics
 func (m *LspManager) Diagnostics(buf *Buffer, lineNum int) []protocol.Diagnostic {
 	m.rw.Lock()
 	defer m.rw.Unlock()
@@ -332,6 +332,7 @@ func (m *LspManager) Diagnostics(buf *Buffer, lineNum int) []protocol.Diagnostic
 	if val, ok := m.diagnostics[buf.FilePath]; ok {
 		return val[uint32(lineNum)]
 	}
+
 	return nil
 }
 
@@ -380,7 +381,6 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
 		if req.Method() == "textDocument/publishDiagnostics" {
 			l.rw.Lock()
-			defer l.rw.Unlock()
 
 			rest := protocol.PublishDiagnosticsParams{}
 			json.Unmarshal(req.Params(), &rest)
@@ -391,12 +391,13 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 			for _, r := range rest.Diagnostics {
 				l.diagnostics[filepath][r.Range.Start.Line] = append(l.diagnostics[filepath][r.Range.Start.Line], r)
 			}
+			l.rw.Unlock()
+			l.e.Redraw()
 		}
-
-		l.e.Redraw()
 
 		return reply(ctx, nil, nil)
 	}
+
 	c.Go(context.Background(), handler)
 
 	// initialize connection sequence
@@ -436,3 +437,4 @@ func (l *lspConn) didOpen(buf *Buffer) {
 	// fmt.Println("DIDOPEN DONE", id, err)
 	// didOpen
 }
+

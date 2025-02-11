@@ -48,6 +48,7 @@ type Editor struct {
 	Lsp          *LspManager
 	Events       *EventsManager
 	activeWindow *Window
+	Autocomplete func(Context)
 }
 
 func NewEditor(
@@ -198,3 +199,4 @@ func (e *Editor) Redraw() {
 func (e *Editor) ScreenSync() {
 	e.ScreenSyncCh <- 1
 }
+

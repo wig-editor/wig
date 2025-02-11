@@ -69,8 +69,12 @@ func CmdCursorBeginningOfTheLine(ctx Context) {
 
 func CmdCursorFirstNonBlank(ctx Context) {
 	line := CursorLine(ctx.Buf)
+	if line.Value.IsEmpty() {
+		CmdGotoLineEnd(ctx)
+		return
+	}
 	CmdCursorBeginningOfTheLine(ctx)
-	if len(line.Value) == 0 {
+	if len(line.Value) <= 1 {
 		return
 	}
 	for _, c := range line.Value {

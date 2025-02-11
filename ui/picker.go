@@ -8,11 +8,11 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/firstrow/mcwig"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/junegunn/fzf/src/algo"
 	"github.com/junegunn/fzf/src/util"
-
-	"github.com/firstrow/mcwig"
 )
 
 type PickerItem[T any] struct {
@@ -164,7 +164,6 @@ func (u *UiPicker[T]) filterItems() {
 	slices.SortFunc(u.filtered, func(a, b PickerItem[T]) int {
 		return cmp.Compare(b.Score, a.Score)
 	})
-
 	u.activeItem = 0
 }
 

@@ -8,6 +8,7 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 	if ctx.Buf.Mode() != MODE_INSERT {
 		return
 	}
+
 	{
 		if ev.Modifiers()&tcell.ModCtrl != 0 {
 			return
@@ -26,6 +27,10 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 
 	if ev.Key() == tcell.KeyEnter {
 		ch = '\n'
+	}
+
+	if ch == '\t' {
+		ch = '\t'
 	}
 
 	line := CursorLine(ctx.Buf)
@@ -74,4 +79,3 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
 	}
 }
-

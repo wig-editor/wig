@@ -292,22 +292,14 @@ func CmdChangeBefore(_ Context) func(Context) {
 	}
 }
 
+func CmdChangeLine(ctx Context) {
+	CmdCursorFirstNonBlank(ctx)
+	CmdChangeEndOfLine(ctx)
+}
+
 func CmdChangeEndOfLine(ctx Context) {
 	ctx.Char = "\n"
 	CmdChangeBefore(ctx)(ctx)
-}
-
-func CmdChangeLine(ctx Context) {
-	line := CursorLine(ctx.Buf)
-	idx := 0
-	for i, c := range line.Value {
-		if !unicode.IsSpace(c) {
-			idx = i
-			break
-		}
-	}
-	CmdInsertModeAfter(ctx)
-	line.Value = line.Value[:idx] // TODO: use text delete
 }
 
 func CmdDeleteTo(_ Context) func(Context) {
@@ -542,3 +534,4 @@ func CmdVisualLineMode(ctx Context) {
 	ctx.Buf.Selection.End.Char = len(line.Value) - 1
 	ctx.Buf.SetMode(MODE_VISUAL_LINE)
 }
+
