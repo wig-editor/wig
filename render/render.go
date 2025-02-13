@@ -29,6 +29,7 @@ func New(e *mcwig.Editor, screen tcell.Screen) *Renderer {
 }
 
 func (r *Renderer) Render() {
+	// TODO: schedule render
 	r.rw.Lock()
 	defer r.rw.Unlock()
 
@@ -47,8 +48,6 @@ func (r *Renderer) Render() {
 
 	// windows
 	// TODO: rendering must be optimized.
-	// - do not create view every cycle. cache+reuse as much as possible.
-	// - do not call Size(), instead use resize event
 	var winView *mview
 	for i, win := range r.e.Windows {
 		if r.e.Layout == mcwig.LayoutVertical {
@@ -64,7 +63,12 @@ func (r *Renderer) Render() {
 	// widgets: pickers, etc...
 	mainView := NewMView(r.screen, 0, 0, w, h)
 	for _, c := range r.e.UiComponents {
-		c.Render(mainView)
+		switch c.Plane() {
+		case mcwig.PlaneWin:
+			c.Render(winView)
+		default:
+			c.Render(mainView)
+		}
 	}
 
 	// ui.NotificationsRender(r.e, mainView)
@@ -127,3 +131,4 @@ func (t *mview) SetContent(x, y int, str string, st tcell.Style) {
 		x += w
 	}
 }
+

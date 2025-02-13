@@ -287,7 +287,7 @@ func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cu
 	}
 }
 
-func (l *LspManager) Completion(buf *Buffer) (sign string) {
+func (l *LspManager) Completion(buf *Buffer) (res protocol.CompletionList) {
 	root, _ := l.e.Projects.FindRoot(buf)
 
 	_, ignore := l.ignore[root]
@@ -311,17 +311,19 @@ func (l *LspManager) Completion(buf *Buffer) (sign string) {
 			},
 		},
 		Context: &protocol.CompletionContext{
-			TriggerKind: protocol.CompletionTriggerKindInvoked,
+			// TriggerKind: protocol.CompletionTriggerKindInvoked,
+			TriggerCharacter: ".",
+			TriggerKind:      protocol.CompletionTriggerKindTriggerCharacter,
 		},
 	}
+	fmt.Println(req)
 
-	var result protocol.CompletionList
-	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentCompletion, req, &result)
+	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentCompletion, req, &res)
 	if err != nil {
 		l.e.LogError(err)
 	}
 
-	return ""
+	return
 }
 
 // TODO: return copy of diagnostics
@@ -392,6 +394,9 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 				l.diagnostics[filepath][r.Range.Start.Line] = append(l.diagnostics[filepath][r.Range.Start.Line], r)
 			}
 			l.rw.Unlock()
+
+			// TODO: redraw only if modified buffer is visible
+			// TODO: schedule redraw. e.g. one redraw per 3ms.
 			l.e.Redraw()
 		}
 

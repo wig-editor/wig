@@ -36,8 +36,12 @@ type UiPicker[T any] struct {
 	onChange    func()
 }
 
+func (u *UiPicker[T]) Plane() mcwig.RenderPlane {
+	return mcwig.PlaneEditor
+}
+
 func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerItem[T]) *UiPicker[T] {
-	for i, _ := range items {
+	for i := range items {
 		name := strings.TrimRightFunc(items[i].Name, unicode.IsSpace)
 		items[i].Name = strings.ReplaceAll(name, "\t", "    ")
 	}
@@ -224,3 +228,4 @@ func (u *UiPicker[T]) Render(view mcwig.View) {
 		i++
 	}
 }
+

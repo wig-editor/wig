@@ -11,8 +11,11 @@ import (
 type uiSearchPrompt struct {
 	e      *mcwig.Editor
 	keymap *mcwig.KeyHandler
+	chBuf  []rune
+}
 
-	chBuf []rune
+func (u *uiSearchPrompt) Plane() mcwig.RenderPlane {
+	return mcwig.PlaneEditor
 }
 
 func CmdSearchPromptInit(ctx mcwig.Context) {
@@ -88,3 +91,4 @@ func (u *uiSearchPrompt) Render(view mcwig.View) {
 func (u *uiSearchPrompt) Mode() mcwig.Mode {
 	return mcwig.MODE_NORMAL
 }
+

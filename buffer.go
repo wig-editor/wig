@@ -81,6 +81,7 @@ func BufferReadFile(path string) (*Buffer, error) {
 	buf.Cursor = Cursor{0, 0, 0}
 	buf.Selection = nil
 	buf.ResetLines()
+	buf.ScrollOffset = 0
 
 	newLine := "\n"
 	sc := bufio.NewScanner(file)

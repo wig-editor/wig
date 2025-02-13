@@ -90,6 +90,9 @@ func SelectionStart(buf *Buffer) {
 }
 
 func SelectionStop(buf *Buffer) {
+	if buf.Selection == nil {
+		return
+	}
 	buf.Selection.End = buf.Cursor
 }
 

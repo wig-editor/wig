@@ -14,6 +14,10 @@ type uiCommandLine struct {
 	chBuf  []rune
 }
 
+func (u *uiCommandLine) Plane() mcwig.RenderPlane {
+	return mcwig.PlaneEditor
+}
+
 func CmdLineInit(ctx mcwig.Context) {
 	cmdLine := &uiCommandLine{
 		e:     ctx.Editor,
@@ -100,3 +104,4 @@ func (u *uiCommandLine) Render(view mcwig.View) {
 func (u *uiCommandLine) Mode() mcwig.Mode {
 	return mcwig.MODE_NORMAL
 }
+

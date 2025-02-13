@@ -62,8 +62,8 @@ func drawBoxNoBorder(s mcwig.View, x1, y1, width, height int, style tcell.Style)
 		x1, x2 = x2, x1
 	}
 
-	for row := y1 + 1; row < y2; row++ {
-		for col := x1 + 1; col < x2; col++ {
+	for row := y1; row <= y2; row++ {
+		for col := x1; col <= x2; col++ {
 			s.SetContent(col, row, " ", style)
 		}
 	}

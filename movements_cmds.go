@@ -7,6 +7,11 @@ import (
 )
 
 func CmdScrollUp(ctx Context) {
+	defer func() {
+		if ctx.Buf.ScrollOffset < 0 {
+			ctx.Buf.ScrollOffset = 0
+		}
+	}()
 	if ctx.Buf.ScrollOffset > 0 {
 		ctx.Buf.ScrollOffset--
 
@@ -287,6 +292,12 @@ func CmdWindowClose(ctx Context) {
 }
 
 func CmdEnsureCursorVisible(ctx Context) {
+	defer func() {
+		if ctx.Buf.ScrollOffset < 0 {
+			ctx.Buf.ScrollOffset = 0
+		}
+	}()
+
 	_, h := ctx.Editor.View.Size()
 	if ctx.Buf.Cursor.Line > ctx.Buf.ScrollOffset+h-minVisibleLines {
 		ctx.Buf.ScrollOffset = ctx.Buf.Cursor.Line - h + minVisibleLines
@@ -298,6 +309,12 @@ func CmdEnsureCursorVisible(ctx Context) {
 }
 
 func CmdCursorCenter(ctx Context) {
+	defer func() {
+		if ctx.Buf.ScrollOffset < 0 {
+			ctx.Buf.ScrollOffset = 0
+		}
+	}()
+
 	_, h := ctx.Editor.View.Size()
 	ctx.Buf.ScrollOffset = ctx.Buf.Cursor.Line - (h / 2) + minVisibleLines
 }

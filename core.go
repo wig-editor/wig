@@ -46,7 +46,6 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 			pos += len(s.TokenText())
 		}
 	}
-
 	EditorInst.Events.Broadcast(event)
 }
 

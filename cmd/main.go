@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/firstrow/mcwig"
+	"github.com/firstrow/mcwig/autocomplete"
 	"github.com/firstrow/mcwig/config"
 	"github.com/firstrow/mcwig/metrics"
 	"github.com/firstrow/mcwig/render"
-
-	"net/http"
-	_ "net/http/pprof"
 )
 
 func main() {
@@ -36,6 +36,7 @@ func main() {
 		render.NewMView(tscreen, 0, 0, w, h),
 		mcwig.NewKeyHandler(config.DefaultKeyMap()),
 	)
+	editor.AutocompleteTrigger = autocomplete.Register(editor)
 
 	buf := editor.OpenFile("/home/andrew/code/mcwig/core.go")
 	editor.ActiveWindow().VisitBuffer(buf)

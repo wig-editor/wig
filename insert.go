@@ -24,13 +24,19 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 	}
 
 	ch := ev.Rune()
+	if ch == 0 {
+		return
+	}
 
 	if ev.Key() == tcell.KeyEnter {
 		ch = '\n'
 	}
 
 	if ch == '\t' {
-		ch = '\t'
+		// exit on autocomplete twigger.
+		if ctx.Editor.AutocompleteTrigger(ctx) {
+			return
+		}
 	}
 
 	line := CursorLine(ctx.Buf)
@@ -79,3 +85,4 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
 	}
 }
+

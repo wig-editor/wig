@@ -10,10 +10,18 @@ type View interface {
 	Resize(x, y, width, height int)
 }
 
+type RenderPlane int
+
+const (
+	PlaneWin    RenderPlane = 0
+	PlaneEditor RenderPlane = 1
+)
+
 type UiComponent interface {
 	Mode() Mode
 	Keymap() *KeyHandler
 	Render(view View)
+	Plane() RenderPlane
 }
 
 type Context struct {
@@ -23,9 +31,11 @@ type Context struct {
 	Char   string
 }
 
-type Layout int
+type AutocompleteFn func(Context) bool
 
 var EditorInst *Editor
+
+type Layout int
 
 const (
 	LayoutHorizontal Layout = 0
@@ -33,22 +43,22 @@ const (
 )
 
 type Editor struct {
-	View         View
-	Keys         *KeyHandler
-	Buffers      []*Buffer
-	Windows      []*Window
-	UiComponents []UiComponent
-	ExitCh       chan int
-	RedrawCh     chan int
-	ScreenSyncCh chan int
-	Layout       Layout
-	Yanks        List[yank]
-	Projects     ProjectManager
-	Message      string // display in echo area
-	Lsp          *LspManager
-	Events       *EventsManager
-	activeWindow *Window
-	Autocomplete func(Context)
+	View                View
+	Keys                *KeyHandler
+	Buffers             []*Buffer
+	Windows             []*Window
+	UiComponents        []UiComponent
+	ExitCh              chan int
+	RedrawCh            chan int
+	ScreenSyncCh        chan int
+	Layout              Layout
+	Yanks               List[yank]
+	Projects            ProjectManager
+	Message             string // display in echo area
+	Lsp                 *LspManager
+	Events              *EventsManager
+	activeWindow        *Window
+	AutocompleteTrigger AutocompleteFn
 }
 
 func NewEditor(

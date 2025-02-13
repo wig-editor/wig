@@ -116,6 +116,7 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 
 func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {
 	m := []string{}
+
 	if ev.Modifiers()&tcell.ModShift != 0 {
 		m = append(m, "shift")
 	}
@@ -144,6 +145,7 @@ func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {
 		}
 		return fmt.Sprintf("%s+%s", strings.Join(m, "+"), s)
 	}
+
 	return s
 }
 
