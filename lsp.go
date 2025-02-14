@@ -486,6 +486,7 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 			for _, r := range rest.Diagnostics {
 				l.diagnostics[filepath][r.Range.Start.Line] = append(l.diagnostics[filepath][r.Range.Start.Line], r)
 			}
+
 			l.rw.Unlock()
 
 			// TODO: redraw only if modified buffer is visible
@@ -501,8 +502,6 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	// initialize connection sequence
 	r := &protocol.InitializeParams{}
 	json.Unmarshal([]byte(lspServerInitJson), r)
-	r.Capabilities.TextDocument.Completion.CompletionItem.SnippetSupport = true
-	// fmt.Printf("%+v", r.Capabilities.TextDocument.Completion.CompletionItem)
 
 	var result protocol.InitializeResult
 	_, err = c.Call(context.Background(), protocol.MethodInitialize, r, &result)
