@@ -434,6 +434,46 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	c := jsonrpc2.NewConn(s)
 
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
+		// TODO: reply with real gopls config
+		if req.Method() == "workspace/configuration" {
+			resp := []any{
+				map[string]any{
+					"analysisProgressReporting": true,
+					"buildFlags":                []interface{}{},
+					"codelenses": map[string]interface{}{
+						"gc_details":         false,
+						"generate":           true,
+						"regenerate_cgo":     true,
+						"tidy":               true,
+						"upgrade_dependency": true,
+						"test":               true,
+						"vendor":             true,
+					},
+					"completeFunctionCalls": true,
+					"completionBudget":      "100ms",
+					"diagnosticsDelay":      "1s",
+					"directoryFilters":      []interface{}{},
+					"gofumpt":               false,
+					"hoverKind":             "SynopsisDocumentation",
+					"importShortcut":        "Both",
+					"linkTarget":            "pkg.go.dev",
+					"linksInHover":          true,
+					"local":                 "",
+					"matcher":               "Fuzzy",
+					"standaloneTags": []interface{}{
+						"ignore",
+					},
+					"symbolMatcher":      "FastFuzzy",
+					"symbolScope":        "all",
+					"symbolStyle":        "Dynamic",
+					"templateExtensions": []interface{}{},
+					"usePlaceholders":    true,
+					"verboseOutput":      true,
+				},
+			}
+			return reply(ctx, resp, nil)
+		}
+
 		if req.Method() == "textDocument/publishDiagnostics" {
 			l.rw.Lock()
 
