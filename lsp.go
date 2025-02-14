@@ -461,9 +461,11 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	// initialize connection sequence
 	r := &protocol.InitializeParams{}
 	json.Unmarshal([]byte(lspServerInitJson), r)
+	r.Capabilities.TextDocument.Completion.CompletionItem.SnippetSupport = true
+	// fmt.Printf("%+v", r.Capabilities.TextDocument.Completion.CompletionItem)
 
 	var result protocol.InitializeResult
-	_, err = c.Call(context.Background(), "initialize", r, &result)
+	_, err = c.Call(context.Background(), protocol.MethodInitialize, r, &result)
 	if err != nil {
 		l.e.LogError(err)
 	}
@@ -495,3 +497,4 @@ func (l *lspConn) didOpen(buf *Buffer) {
 	// fmt.Println("DIDOPEN DONE", id, err)
 	// didOpen
 }
+

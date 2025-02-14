@@ -255,3 +255,4 @@ var lspServerInitJson = `{
   "initializationOptions": null,
   "workDoneToken": "1"
 }`
+

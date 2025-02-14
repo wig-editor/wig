@@ -77,7 +77,7 @@ func (w *AutocompleteWidget) selectItem(ctx mcwig.Context) {
 		},
 	})
 	mcwig.TextInsert(ctx.Buf, line, int(pos), text)
-	ctx.Buf.Cursor.Char = pos + len(text)
+	ctx.Buf.Cursor.Char = item.TextEdit.Replace.Start.Character + len(text)
 }
 
 func (w *AutocompleteWidget) Render(view mcwig.View) {
