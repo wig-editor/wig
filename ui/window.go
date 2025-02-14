@@ -2,8 +2,9 @@ package ui
 
 import (
 	str "github.com/boyter/go-string"
-	"github.com/firstrow/mcwig"
 	"github.com/mattn/go-runewidth"
+
+	"github.com/firstrow/mcwig"
 )
 
 func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
@@ -99,7 +100,11 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				// render cursor
 				if isActiveWin {
 					if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {
-						view.SetContent(x, y, string(ch[0]), mcwig.Color("ui.cursor"))
+						s := mcwig.Color("ui.cursor")
+						if buf.Mode() == mcwig.MODE_INSERT {
+							s = mcwig.Color("ui.cursor.insert")
+						}
+						view.SetContent(x, y, string(ch[0]), s)
 					}
 				}
 
@@ -138,3 +143,4 @@ func getRenderChar(c rune) string {
 	}
 	return string(c)
 }
+
