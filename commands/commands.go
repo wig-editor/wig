@@ -303,3 +303,4 @@ func CmdMakeRun(ctx mcwig.Context) {
 	cmd.Dir = "/home/andrew/code/mcwig"
 	cmd.Start()
 }
+

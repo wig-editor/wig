@@ -460,15 +460,14 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 					"linksInHover":          true,
 					"local":                 "",
 					"matcher":               "Fuzzy",
-					"standaloneTags": []interface{}{
+					"standaloneTags": []any{
 						"ignore",
 					},
-					"symbolMatcher":      "FastFuzzy",
-					"symbolScope":        "all",
-					"symbolStyle":        "Dynamic",
-					"templateExtensions": []interface{}{},
-					"usePlaceholders":    true,
-					"verboseOutput":      true,
+					"symbolMatcher":   "FastFuzzy",
+					"symbolScope":     "all",
+					"symbolStyle":     "Dynamic",
+					"usePlaceholders": true,
+					"verboseOutput":   true,
 				},
 			}
 			return reply(ctx, resp, nil)
