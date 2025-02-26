@@ -45,6 +45,8 @@ func loadTheme(name string) {
 	buildStyles()
 }
 
+// TODO: fix resolve of nested styles.
+// ui.menu.selected should be build from ui.menu
 func buildStyles() {
 	styles = map[string]tcell.Style{}
 	for k := range colors.Colors {

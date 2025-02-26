@@ -42,7 +42,6 @@ func CreateWindow() *Window {
 }
 
 // Jumps
-
 type Jump struct {
 	FilePath string
 	Cursor   Cursor
@@ -109,3 +108,4 @@ func (j *Jumps) JumpForward() {
 	EditorInst.ActiveWindow().buf = b
 	j.current = item
 }
+

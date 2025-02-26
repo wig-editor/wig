@@ -28,6 +28,7 @@ func New(e *mcwig.Editor, screen tcell.Screen) *Renderer {
 	return r
 }
 
+// TODO: rendering must be optimized.
 func (r *Renderer) Render() {
 	// TODO: schedule render
 	r.rw.Lock()
@@ -47,13 +48,17 @@ func (r *Renderer) Render() {
 	}
 
 	// windows
-	// TODO: rendering must be optimized.
 	var winView *mview
+	var activeWinView *mview
 	for i, win := range r.e.Windows {
 		if r.e.Layout == mcwig.LayoutVertical {
 			winView = NewMView(r.screen, winW*i, 0, winW, h)
 		} else {
 			winView = NewMView(r.screen, 0, winH*i, w, winH)
+		}
+
+		if win == r.e.ActiveWindow() {
+			activeWinView = winView
 		}
 
 		ui.WindowRender(r.e, winView, win)
@@ -65,7 +70,7 @@ func (r *Renderer) Render() {
 	for _, c := range r.e.UiComponents {
 		switch c.Plane() {
 		case mcwig.PlaneWin:
-			c.Render(winView)
+			c.Render(activeWinView)
 		default:
 			c.Render(mainView)
 		}

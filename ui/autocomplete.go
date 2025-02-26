@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"fmt"
-
 	"github.com/firstrow/mcwig"
 )
 
@@ -38,6 +36,11 @@ func AutocompleteInit(ctx mcwig.Context, pos mcwig.Position, items mcwig.AutoGen
 			},
 			"Tab": func(ctx mcwig.Context) {
 				widget.activeItem++
+			},
+			"Backtab": func(ctx mcwig.Context) {
+				if widget.activeItem > 0 {
+					widget.activeItem--
+				}
 			},
 			"Enter": widget.selectItem,
 		},
@@ -86,15 +89,20 @@ func (w *AutocompleteWidget) Render(view mcwig.View) {
 
 	maxItems := min(10, len(w.items.Items)-1)
 
+	_, winHeight := view.Size()
+	if y+maxItems >= winHeight {
+		y -= maxItems + 2
+	}
+
 	drawBoxNoBorder(view, w.pos.Char, y, 50, maxItems, mcwig.Color("ui.menu"))
 
 	for i, row := range w.items.Items {
 		label := row.Label
-		fmt.Println(row.TextEdit, "--------")
+		st := mcwig.Color("ui.menu")
 		if i == w.activeItem {
-			label += "<"
+			st = mcwig.Color("ui.menu.selected")
 		}
-		view.SetContent(x, y, label, mcwig.Color("ui.menu.selected"))
+		view.SetContent(x, y, label, st)
 		if i >= maxItems {
 			return
 		}

@@ -47,6 +47,7 @@ type Editor struct {
 	Keys                *KeyHandler
 	Buffers             []*Buffer
 	Windows             []*Window
+	activeWindow        *Window
 	UiComponents        []UiComponent
 	ExitCh              chan int
 	RedrawCh            chan int
@@ -57,7 +58,6 @@ type Editor struct {
 	Message             string // display in echo area
 	Lsp                 *LspManager
 	Events              *EventsManager
-	activeWindow        *Window
 	AutocompleteTrigger AutocompleteFn
 }
 
