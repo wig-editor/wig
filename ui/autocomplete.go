@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"math"
+
 	"github.com/firstrow/mcwig"
 )
 
@@ -35,7 +37,9 @@ func AutocompleteInit(ctx mcwig.Context, pos mcwig.Position, items mcwig.AutoGen
 				ctx.Editor.PopUi()
 			},
 			"Tab": func(ctx mcwig.Context) {
-				widget.activeItem++
+				if widget.activeItem < len(widget.items.Items)-1 {
+					widget.activeItem++
+				}
 			},
 			"Backtab": func(ctx mcwig.Context) {
 				if widget.activeItem > 0 {
@@ -87,7 +91,7 @@ func (w *AutocompleteWidget) Render(view mcwig.View) {
 	x := w.pos.Char + 2
 	y := w.pos.Line - w.ctx.Buf.ScrollOffset + 1
 
-	maxItems := min(10, len(w.items.Items)-1)
+	maxItems := min(10, len(w.items.Items))
 
 	_, winHeight := view.Size()
 	if y+maxItems >= winHeight {
@@ -96,12 +100,23 @@ func (w *AutocompleteWidget) Render(view mcwig.View) {
 
 	drawBoxNoBorder(view, w.pos.Char, y, 50, maxItems, mcwig.Color("ui.menu"))
 
-	for i, row := range w.items.Items {
-		label := row.Label
+	// pagination
+	pageSize := maxItems
+	pageNumber := math.Ceil(float64(w.activeItem+1)/float64(pageSize)) - 1
+	startIndex := int(pageNumber) * pageSize
+	endIndex := startIndex + pageSize
+	if endIndex > len(w.items.Items) {
+		endIndex = len(w.items.Items)
+	}
+	dataset := w.items.Items[startIndex:endIndex]
+
+	for i, row := range dataset {
 		st := mcwig.Color("ui.menu")
-		if i == w.activeItem {
+		if i+startIndex == w.activeItem {
 			st = mcwig.Color("ui.menu.selected")
 		}
+
+		label := row.Label
 		view.SetContent(x, y, label, st)
 		if i >= maxItems {
 			return
