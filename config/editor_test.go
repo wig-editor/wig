@@ -50,6 +50,7 @@ line five
 	// go to line three. split it. enter @. append !.
 	keys.HandleKey(e, key('2'), buf.Mode())
 	keys.HandleKey(e, key('j'), buf.Mode())
+	keys.HandleKey(e, key('^'), buf.Mode())
 	keys.HandleKey(e, key('4'), buf.Mode())
 	keys.HandleKey(e, key('l'), buf.Mode())
 	keys.HandleKey(e, key('i'), buf.Mode())
@@ -67,6 +68,7 @@ line
 line four
 line five
 `
+
 	require.Equal(t, expected, buf.String())
 
 	// go to the last line. delete two words.
@@ -111,3 +113,4 @@ line five
 func key(ch rune) *tcell.EventKey {
 	return tcell.NewEventKey(tcell.KeyRune, ch, tcell.ModNone)
 }
+

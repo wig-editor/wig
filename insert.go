@@ -24,10 +24,6 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 	}
 
 	ch := ev.Rune()
-	if ch == 0 {
-		return
-	}
-
 	if ev.Key() == tcell.KeyEnter {
 		ch = '\n'
 	}
@@ -37,6 +33,10 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		if ctx.Editor.AutocompleteTrigger(ctx) {
 			return
 		}
+	}
+
+	if ch == 0 {
+		return
 	}
 
 	line := CursorLine(ctx.Buf)

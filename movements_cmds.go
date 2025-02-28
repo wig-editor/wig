@@ -33,17 +33,26 @@ func CmdScrollDown(ctx Context) {
 }
 
 func CmdCursorLeft(ctx Context) {
-	if ctx.Buf.Cursor.Char > 0 {
-		ctx.Buf.Cursor.Char--
-		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
+	count := max(ctx.Count, 1)
+
+	for i := uint32(0); i < count; i++ {
+		if ctx.Buf.Cursor.Char > 0 {
+			ctx.Buf.Cursor.Char--
+			ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
+		}
 	}
 }
 
 func CmdCursorRight(ctx Context) {
 	line := CursorLine(ctx.Buf)
-	if ctx.Buf.Cursor.Char < len(line.Value)-1 {
-		ctx.Buf.Cursor.Char++
-		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
+
+	count := max(ctx.Count, 1)
+
+	for i := uint32(0); i < count; i++ {
+		if ctx.Buf.Cursor.Char < len(line.Value)-1 {
+			ctx.Buf.Cursor.Char++
+			ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
+		}
 	}
 }
 

@@ -30,11 +30,38 @@ type Highlighter struct {
 	sourceCode []byte
 }
 
+// TODO: this must exit on editor close
+// use context cancel()
+func HighlighterGo(e *Editor) {
+	go func() {
+		events := e.Events.Subscribe()
+		for {
+			select {
+			case msg := <-events:
+				switch event := msg.(type) {
+				case EventTextChange:
+					HighlighterEditTree(event)
+				}
+			}
+		}
+	}()
+}
+
+func HighlighterEditTree(event EventTextChange) {
+	if event.Buf == nil {
+		return
+	}
+
+	h := event.Buf.Highlighter
+	if h == nil {
+		return
+	}
+
+}
+
 // TODO: rewrite treesitter to use channel and scheduled parsing
 var tslock sync.Mutex
 
-// TODO: highlighter parser and query MUST be request
-// for every buffer
 func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 	if !strings.HasSuffix(buf.FilePath, ".go") {
 		return
@@ -88,6 +115,7 @@ func (h *Highlighter) RootNode() *Element[TreeSitterRangeNode] {
 	return h.nodes.First()
 }
 
+// Get syntax highlights for document range
 func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 	tslock.Lock()
 	defer tslock.Unlock()
@@ -182,3 +210,4 @@ func (c *TreeSitterNodeCursor) Seek(line, ch uint32) (node *Element[TreeSitterRa
 
 	return nil, false
 }
+
