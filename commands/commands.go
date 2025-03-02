@@ -171,7 +171,7 @@ func CmdSearchWordUnderCursor(ctx mcwig.Context) {
 	}
 
 	if ctx.Buf.Selection != nil {
-		pat = mcwig.SelectionToString(ctx.Buf)
+		pat = mcwig.SelectionToString(ctx.Buf, ctx.Buf.Selection)
 		mcwig.CmdNormalMode(ctx)
 		return
 	}
@@ -303,4 +303,3 @@ func CmdMakeRun(ctx mcwig.Context) {
 	cmd.Dir = "/home/andrew/code/mcwig"
 	cmd.Start()
 }
-

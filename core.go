@@ -58,9 +58,11 @@ func TextDelete(buf *Buffer, selection *Selection) {
 	}()
 
 	sel := SelectionNormalize(selection)
-
 	lineStart := CursorLineByNum(buf, sel.Start.Line)
 	lineEnd := CursorLineByNum(buf, sel.End.Line)
+	sel.End.Char--
+	oldText := SelectionToString(buf, &sel)
+	sel.End.Char++
 
 	// if request is to delete more chars then len(end) - we must connect next line
 	// since we delete "\n"
@@ -86,10 +88,11 @@ func TextDelete(buf *Buffer, selection *Selection) {
 	lineStart.Value = slices.Concat(lineStart.Value[:start], lineEnd.Value[end:])
 
 	event := EventTextChange{
-		Buf:   buf,
-		Start: Position{Line: sel.Start.Line, Char: sel.Start.Char},
-		End:   Position{Line: sel.End.Line, Char: sel.End.Char},
-		Text:  "",
+		Buf:     buf,
+		Start:   Position{Line: sel.Start.Line, Char: sel.Start.Char},
+		End:     Position{Line: sel.End.Line, Char: sel.End.Char},
+		Text:    "",
+		OldText: oldText,
 	}
 
 	EditorInst.Events.Broadcast(event)
@@ -121,7 +124,7 @@ func CmdExitInsertMode(ctx Context) {
 
 	// TODO: this is ugly
 	if ctx.Buf.Highlighter != nil {
-		ctx.Buf.Highlighter.Build()
+		//		ctx.Buf.Highlighter.Build()
 	}
 }
 
@@ -399,6 +402,7 @@ func CmdToggleComment(ctx Context) {
 }
 
 func CmdSelectionDelete(ctx Context) {
+	defer CmdNormalMode(ctx)
 	if ctx.Buf.TxStart() {
 		defer ctx.Buf.TxEnd()
 	}
@@ -534,3 +538,4 @@ func CmdVisualLineMode(ctx Context) {
 	ctx.Buf.Selection.End.Char = len(line.Value) - 1
 	ctx.Buf.SetMode(MODE_VISUAL_LINE)
 }
+

@@ -11,10 +11,11 @@ type Range struct {
 }
 
 type EventTextChange struct {
-	Buf   *Buffer
-	Start Position
-	End   Position
-	Text  string
+	Buf     *Buffer
+	Start   Position
+	End     Position
+	Text    string
+	OldText string
 }
 
 type EventsManager struct {
@@ -64,4 +65,3 @@ func (e *EventsManager) start() {
 		}
 	}
 }
-

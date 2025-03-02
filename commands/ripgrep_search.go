@@ -156,7 +156,7 @@ func CmdProjectSearchWordUnderCursor(ctx mcwig.Context) {
 	pat := ""
 
 	if ctx.Buf.Selection != nil {
-		pat = mcwig.SelectionToString(ctx.Buf)
+		pat = mcwig.SelectionToString(ctx.Buf, ctx.Buf.Selection)
 	} else {
 		start, end := mcwig.TextObjectWord(ctx.Buf, true)
 		if end+1 > start {
@@ -167,4 +167,3 @@ func CmdProjectSearchWordUnderCursor(ctx mcwig.Context) {
 
 	rgDoSearch(ctx, pat)
 }
-

@@ -34,11 +34,11 @@ func TestSelectionToString(t *testing.T) {
 	}
 
 	buf.Selection = &Selection{Start: Cursor{Line: 2, Char: 1}, End: Cursor{Line: 2, Char: 8}}
-	assert.Equal(t, "ine thre", SelectionToString(buf))
+	assert.Equal(t, "ine thre", SelectionToString(buf, buf.Selection))
 
 	buf.Selection = &Selection{Start: Cursor{Line: 0, Char: 0}, End: Cursor{Line: 0, Char: 1111}}
-	assert.Equal(t, "line one\n", SelectionToString(buf))
+	assert.Equal(t, "line one\n", SelectionToString(buf, buf.Selection))
 
 	buf.Selection = &Selection{Start: Cursor{Line: 1, Char: 0}, End: Cursor{Line: 2, Char: 3}}
-	assert.Equal(t, "line two\nline", SelectionToString(buf))
+	assert.Equal(t, "line two\nline", SelectionToString(buf, buf.Selection))
 }

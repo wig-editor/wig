@@ -3,6 +3,7 @@ package mcwig
 import (
 	"math"
 	"strings"
+	"unicode/utf8"
 )
 
 // Thanks: https://gist.github.com/pje/90e727f80685c78a6c1cfff35f62155a
@@ -18,6 +19,14 @@ func (l Line) IsEmpty() bool {
 
 func (l Line) String() string {
 	return string(l)
+}
+
+func (l Line) Bytes() int {
+	size := 0
+	for _, r := range l {
+		size += utf8.RuneLen(r)
+	}
+	return size
 }
 
 func (l Line) Range(from, to int) []rune {
@@ -145,4 +154,3 @@ func (l *List[T]) remove(e *Element[T]) {
 	e.list = nil
 	l.Len--
 }
-

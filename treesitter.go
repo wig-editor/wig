@@ -2,15 +2,21 @@ package mcwig
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
+	"time"
+	"unicode/utf8"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/pkg/errors"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/golang"
 )
+
+// TODO: rewrite treesitter to use channel and scheduled parsing
+var tslock sync.Mutex
 
 type TreeSitterRangeNode struct {
 	NodeName  string
@@ -48,6 +54,7 @@ func HighlighterGo(e *Editor) {
 }
 
 func HighlighterEditTree(event EventTextChange) {
+	// return
 	if event.Buf == nil {
 		return
 	}
@@ -57,10 +64,78 @@ func HighlighterEditTree(event EventTextChange) {
 		return
 	}
 
+	tslock.Lock()
+	defer tslock.Unlock()
+
+	t1 := time.Now()
+
+	ll := HighlighterAdaptEditInput(event)
+	fmt.Printf("evett: %+v", ll)
+
+	event.Buf.Highlighter.tree.Edit(
+		ll,
+	)
+
+	h.nodes = List[TreeSitterRangeNode]{}
+
+	event.Buf.Highlighter.sourceCode = []byte(h.buf.String())
+	tree, err := h.parser.ParseCtx(context.Background(), h.tree, h.sourceCode)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	h.tree.Close()
+	h.tree = tree
+
+	fmt.Println("high", time.Now().Sub(t1))
+
+	EditorInst.Redraw()
 }
 
-// TODO: rewrite treesitter to use channel and scheduled parsing
-var tslock sync.Mutex
+func HighlighterAdaptEditInput(event EventTextChange) (r sitter.EditInput) {
+	// deletion
+	if len(event.Text) == 0 {
+		oldEndByte := pointToByte(event.Buf, event.Start.Line, event.Start.Char) + len(event.OldText)
+		return sitter.EditInput{
+			StartPoint:  sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
+			OldEndPoint: sitter.Point{Row: uint32(event.End.Line), Column: uint32(event.End.Char)},
+			NewEndPoint: sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
+			StartIndex:  uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
+			OldEndIndex: uint32(oldEndByte),
+			NewEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
+		}
+	}
+
+	// insert
+	oldEndByte := pointToByte(event.Buf, event.Start.Line, event.Start.Char)
+	return sitter.EditInput{
+		StartPoint:  sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
+		OldEndPoint: sitter.Point{Row: uint32(event.End.Line), Column: uint32(event.End.Char)},
+		NewEndPoint: sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char) + uint32(utf8.RuneCountInString(event.Text))},
+		StartIndex:  uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
+		OldEndIndex: uint32(oldEndByte),
+		NewEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + len(event.Text)),
+	}
+}
+
+func pointToByte(buf *Buffer, line, char int) int {
+	size := 0
+	currentLine := buf.Lines.First()
+	lineNum := 0
+	for currentLine != nil {
+		if lineNum == line {
+			for _, r := range currentLine.Value.Range(0, char) {
+				size += utf8.RuneLen(r)
+			}
+			return size
+		}
+		size += currentLine.Value.Bytes()
+
+		currentLine = currentLine.Next()
+		lineNum++
+	}
+	return size
+}
 
 func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 	if !strings.HasSuffix(buf.FilePath, ".go") {
@@ -89,9 +164,6 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 	buf.Highlighter = h
 }
 
-// Build and "syntax" must be separated.
-// so we can do full rebuild and query syntax ranges only
-// for lines on the screen.
 func (h *Highlighter) Build() {
 	tslock.Lock()
 	defer tslock.Unlock()
@@ -116,6 +188,7 @@ func (h *Highlighter) RootNode() *Element[TreeSitterRangeNode] {
 }
 
 // Get syntax highlights for document range
+// TODO: this must return array of nodes
 func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 	tslock.Lock()
 	defer tslock.Unlock()

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/firstrow/mcwig/testutils"
+	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/stretchr/testify/require"
 )
 
@@ -84,16 +85,131 @@ func add(a int, b int) {
 	events := e.Events.Subscribe()
 
 	line := CursorLineByNum(buf, 4)
-	TextInsert(buf, line, 22, " int")
-	require.Equal(t, "func add(a int, b int) int {\n", line.Value.String())
+	TextDelete(buf, &Selection{
+		Start: Cursor{Line: 4, Char: 5},
+		End:   Cursor{Line: 4, Char: 8},
+	})
+	require.Equal(t, "func (a int, b int) {\n", line.Value.String())
 
 	msg := <-events
 	event := msg.(EventTextChange)
 	require.Equal(t, EventTextChange{
-		Buf:   buf,
-		Start: Position{Line: 4, Char: 22},
-		End:   Position{Line: 4, Char: 22},
-		Text:  " int",
+		Buf:     buf,
+		Start:   Position{Line: 4, Char: 5},
+		End:     Position{Line: 4, Char: 8},
+		Text:    "",
+		OldText: "add",
 	}, event)
+
+	expected := sitter.EditInput{
+		StartPoint:  sitter.Point{Row: 4, Column: 5},
+		OldEndPoint: sitter.Point{Row: 4, Column: 8},
+		NewEndPoint: sitter.Point{Row: 4, Column: 5},
+		StartIndex:  uint32(34),
+		OldEndIndex: uint32(37),
+		NewEndIndex: uint32(34),
+	}
+
+	actual := HighlighterAdaptEditInput(event)
+	require.Equal(t, expected, actual)
+}
+
+func TestTreeSitter_AdaptEventTextChangeDeleteLine(t *testing.T) {
+	source := `package mcwig
+
+import "fmt"
+
+func add(a int, b int) {
+	fmt.Printf("%d", a+b)
+}`
+
+	e := NewEditor(
+		testutils.Viewport,
+		nil,
+	)
+	buf := e.BufferFindByFilePath("testfile", true)
+	buf.ResetLines()
+	buf.Append(source)
+	require.Equal(t, source+"\n", buf.String())
+
+	events := e.Events.Subscribe()
+
+	buf.Cursor.Line = 4
+	buf.Cursor.Char = 0
+
+	CmdDeleteLine(Context{
+		Editor: e,
+		Buf:    buf,
+		Count:  0,
+		Char:   "",
+	})
+
+	msg := <-events
+	event := msg.(EventTextChange)
+	require.Equal(t, EventTextChange{
+		Buf:     buf,
+		Start:   Position{Line: 4, Char: 0},
+		End:     Position{Line: 5, Char: 0},
+		Text:    "",
+		OldText: "func add(a int, b int) {\n",
+	}, event)
+
+	expected := sitter.EditInput{
+		StartPoint:  sitter.Point{Row: 4, Column: 0},
+		OldEndPoint: sitter.Point{Row: 5, Column: 0},
+		NewEndPoint: sitter.Point{Row: 4, Column: 0},
+		StartIndex:  uint32(29),
+		OldEndIndex: uint32(54),
+		NewEndIndex: uint32(29),
+	}
+
+	actual := HighlighterAdaptEditInput(event)
+	require.Equal(t, expected, actual)
+}
+
+func TestTreeSitter_AdaptEventTextInsert(t *testing.T) {
+	source := `package mcwig
+
+import "fmt"
+
+func add(a int, b int) {
+	fmt.Printf("%d", a+b)
+}`
+
+	e := NewEditor(
+		testutils.Viewport,
+		nil,
+	)
+	buf := e.BufferFindByFilePath("testfile", true)
+	buf.ResetLines()
+	buf.Append(source)
+	require.Equal(t, source+"\n", buf.String())
+
+	events := e.Events.Subscribe()
+
+	buf.Cursor.Line = 4
+	buf.Cursor.Char = 0
+
+	msg := <-events
+	event := msg.(EventTextChange)
+	require.Equal(t, EventTextChange{
+		Buf:     buf,
+		Start:   Position{Line: 4, Char: 8},
+		End:     Position{Line: 4, Char: 8},
+		Text:    "1",
+		OldText: "",
+	}, event)
+
+	expected := sitter.EditInput{
+		StartPoint:  sitter.Point{Row: 4, Column: 8},
+		OldEndPoint: sitter.Point{Row: 5, Column: 8},
+		NewEndPoint: sitter.Point{Row: 4, Column: 9},
+		StartIndex:  uint32(37),
+		OldEndIndex: uint32(37),
+		NewEndIndex: uint32(38),
+	}
+
+	actual := HighlighterAdaptEditInput(event)
+	require.Equal(t, expected, actual)
 }
 

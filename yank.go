@@ -69,7 +69,7 @@ func yankSave(ctx Context) {
 	if ctx.Buf.Selection == nil {
 		y = yank{val: string(line.Value)}
 	} else {
-		st := SelectionToString(ctx.Buf)
+		st := SelectionToString(ctx.Buf, ctx.Buf.Selection)
 		if len(st) == 0 {
 			return
 		}

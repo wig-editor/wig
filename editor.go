@@ -82,6 +82,7 @@ func NewEditor(
 		Events:       NewEventsManager(),
 	}
 	EditorInst.Lsp = NewLspManager(EditorInst)
+	HighlighterGo(EditorInst)
 
 	return EditorInst
 }

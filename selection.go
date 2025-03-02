@@ -23,12 +23,12 @@ func SelectionCursorInRange(sel *Selection, c Cursor) bool {
 	return true
 }
 
-func SelectionToString(buf *Buffer) string {
-	if buf.Selection == nil {
+func SelectionToString(buf *Buffer, sel *Selection) string {
+	if sel == nil {
 		return ""
 	}
 
-	s := SelectionNormalize(buf.Selection)
+	s := SelectionNormalize(sel)
 
 	lineStart := CursorLineByNum(buf, s.Start.Line)
 	lineEnd := CursorLineByNum(buf, s.End.Line)
