@@ -40,10 +40,13 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 			line.Value = []rune(prefix + "\n")
 			buf.Lines.insertValueAfter([]rune(suffix), line)
 			line = line.Next()
+			event.End.Line++
+			event.End.Char = 0
 			pos = 0
 		default:
 			line.Value = slices.Concat(line.Value[:pos], []rune(s.TokenText()), line.Value[pos:])
 			pos += len(s.TokenText())
+			event.End.Char = pos
 		}
 	}
 
@@ -199,8 +202,8 @@ func CmdAppendLine(ctx Context) {
 
 func CmdLineOpenBelow(ctx Context) {
 	line := CursorLine(ctx.Buf)
-	CmdInsertModeAfter(ctx)
 	TextInsert(ctx.Buf, line, len(line.Value)-1, "\n")
+	CmdInsertModeAfter(ctx)
 	CmdCursorLineDown(ctx)
 	CmdCursorBeginningOfTheLine(ctx)
 	indent(ctx)
