@@ -110,7 +110,7 @@ func HighlighterAdaptEditInput(event EventTextChange) (r sitter.EditInput) {
 	return sitter.EditInput{
 		StartPoint:  sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
 		OldEndPoint: sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
-		NewEndPoint: sitter.Point{Row: uint32(event.End.Line), Column: uint32(event.End.Char)},
+		NewEndPoint: sitter.Point{Row: uint32(event.NewEnd.Line), Column: uint32(event.NewEnd.Char)},
 		StartIndex:  uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
 		OldEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
 		NewEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + len(event.Text)),

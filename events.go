@@ -14,6 +14,7 @@ type EventTextChange struct {
 	Buf     *Buffer
 	Start   Position
 	End     Position
+	NewEnd  Position
 	Text    string
 	OldText string
 }
@@ -65,3 +66,4 @@ func (e *EventsManager) start() {
 		}
 	}
 }
+

@@ -13,10 +13,11 @@ const minVisibleLines = 5
 func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	sline := CursorNumByLine(buf, line)
 	event := EventTextChange{
-		Buf:   buf,
-		Start: Position{Line: sline, Char: pos},
-		End:   Position{Line: sline, Char: pos},
-		Text:  text,
+		Buf:    buf,
+		Start:  Position{Line: sline, Char: pos},
+		End:    Position{Line: sline, Char: pos},
+		NewEnd: Position{Line: sline, Char: pos},
+		Text:   text,
 	}
 
 	if pos < 0 {
@@ -40,13 +41,13 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 			line.Value = []rune(prefix + "\n")
 			buf.Lines.insertValueAfter([]rune(suffix), line)
 			line = line.Next()
-			event.End.Line++
-			event.End.Char = 0
 			pos = 0
+			event.NewEnd.Line++
+			event.NewEnd.Char = 0
 		default:
 			line.Value = slices.Concat(line.Value[:pos], []rune(s.TokenText()), line.Value[pos:])
 			pos += len(s.TokenText())
-			event.End.Char = pos
+			event.NewEnd.Char++
 		}
 	}
 
@@ -202,11 +203,11 @@ func CmdAppendLine(ctx Context) {
 
 func CmdLineOpenBelow(ctx Context) {
 	line := CursorLine(ctx.Buf)
-	TextInsert(ctx.Buf, line, len(line.Value)-1, "\n")
 	CmdInsertModeAfter(ctx)
+	TextInsert(ctx.Buf, line, len(line.Value), "\n")
 	CmdCursorLineDown(ctx)
 	CmdCursorBeginningOfTheLine(ctx)
-	indent(ctx)
+	// indent(ctx)
 }
 
 func CmdLineOpenAbove(ctx Context) {
