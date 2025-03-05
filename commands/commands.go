@@ -2,8 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/firstrow/mcwig"
@@ -11,12 +13,44 @@ import (
 	"github.com/firstrow/mcwig/ui"
 )
 
-func CmdIndent(ctx mcwig.Context) {
-	mcwig.CmdCursorBeginningOfTheLine(ctx)
-	line := mcwig.CursorLine(ctx.Buf)
-	mcwig.TextInsert(ctx.Buf, line, 5, "1")
-	line = mcwig.CursorLine(ctx.Buf)
-	mcwig.TextInsert(ctx.Buf, line, 5, "2")
+func CmdThemeSelect(ctx mcwig.Context) {
+	currentDir := "/home/andrew/code/mcwig/runtime/helix/themes/"
+
+	files, err := os.ReadDir(currentDir)
+	if err != nil {
+		fmt.Printf("Error reading directory: %v\n", err)
+		return
+	}
+
+	themes := []string{}
+	for _, file := range files {
+		if !file.IsDir() && filepath.Ext(file.Name()) == ".toml" {
+			themes = append(themes, file.Name()[:len(file.Name())-5])
+		}
+	}
+
+	items := make([]ui.PickerItem[string], 0, 32)
+	for _, b := range themes {
+		items = append(items, ui.PickerItem[string]{
+			Name:   b,
+			Value:  b,
+			Active: false,
+		})
+	}
+
+	action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
+		defer ctx.Editor.PopUi()
+		if i == nil {
+			return
+		}
+		mcwig.LoadTheme(i.Value)
+	}
+
+	ui.PickerInit(
+		ctx.Editor,
+		action,
+		items,
+	)
 }
 
 func CmdBufferPicker(ctx mcwig.Context) {

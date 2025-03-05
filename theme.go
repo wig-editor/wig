@@ -23,10 +23,10 @@ var styles map[string]tcell.Style
 var colors AllConfig
 
 func init() {
-	loadTheme("yo")
+	LoadTheme("solarized_dark")
 }
 
-func loadTheme(name string) {
+func LoadTheme(name string) {
 	tname := fmt.Sprintf("/home/andrew/code/mcwig/runtime/helix/themes/%s.toml", name)
 	colorThemeFile := tname
 	theme, err := os.ReadFile(colorThemeFile)

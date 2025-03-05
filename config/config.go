@@ -20,7 +20,6 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"j":      mcwig.CmdCursorLineDown,
 			"k":      mcwig.CmdCursorLineUp,
 			"i":      mcwig.CmdEnterInsertMode,
-			"I":      commands.CmdIndent,
 			"v":      mcwig.CmdVisualMode,
 			"V":      mcwig.CmdVisualLineMode,
 			"a":      mcwig.CmdInsertModeAfter,
@@ -109,6 +108,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"s": mcwig.KeyMap{
 					"s": commands.CmdSearchLine,
 				},
+				"t": commands.CmdThemeSelect,
 			},
 		},
 		mcwig.MODE_VISUAL: mcwig.KeyMap{
