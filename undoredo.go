@@ -35,7 +35,7 @@ func (tx *Transaction) End() {
 
 	if len(apply) > 0 {
 		if tx.buf.Highlighter != nil {
-			// tx.buf.Highlighter.Build()
+			tx.buf.Highlighter.Build()
 		}
 	}
 
@@ -101,7 +101,7 @@ func (u *UndoRedo) Undo() {
 	}
 
 	if u.Buf.Highlighter != nil {
-		// u.Buf.Highlighter.Build()
+		u.Buf.Highlighter.Build()
 	}
 }
 
@@ -123,7 +123,7 @@ func (u *UndoRedo) Redo() {
 	}
 
 	if u.Buf.Highlighter != nil {
-		// u.Buf.Highlighter.Build()
+		u.Buf.Highlighter.Build()
 	}
 }
 

@@ -183,7 +183,6 @@ func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 		sitter.Point{Row: lineEnd, Column: 0},
 	)
 	qc.Exec(h.q, h.tree.RootNode())
-
 	defer qc.Close()
 
 	i := 0

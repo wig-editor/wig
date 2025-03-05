@@ -1,6 +1,7 @@
 package mcwig
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/firstrow/mcwig/testutils"
@@ -25,18 +26,25 @@ func add(a int, b int) {
 	buf.Append(source)
 	require.Equal(t, source+"\n", buf.String())
 
-	events := e.Events.Subscribe()
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		events := e.Events.Subscribe()
+		wg.Done()
+		msg := <-events
+		event := msg.Msg.(EventTextChange)
+		require.Equal(t, EventTextChange{
+			Buf:   buf,
+			Start: Position{Line: 4, Char: 22},
+			End:   Position{Line: 4, Char: 22},
+			Text:  " int",
+		}, event)
+	}()
+	wg.Wait()
 
 	line := CursorLineByNum(buf, 4)
 	TextInsert(buf, line, 22, " int")
 	require.Equal(t, "func add(a int, b int) int {\n", line.Value.String())
 
-	msg := <-events
-	event := msg.(EventTextChange)
-	require.Equal(t, EventTextChange{
-		Buf:   buf,
-		Start: Position{Line: 4, Char: 22},
-		End:   Position{Line: 4, Char: 22},
-		Text:  " int",
-	}, event)
 }
+
