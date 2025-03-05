@@ -73,16 +73,16 @@ func (e *EventsManager) start() {
 		select {
 		case l := <-e.newListener:
 			e.listeners = append(e.listeners, l)
-		case msg := <-e.source:
-			wg := sync.WaitGroup{}
-			for _, l := range e.listeners {
-				if l == nil {
-					continue
-				}
-				wg.Add(1)
-				l <- Event{msg, &wg}
-				wg.Wait()
-			}
+			// case msg := <-e.source:
+			// wg := sync.WaitGroup{}
+			// for _, l := range e.listeners {
+			// if l == nil {
+			// continue
+			// }
+			// wg.Add(1)
+			// l <- Event{msg, &wg}
+			// wg.Wait()
+			// }
 		}
 	}
 }
