@@ -475,18 +475,17 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 		}
 
 		if req.Method() == "textDocument/publishDiagnostics" {
-			l.rw.Lock()
 
 			rest := protocol.PublishDiagnosticsParams{}
 			json.Unmarshal(req.Params(), &rest)
 
 			filepath := rest.URI.Filename()
-			l.diagnostics[filepath] = map[uint32][]protocol.Diagnostic{}
 
+			l.rw.Lock()
+			l.diagnostics[filepath] = map[uint32][]protocol.Diagnostic{}
 			for _, r := range rest.Diagnostics {
 				l.diagnostics[filepath][r.Range.Start.Line] = append(l.diagnostics[filepath][r.Range.Start.Line], r)
 			}
-
 			l.rw.Unlock()
 
 			// TODO: redraw only if modified buffer is visible

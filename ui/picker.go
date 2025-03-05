@@ -182,7 +182,7 @@ func (u *UiPicker[T]) SetInput(val string) {
 func (u *UiPicker[T]) Render(view mcwig.View) {
 	vw, vh := view.Size()
 
-	w := int(float32(vw) * 0.86)
+	w := int(float32(vw) * 0.76)
 	h := vh - 5
 	x := vw/2 - w/2
 	y := 3
