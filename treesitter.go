@@ -2,11 +2,9 @@ package mcwig
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 	"sync"
-	"time"
 	"unicode/utf8"
 
 	"github.com/gdamore/tcell/v2"
@@ -43,10 +41,11 @@ func HighlighterGo(e *Editor) {
 		events := e.Events.Subscribe()
 		for {
 			select {
-			case msg := <-events:
-				switch event := msg.(type) {
+			case event := <-events:
+				switch e := event.Msg.(type) {
 				case EventTextChange:
-					HighlighterEditTree(event)
+					HighlighterEditTree(e)
+					event.Wg.Done()
 				}
 			}
 		}
@@ -54,7 +53,6 @@ func HighlighterGo(e *Editor) {
 }
 
 func HighlighterEditTree(event EventTextChange) {
-	// return
 	if event.Buf == nil {
 		return
 	}
@@ -67,41 +65,29 @@ func HighlighterEditTree(event EventTextChange) {
 	tslock.Lock()
 	defer tslock.Unlock()
 
-	t1 := time.Now()
-
 	ll := HighlighterAdaptEditInput(event)
-	fmt.Printf("evett: %+v", ll)
-
-	event.Buf.Highlighter.tree.Edit(
-		ll,
-	)
+	event.Buf.Highlighter.tree.Edit(ll)
 
 	h.nodes = List[TreeSitterRangeNode]{}
-
-	event.Buf.Highlighter.sourceCode = []byte(h.buf.String())
-	tree, err := h.parser.ParseCtx(context.Background(), h.tree, h.sourceCode)
+	event.Buf.Highlighter.sourceCode = []byte(event.Buf.String())
+	tree, err := h.parser.ParseCtx(context.Background(), h.tree, event.Buf.Highlighter.sourceCode)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	h.tree.Close()
 	h.tree = tree
-
-	fmt.Println("high", time.Now().Sub(t1))
-
-	EditorInst.Redraw()
 }
 
 func HighlighterAdaptEditInput(event EventTextChange) (r sitter.EditInput) {
 	// deletion
 	if len(event.Text) == 0 {
-		oldEndByte := pointToByte(event.Buf, event.Start.Line, event.Start.Char) + len(event.OldText)
 		return sitter.EditInput{
 			StartPoint:  sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
 			OldEndPoint: sitter.Point{Row: uint32(event.End.Line), Column: uint32(event.End.Char)},
 			NewEndPoint: sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
 			StartIndex:  uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
-			OldEndIndex: uint32(oldEndByte),
+			OldEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + len(event.OldText)),
 			NewEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
 		}
 	}
@@ -113,23 +99,20 @@ func HighlighterAdaptEditInput(event EventTextChange) (r sitter.EditInput) {
 		NewEndPoint: sitter.Point{Row: uint32(event.NewEnd.Line), Column: uint32(event.NewEnd.Char)},
 		StartIndex:  uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
 		OldEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
-		NewEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + len(event.Text)),
+		NewEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + utf8.RuneCountInString(event.Text)),
 	}
 }
 
 func pointToByte(buf *Buffer, line, char int) int {
 	size := 0
-	currentLine := buf.Lines.First()
 	lineNum := 0
+	currentLine := buf.Lines.First()
 	for currentLine != nil {
 		if lineNum == line {
-			for _, r := range currentLine.Value.Range(0, char) {
-				size += utf8.RuneLen(r)
-			}
-			return size
+			v := currentLine.Value.Range(0, char)
+			return size + utf8.RuneCountInString(string(v))
 		}
 		size += currentLine.Value.Bytes()
-
 		currentLine = currentLine.Next()
 		lineNum++
 	}
@@ -211,7 +194,7 @@ func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 			break
 		}
 
-		// Apply predicates filtering
+		// Apply predicates filteringsdkfsldfjslkdfj
 		m = qc.FilterPredicates(m, h.sourceCode)
 		for _, c := range m.Captures {
 			startPoint := c.Node.StartPoint()

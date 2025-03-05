@@ -11,6 +11,14 @@ import (
 	"github.com/firstrow/mcwig/ui"
 )
 
+func CmdIndent(ctx mcwig.Context) {
+	mcwig.CmdCursorBeginningOfTheLine(ctx)
+	line := mcwig.CursorLine(ctx.Buf)
+	mcwig.TextInsert(ctx.Buf, line, 5, "1")
+	line = mcwig.CursorLine(ctx.Buf)
+	mcwig.TextInsert(ctx.Buf, line, 5, "2")
+}
+
 func CmdBufferPicker(ctx mcwig.Context) {
 	items := make([]ui.PickerItem[*mcwig.Buffer], 0, 32)
 	for _, b := range ctx.Editor.Buffers {
@@ -190,6 +198,7 @@ func CmdFormatBufferAndSave(ctx mcwig.Context) {
 
 	ctx.Editor.Lsp.DidClose(ctx.Buf)
 	ctx.Editor.Lsp.DidOpen(ctx.Buf)
+	ctx.Buf.Highlighter.Build()
 }
 
 func CmdSearchLine(ctx mcwig.Context) {
@@ -303,3 +312,4 @@ func CmdMakeRun(ctx mcwig.Context) {
 	cmd.Dir = "/home/andrew/code/mcwig"
 	cmd.Start()
 }
+

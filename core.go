@@ -203,11 +203,11 @@ func CmdAppendLine(ctx Context) {
 
 func CmdLineOpenBelow(ctx Context) {
 	line := CursorLine(ctx.Buf)
-	CmdInsertModeAfter(ctx)
-	TextInsert(ctx.Buf, line, len(line.Value), "\n")
+	CmdAppendLine(ctx)
+	TextInsert(ctx.Buf, line, len(line.Value)-1, "\n")
 	CmdCursorLineDown(ctx)
 	CmdCursorBeginningOfTheLine(ctx)
-	// indent(ctx)
+	indent(ctx)
 }
 
 func CmdLineOpenAbove(ctx Context) {

@@ -61,10 +61,11 @@ func NewLspManager(e *Editor) *LspManager {
 		events := e.Events.Subscribe()
 		for {
 			select {
-			case msg := <-events:
-				switch event := msg.(type) {
+			case event := <-events:
+				switch e := event.Msg.(type) {
 				case EventTextChange:
-					r.DidChange(event)
+					r.DidChange(e)
+					event.Wg.Done()
 				}
 			}
 		}
