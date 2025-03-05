@@ -56,6 +56,7 @@ type Event struct {
 	Wg  *sync.WaitGroup
 }
 
+// this is very quick and dirty implementation.
 func (e *EventsManager) Broadcast(msg any) {
 	wg := sync.WaitGroup{}
 	for _, l := range e.listeners {
