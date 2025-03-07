@@ -14,7 +14,7 @@ import (
 )
 
 func CmdThemeSelect(ctx mcwig.Context) {
-	currentDir := "/home/andrew/code/mcwig/runtime/helix/themes/"
+	currentDir := "/home/andrew/code/helix/runtime/themes"
 
 	files, err := os.ReadDir(currentDir)
 	if err != nil {
@@ -43,7 +43,7 @@ func CmdThemeSelect(ctx mcwig.Context) {
 		if i == nil {
 			return
 		}
-		mcwig.LoadTheme(i.Value)
+		mcwig.ApplyTheme(i.Value)
 	}
 
 	ui.PickerInit(

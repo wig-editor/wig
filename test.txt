@@ -13,3 +13,10 @@ select * from employee;
 # append: 1
 
 GET google.com
+
+# cmd: http --pretty=none --print=hmb
+# interactive: 0
+# append: 1
+
+GET google.com
+

@@ -23,26 +23,30 @@ var styles map[string]tcell.Style
 var colors AllConfig
 
 func init() {
-	LoadTheme("solarized_dark")
+	ApplyTheme("solarized_dark")
 }
 
-func LoadTheme(name string) {
-	tname := fmt.Sprintf("/home/andrew/code/mcwig/runtime/helix/themes/%s.toml", name)
+func ApplyTheme(name string) {
+	c, p := loadColors(name)
+	colors.Colors = c
+	colors.Palette = p
+	buildStyles()
+}
+
+func loadColors(name string) (colors map[string]ColorConfig, palette map[string]string) {
+	tname := fmt.Sprintf("/home/andrew/code/helix/runtime/themes/%s.toml", name)
 	colorThemeFile := tname
 	theme, err := os.ReadFile(colorThemeFile)
 	if err != nil {
 		panic(err.Error())
 	}
-
+	theme = append([]byte("[colors]"), theme...)
 	c := map[string]any{}
 	err = toml.Unmarshal(theme, &c)
 	if err != nil {
 		panic(err.Error())
 	}
-	colors.Colors = parseColors(c["colors"].(map[string]any))
-	colors.Palette = parsePalette(c["palette"].(map[string]any))
-
-	buildStyles()
+	return parseColors(c["colors"].(map[string]any)), parsePalette(c["palette"].(map[string]any))
 }
 
 // TODO: fix resolve of nested styles.
@@ -78,6 +82,7 @@ func parseColors(m map[string]any) map[string]ColorConfig {
 			if values["fg"] != nil {
 				fg = values["fg"].(string)
 			}
+
 			conf = ColorConfig{Fg: fg, Bg: bg}
 		}
 
