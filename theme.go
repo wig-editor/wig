@@ -46,7 +46,13 @@ func loadColors(name string) (colors map[string]ColorConfig, palette map[string]
 	if err != nil {
 		panic(err.Error())
 	}
-	return parseColors(c["colors"].(map[string]any)), parsePalette(c["palette"].(map[string]any))
+
+	cd := c["colors"].(map[string]any)
+	if val, ok := cd['inherits']; ok {
+		panic(11111111111111)
+	}
+
+	return parseColors(cd), parsePalette(c["palette"].(map[string]any))
 }
 
 // TODO: fix resolve of nested styles.
