@@ -10,11 +10,11 @@ import (
 )
 
 type AllConfig struct {
-	Colors  map[string]ColorConfig
+	Colors  map[string]Style
 	Palette map[string]string
 }
 
-type ColorConfig struct {
+type Style struct {
 	Fg string
 	Bg string
 }
@@ -33,7 +33,7 @@ func ApplyTheme(name string) {
 	buildStyles()
 }
 
-func loadColors(name string) (colors map[string]ColorConfig, palette map[string]string) {
+func loadColors(name string) (colors map[string]Style, palette map[string]string) {
 	tname := fmt.Sprintf("/home/andrew/code/helix/runtime/themes/%s.toml", name)
 	colorThemeFile := tname
 	theme, err := os.ReadFile(colorThemeFile)
@@ -48,8 +48,7 @@ func loadColors(name string) (colors map[string]ColorConfig, palette map[string]
 	}
 
 	cd := c["colors"].(map[string]any)
-	if val, ok := cd['inherits']; ok {
-		panic(11111111111111)
+	if _, ok := cd["inherits"]; ok {
 	}
 
 	return parseColors(cd), parsePalette(c["palette"].(map[string]any))
@@ -68,15 +67,17 @@ func buildStyles() {
 	styles["default"] = tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
 }
 
-func parseColors(m map[string]any) map[string]ColorConfig {
-	result := map[string]ColorConfig{}
+func buildColorConfig() {}
+
+func parseColors(m map[string]any) map[string]Style {
+	result := map[string]Style{}
 
 	for k, v := range m {
-		var conf ColorConfig
+		var conf Style
 
 		switch v.(type) {
 		case string:
-			conf = ColorConfig{Fg: v.(string), Bg: ""}
+			conf = Style{Fg: v.(string), Bg: ""}
 		case map[string]any:
 			values := v.(map[string]any)
 			var bg string
@@ -89,7 +90,7 @@ func parseColors(m map[string]any) map[string]ColorConfig {
 				fg = values["fg"].(string)
 			}
 
-			conf = ColorConfig{Fg: fg, Bg: bg}
+			conf = Style{Fg: fg, Bg: bg}
 		}
 
 		result[k] = conf
