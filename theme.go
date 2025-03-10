@@ -28,7 +28,42 @@ func init() {
 
 func ApplyTheme(name string) {
 	currentTheme = loadColors(name)
+	inherits := currentTheme.Colors["inherits"].Fg
+
+	for inherits != "" {
+		baseTheme := loadColors(inherits)
+		currentTheme = mergeThemes(baseTheme, currentTheme)
+		inherits = baseTheme.Colors["inherits"].Fg
+	}
+
 	buildStyles()
+}
+
+func mergeThemes(base, child Theme) Theme {
+	result := Theme{
+		Colors:  map[string]Style{},
+		Palette: map[string]string{},
+	}
+
+	// palette
+	for k, v := range base.Palette {
+		result.Palette[k] = v
+	}
+	for k, v := range child.Palette {
+		result.Palette[k] = v
+	}
+
+	// colors
+	for k, v := range base.Colors {
+		result.Colors[k] = v
+	}
+	for k, v := range child.Colors {
+		result.Colors[k] = v
+	}
+
+	result.Colors["inherits"] = Style{}
+
+	return result
 }
 
 func loadColors(name string) Theme {
@@ -46,8 +81,8 @@ func loadColors(name string) Theme {
 	}
 
 	return Theme{
-		Colors:  parseColors(c["colors"].(map[string]any)),
-		Palette: parsePalette(c["palette"].(map[string]any)),
+		Colors:  parseColors(c),
+		Palette: parsePalette(c),
 	}
 }
 
@@ -64,8 +99,12 @@ func buildStyles() {
 	styles["default"] = tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
 }
 
-func parseColors(m map[string]any) map[string]Style {
+func parseColors(theme map[string]any) map[string]Style {
 	result := map[string]Style{}
+	if _, ok := theme["colors"]; !ok {
+		return result
+	}
+	m := theme["colors"].(map[string]any)
 
 	for k, v := range m {
 		var conf Style
@@ -94,8 +133,17 @@ func parseColors(m map[string]any) map[string]Style {
 	return result
 }
 
-func parsePalette(m map[string]any) map[string]string {
+func parsePalette(theme map[string]any) map[string]string {
 	result := map[string]string{}
+
+	if _, ok := theme["palette"]; !ok {
+		return result
+	}
+	m := theme["palette"].(map[string]any)
+
+	if m == nil {
+		return result
+	}
 
 	for k, v := range m {
 		switch v.(type) {
