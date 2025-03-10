@@ -9,7 +9,7 @@ import (
 	"github.com/pelletier/go-toml"
 )
 
-type AllConfig struct {
+type Theme struct {
 	Colors  map[string]Style
 	Palette map[string]string
 }
@@ -20,20 +20,18 @@ type Style struct {
 }
 
 var styles map[string]tcell.Style
-var colors AllConfig
+var currentTheme Theme
 
 func init() {
 	ApplyTheme("solarized_dark")
 }
 
 func ApplyTheme(name string) {
-	c, p := loadColors(name)
-	colors.Colors = c
-	colors.Palette = p
+	currentTheme = loadColors(name)
 	buildStyles()
 }
 
-func loadColors(name string) (colors map[string]Style, palette map[string]string) {
+func loadColors(name string) Theme {
 	tname := fmt.Sprintf("/home/andrew/code/helix/runtime/themes/%s.toml", name)
 	colorThemeFile := tname
 	theme, err := os.ReadFile(colorThemeFile)
@@ -47,27 +45,24 @@ func loadColors(name string) (colors map[string]Style, palette map[string]string
 		panic(err.Error())
 	}
 
-	cd := c["colors"].(map[string]any)
-	if _, ok := cd["inherits"]; ok {
+	return Theme{
+		Colors:  parseColors(c["colors"].(map[string]any)),
+		Palette: parsePalette(c["palette"].(map[string]any)),
 	}
-
-	return parseColors(cd), parsePalette(c["palette"].(map[string]any))
 }
 
 // TODO: fix resolve of nested styles.
 // ui.menu.selected should be build from ui.menu
 func buildStyles() {
 	styles = map[string]tcell.Style{}
-	for k := range colors.Colors {
+	for k := range currentTheme.Colors {
 		styles[k] = getColor(k)
 	}
 
-	defaultBg := colors.Palette[colors.Colors["ui.background"].Bg]
-	defaultFg := colors.Palette[colors.Colors["ui.text"].Fg]
+	defaultBg := currentTheme.Palette[currentTheme.Colors["ui.background"].Bg]
+	defaultFg := currentTheme.Palette[currentTheme.Colors["ui.text"].Fg]
 	styles["default"] = tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
 }
-
-func buildColorConfig() {}
 
 func parseColors(m map[string]any) map[string]Style {
 	result := map[string]Style{}
@@ -129,19 +124,19 @@ func Color(color string) tcell.Style {
 }
 
 func getColor(color string) tcell.Style {
-	defaultBg := colors.Palette[colors.Colors["ui.background"].Bg]
-	defaultFg := colors.Palette[colors.Colors["ui.text"].Fg]
+	defaultBg := currentTheme.Palette[currentTheme.Colors["ui.background"].Bg]
+	defaultFg := currentTheme.Palette[currentTheme.Colors["ui.text"].Fg]
 
-	if val, ok := colors.Colors[color]; ok {
+	if val, ok := currentTheme.Colors[color]; ok {
 		fgColor := val.Fg
 		bgColor := val.Bg
 
 		if !strings.HasPrefix(fgColor, "#") {
-			fgColor = colors.Palette[fgColor]
+			fgColor = currentTheme.Palette[fgColor]
 		}
 
 		if !strings.HasPrefix(bgColor, "#") {
-			bgColor = colors.Palette[bgColor]
+			bgColor = currentTheme.Palette[bgColor]
 		}
 
 		if fgColor == "" {
