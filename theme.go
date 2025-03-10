@@ -23,7 +23,7 @@ var styles map[string]tcell.Style
 var currentTheme Theme
 
 func init() {
-	ApplyTheme("solarized_dark")
+	ApplyTheme("boo_berry")
 }
 
 func ApplyTheme(name string) {
@@ -161,9 +161,10 @@ func Color(color string) tcell.Style {
 		return s
 	}
 
-	sections := strings.Split(color, ".")
-	if len(sections) > 1 {
-		r := Color(sections[0])
+	parts := strings.Split(color, ".")
+	if len(parts) > 1 {
+		ns := strings.Join(parts[:len(parts)-1], ".")
+		r := Color(ns)
 		styles[color] = r
 		return r
 	}
