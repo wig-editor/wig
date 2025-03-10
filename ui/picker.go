@@ -33,7 +33,8 @@ type UiPicker[T any] struct {
 	chBuf       []rune
 	activeItem  int
 	activeItemT *PickerItem[T]
-	onChange    func()
+	onChange    func()               // on user change input
+	onSelect    func(*PickerItem[T]) // when Tab pressed
 }
 
 func (u *UiPicker[T]) Plane() mcwig.RenderPlane {
@@ -53,6 +54,8 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 		filtered:   items,
 		action:     action,
 		activeItem: 0,
+		onSelect:   func(*PickerItem[T]) {},
+		onChange:   func() {},
 	}
 	picker.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
 		mcwig.MODE_INSERT: mcwig.KeyMap{
@@ -62,11 +65,18 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 			"Tab": func(ctx mcwig.Context) {
 				if picker.activeItem < len(picker.filtered)-1 {
 					picker.activeItem++
+					if picker.activeItemT != nil {
+						// TODO: fixme. this selects previous theme
+						picker.onSelect(picker.activeItemT)
+					}
 				}
 			},
 			"Backtab": func(ctx mcwig.Context) {
 				if picker.activeItem > 0 {
 					picker.activeItem--
+					if picker.activeItemT != nil {
+						picker.onSelect(picker.activeItemT)
+					}
 				}
 			},
 			"Enter": func(ctx mcwig.Context) {
@@ -89,6 +99,10 @@ func (u *UiPicker[T]) Keymap() *mcwig.KeyHandler {
 
 func (u *UiPicker[T]) OnChange(callback func()) {
 	u.onChange = callback
+}
+
+func (u *UiPicker[T]) OnSelect(callback func(*PickerItem[T])) {
+	u.onSelect = callback
 }
 
 func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {
@@ -123,9 +137,7 @@ func (u *UiPicker[T]) insertCh(ctx mcwig.Context, ev *tcell.EventKey) {
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 		if len(u.chBuf) > 0 {
 			u.chBuf = u.chBuf[:len(u.chBuf)-1]
-			if u.onChange != nil {
-				u.onChange()
-			}
+			u.onChange()
 			u.filterItems()
 		}
 		return
@@ -136,11 +148,7 @@ func (u *UiPicker[T]) insertCh(ctx mcwig.Context, ev *tcell.EventKey) {
 	}
 
 	u.chBuf = append(u.chBuf, ev.Rune())
-
-	if u.onChange != nil {
-		u.onChange()
-	}
-
+	u.onChange()
 	u.filterItems()
 }
 
@@ -217,7 +225,6 @@ func (u *UiPicker[T]) Render(view mcwig.View) {
 		if row.Active {
 			isCurrent = "*"
 		}
-
 		if key+startIndex == u.activeItem {
 			u.activeItemT = &row
 			line = fmt.Sprintf("> %s %s", isCurrent, truncate(row.Name, w-x-8))

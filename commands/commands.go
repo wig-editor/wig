@@ -29,7 +29,7 @@ func CmdThemeSelect(ctx mcwig.Context) {
 		}
 	}
 
-	items := make([]ui.PickerItem[string], 0, 32)
+	items := make([]ui.PickerItem[string], 0, 256)
 	for _, b := range themes {
 		items = append(items, ui.PickerItem[string]{
 			Name:   b,
@@ -46,11 +46,14 @@ func CmdThemeSelect(ctx mcwig.Context) {
 		mcwig.ApplyTheme(i.Value)
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
 		items,
 	)
+	picker.OnSelect(func(item *ui.PickerItem[string]) {
+		mcwig.ApplyTheme(item.Value)
+	})
 }
 
 func CmdBufferPicker(ctx mcwig.Context) {
