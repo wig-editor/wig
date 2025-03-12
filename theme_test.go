@@ -20,9 +20,8 @@ name = "value"
 	err := toml.Unmarshal([]byte(source), &theme)
 	require.Nil(t, err)
 
-	colors := theme["colors"]
-	configs := parseColors(colors.(map[string]any))
-	require.Equal(t, configs["keyword"], ColorConfig{Fg: "violet", Bg: ""})
-	require.Equal(t, configs["attr"], ColorConfig{Fg: "violet", Bg: "white"})
+	configs := parseColors(theme)
+	require.Equal(t, configs["keyword"], Style{Fg: "violet", Bg: ""})
+	require.Equal(t, configs["attr"], Style{Fg: "violet", Bg: "white"})
 }
 
