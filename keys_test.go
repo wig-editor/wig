@@ -1,6 +1,8 @@
 package mcwig
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/firstrow/mcwig/testutils"
@@ -162,28 +164,64 @@ func TestKeyTimes(t *testing.T) {
 	})
 }
 
-func TestKeyNames(t *testing.T) {
-	called := false
-	keyMap := func() ModeKeyMap {
-		return ModeKeyMap{
-			MODE_NORMAL: KeyMap{
-				"d": func(ctx Context) {
-					called = true
-				},
-			},
+func normalizeKeyName2(ev tcell.EventKey) string {
+	s := ""
+	ok := false
+
+	// rune
+	if s, ok = tcell.KeyNames[ev.Key()]; !ok {
+		if ev.Rune() == ' ' {
+			return "<Space>"
 		}
+
+		return string(ev.Rune())
 	}
 
-	editor := NewEditor(
-		testutils.Viewport,
-		NewKeyHandler(keyMap()),
-	)
+	m := []string{}
+	if ev.Modifiers()&tcell.ModShift != 0 {
+		m = append(m, "shift")
+	}
+	if ev.Modifiers()&tcell.ModAlt != 0 {
+		m = append(m, "alt")
+	}
+	if ev.Modifiers()&tcell.ModMeta != 0 {
+		m = append(m, "meta")
+	}
+	if ev.Modifiers()&tcell.ModCtrl != 0 {
+		m = append(m, "ctrl")
+	}
 
-	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
-	editor.ActiveWindow().VisitBuffer(buf)
+	if len(m) != 0 {
+		if ev.Modifiers()&tcell.ModCtrl != 0 && strings.HasPrefix(s, "Ctrl-") {
+			s = s[5:]
+		}
+		return fmt.Sprintf("<%s-%s>", strings.Join(m, "+"), s)
+	}
 
-	editor.HandleInput(key('d'))
-	require.True(t, called)
+	return fmt.Sprintf("<%s>", s)
+}
+
+func buildKeyNames(keys []tcell.EventKey) string {
+	r := []string{}
+	for _, k := range keys {
+		r = append(r, normalizeKeyName2(k))
+	}
+	return strings.Join(r, " ")
+}
+
+func TestKeyNames(t *testing.T) {
+	expected := "i <Space> a <ctrl-W> <Esc>"
+
+	keys := []tcell.EventKey{
+		*tcell.NewEventKey(tcell.KeyRune, 'i', tcell.ModNone),
+		*tcell.NewEventKey(tcell.KeyRune, ' ', tcell.ModNone),
+		*tcell.NewEventKey(tcell.KeyRune, 'a', tcell.ModNone),
+		*tcell.NewEventKey(tcell.KeyCtrlW, 'w', tcell.ModCtrl),
+		*tcell.NewEventKey(tcell.KeyEsc, 0, tcell.ModNone),
+	}
+
+	result := buildKeyNames(keys)
+	require.Equal(t, expected, result)
 }
 
 func key(ch rune) *tcell.EventKey {
