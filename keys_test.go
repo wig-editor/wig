@@ -6,22 +6,15 @@ import (
 	"github.com/firstrow/mcwig/testutils"
 	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestKeyHandler(t *testing.T) {
-	editor := NewEditor(
-		testutils.Viewport,
-		nil,
-	)
-
-	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
-	editor.ActiveWindow().VisitBuffer(buf)
-
 	testForwardCalled := false
 	testDeleteCalled := false
 	capturedChar := ""
 
-	testKeyMap := func() ModeKeyMap {
+	keyMap := func() ModeKeyMap {
 		return ModeKeyMap{
 			MODE_NORMAL: KeyMap{
 				"f": func(ctx Context) {
@@ -41,28 +34,33 @@ func TestKeyHandler(t *testing.T) {
 		}
 	}
 
+	editor := NewEditor(
+		testutils.Viewport,
+		NewKeyHandler(keyMap()),
+	)
+
+	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	editor.ActiveWindow().VisitBuffer(buf)
+
 	t.Run("f", func(t *testing.T) {
-		h := NewKeyHandler(testKeyMap())
-		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'f', tcell.ModNone), MODE_NORMAL)
+		editor.HandleInput(key('f'))
 		if testForwardCalled == false {
 			t.Error("testForwardCalled should be true")
 		}
 	})
 
 	t.Run("dd", func(t *testing.T) {
-		h := NewKeyHandler(testKeyMap())
-		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone), MODE_NORMAL)
-		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone), MODE_NORMAL)
+		editor.HandleInput(key('d'))
+		editor.HandleInput(key('d'))
 		if testDeleteCalled == false {
 			t.Error("testDeleteCalled should be true")
 		}
 	})
 
 	t.Run("dtv", func(t *testing.T) {
-		h := NewKeyHandler(testKeyMap())
-		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone), MODE_NORMAL)
-		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 't', tcell.ModNone), MODE_NORMAL)
-		h.HandleKey(editor, tcell.NewEventKey(tcell.KeyRune, 'v', tcell.ModNone), MODE_NORMAL)
+		editor.HandleInput(key('d'))
+		editor.HandleInput(key('t'))
+		editor.HandleInput(key('v'))
 		if capturedChar != "v" {
 			t.Error("capturedChar should be 'v'")
 		}
@@ -133,20 +131,10 @@ func TestKeyHandlerMap(t *testing.T) {
 		if testDeleteCalled != true {
 			t.Error("testDeleteCalled should be true")
 		}
-
 	})
-
 }
 
 func TestKeyTimes(t *testing.T) {
-	editor := NewEditor(
-		testutils.Viewport,
-		nil,
-	)
-
-	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
-	editor.ActiveWindow().VisitBuffer(buf)
-
 	testKeyMap := func() ModeKeyMap {
 		return ModeKeyMap{
 			MODE_NORMAL: KeyMap{
@@ -157,17 +145,48 @@ func TestKeyTimes(t *testing.T) {
 			},
 		}
 	}
+	h := NewKeyHandler(testKeyMap())
+	editor := NewEditor(
+		testutils.Viewport,
+		h,
+	)
+
+	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	editor.ActiveWindow().VisitBuffer(buf)
 
 	// test remap sinle key
 	t.Run("f", func(t *testing.T) {
-		h := NewKeyHandler(testKeyMap())
-
-		h.HandleKey(editor, key('1'), MODE_NORMAL)
-		h.HandleKey(editor, key('1'), MODE_NORMAL)
+		editor.HandleInput(key('1'))
+		editor.HandleInput(key('1'))
 		assert.Equal(t, 11, h.GetCount())
 	})
+}
+
+func TestKeyNames(t *testing.T) {
+	called := false
+	keyMap := func() ModeKeyMap {
+		return ModeKeyMap{
+			MODE_NORMAL: KeyMap{
+				"d": func(ctx Context) {
+					called = true
+				},
+			},
+		}
+	}
+
+	editor := NewEditor(
+		testutils.Viewport,
+		NewKeyHandler(keyMap()),
+	)
+
+	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	editor.ActiveWindow().VisitBuffer(buf)
+
+	editor.HandleInput(key('d'))
+	require.True(t, called)
 }
 
 func key(ch rune) *tcell.EventKey {
 	return tcell.NewEventKey(tcell.KeyRune, ch, tcell.ModNone)
 }
+
