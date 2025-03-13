@@ -15,8 +15,12 @@ type Theme struct {
 }
 
 type Style struct {
-	Fg string
-	Bg string
+	Fg        string
+	Bg        string
+	Underline struct {
+		Color string
+		Style string
+	}
 }
 
 var styles map[string]tcell.Style
@@ -108,6 +112,13 @@ func parseColors(theme map[string]any) map[string]Style {
 
 	for k, v := range m {
 		var conf Style
+		underline := struct {
+			Color string
+			Style string
+		}{
+			Style: "",
+			Color: "",
+		}
 
 		switch v.(type) {
 		case string:
@@ -123,8 +134,21 @@ func parseColors(theme map[string]any) map[string]Style {
 			if values["fg"] != nil {
 				fg = values["fg"].(string)
 			}
+			if values["underline"] != nil {
+				v := values["underline"].(map[string]any)
+				if v["color"] != nil {
+					underline.Color = v["color"].(string)
+				}
+				if v["style"] != nil {
+					underline.Style = v["style"].(string)
+				}
+			}
 
-			conf = Style{Fg: fg, Bg: bg}
+			conf = Style{
+				Fg:        fg,
+				Bg:        bg,
+				Underline: underline,
+			}
 		}
 
 		result[k] = conf
@@ -204,5 +228,37 @@ func getColor(color string) tcell.Style {
 func ApplyBg(color string, style tcell.Style) tcell.Style {
 	_, bg, _ := Color(color).Decompose()
 	return style.Background(bg)
+}
+
+func MergeStyles(base tcell.Style, color string) tcell.Style {
+	ulStyle := tcell.UnderlineStyleCurly
+	if val, ok := currentTheme.Colors[color]; ok {
+		fgColor := val.Fg
+		bgColor := val.Bg
+
+		if !strings.HasPrefix(fgColor, "#") {
+			fgColor = currentTheme.Palette[fgColor]
+		}
+
+		if !strings.HasPrefix(bgColor, "#") {
+			bgColor = currentTheme.Palette[bgColor]
+		}
+
+		if fgColor != "" {
+			base = base.Foreground(tcell.GetColor(fgColor))
+		}
+		if bgColor != "" {
+			base = base.Background(tcell.GetColor(bgColor))
+		}
+
+		ulColor := val.Underline.Color
+		if !strings.HasPrefix(ulColor, "#") {
+			ulColor = currentTheme.Palette[ulColor]
+		}
+		if ulColor != "" {
+			base = base.Underline(ulStyle, tcell.GetColor("red"))
+		}
+	}
+	return base
 }
 

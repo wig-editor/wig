@@ -85,7 +85,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				if len(diagnostics) > 0 {
 					for _, info := range diagnostics {
 						if i >= int(info.Range.Start.Character) && i < int(info.Range.End.Character) {
-							textStyle = mcwig.Color("diagnostic.error")
+							textStyle = mcwig.MergeStyles(textStyle, "diagnostic.error")
 						}
 					}
 				}
