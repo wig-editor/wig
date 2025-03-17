@@ -149,6 +149,9 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 func (h *Highlighter) Build() {
 	tslock.Lock()
 	defer tslock.Unlock()
+	if h == nil {
+		return
+	}
 
 	h.nodes = List[TreeSitterRangeNode]{}
 

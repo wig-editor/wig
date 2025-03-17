@@ -9,6 +9,7 @@ import (
 )
 
 const minVisibleLines = 5
+const smode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scanner.ScanStrings | scanner.ScanRawStrings | scanner.ScanComments
 
 func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	sline := CursorNumByLine(buf, line)
@@ -31,7 +32,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	s := scanner.Scanner{}
 	s.Init(strings.NewReader(text))
 	s.Whitespace ^= 1<<'\t' | 1<<'\n' | 1<<' '
-	s.Mode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scanner.ScanStrings | scanner.ScanRawStrings | scanner.ScanComments
+	s.Mode = smode
 
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		switch tok {
