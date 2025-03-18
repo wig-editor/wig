@@ -38,24 +38,31 @@ func (r *Renderer) Render() {
 
 	w, h := r.screen.Size()
 
-	var winW, winH int
+	var winW int
+	// var winH int
 	if r.e.Layout == mcwig.LayoutVertical {
 		winW = w / len(r.e.Windows)
-		winH = h
+		// winH = h
 	} else {
 		winW = w
-		winH = h / len(r.e.Windows)
+		// winH = h / len(r.e.Windows)
 	}
 
 	// windows
 	var winView *mview
 	var activeWinView *mview
 	for i, win := range r.e.Windows {
-		if r.e.Layout == mcwig.LayoutVertical {
-			winView = NewMView(r.screen, winW*i, 0, winW, h)
-		} else {
-			winView = NewMView(r.screen, 0, winH*i, w, winH)
+		// TODO: for now Vertical only. I never use horizontal splits
+		// if r.e.Layout == mcwig.LayoutVertical {
+		x := winW * i
+		if i > 0 {
+			st := mcwig.Color("ui.virtual.indent-guide")
+			for i := 0; i <= h; i++ {
+				r.SetContent(x, i, string(tcell.RuneVLine), st)
+			}
+			x += 1
 		}
+		winView = NewMView(r.screen, x, 0, winW, h)
 
 		if win == r.e.ActiveWindow() {
 			activeWinView = winView
