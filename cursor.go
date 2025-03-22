@@ -59,11 +59,7 @@ func CursorDec(buf *Buffer) (moved bool) {
 
 	line := CursorLine(buf)
 	if line.Prev() != nil {
-		chLen := len(line.Prev().Value) - 1
-		if chLen < 0 {
-			chLen = 0
-		}
-
+		chLen := max(len(line.Prev().Value)-1, 0)
 		buf.Cursor.Char = chLen
 		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
 		buf.Cursor.Line--
@@ -164,3 +160,4 @@ func getChClass(r rune) chClass {
 
 	return chWord
 }
+
