@@ -21,11 +21,13 @@ func StatuslineRender(
 	h -= 1
 
 	st := mcwig.Color("ui.statusline.inactive")
+
 	if win == e.ActiveWindow() {
 		st = mcwig.Color("ui.statusline")
-	}
-	if buf.Mode() == mcwig.MODE_INSERT {
-		st = mcwig.Color("ui.statusline.insert")
+
+		if buf.Mode() == mcwig.MODE_INSERT {
+			st = mcwig.Color("ui.statusline.insert")
+		}
 	}
 
 	bg := strings.Repeat(" ", w)

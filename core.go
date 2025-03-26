@@ -103,41 +103,6 @@ func TextDelete(buf *Buffer, selection *Selection) {
 	EditorInst.Events.Broadcast(event)
 }
 
-func CmdEnterInsertMode(ctx Context) {
-	line := CursorLine(ctx.Buf)
-	if line == nil {
-		return
-	}
-
-	ctx.Buf.TxStart()
-	ctx.Buf.SetMode(MODE_INSERT)
-}
-
-func CmdExitInsertMode(ctx Context) {
-	defer func() {
-		ctx.Buf.SetMode(MODE_NORMAL)
-		ctx.Buf.Selection = nil
-	}()
-
-	CmdCursorLeft(ctx)
-	line := CursorLine(ctx.Buf)
-	if ctx.Buf.Cursor.Char >= len(line.Value) {
-		CmdGotoLineEnd(ctx)
-	}
-
-	ctx.Buf.TxEnd()
-
-	// TODO: this is ugly
-	if ctx.Buf.Highlighter != nil {
-		//		ctx.Buf.Highlighter.Build()
-	}
-}
-
-func CmdInsertModeAfter(ctx Context) {
-	CmdCursorRight(ctx)
-	CmdEnterInsertMode(ctx)
-}
-
 func CmdJoinNextLine(ctx Context) {
 	CmdGotoLineEnd(ctx)
 
@@ -519,9 +484,40 @@ func CmdExit(ctx Context) {
 	ctx.Editor.ExitCh <- 1
 }
 
+func CmdEnterInsertMode(ctx Context) {
+	line := CursorLine(ctx.Buf)
+	if line == nil {
+		return
+	}
+
+	ctx.Buf.TxStart()
+	ctx.Buf.SetMode(MODE_INSERT)
+}
+
+func CmdInsertModeAfter(ctx Context) {
+	CmdCursorRight(ctx)
+	CmdEnterInsertMode(ctx)
+}
+
 func CmdVisualMode(ctx Context) {
 	SelectionStart(ctx.Buf)
 	ctx.Buf.SetMode(MODE_VISUAL)
+}
+
+func CmdExitInsertMode(ctx Context) {
+	// defer func() {
+	// ctx.Buf.SetMode(MODE_NORMAL)
+	// ctx.Buf.Selection = nil
+	// }()
+
+	// CmdCursorLeft(ctx)
+	// line := CursorLine(ctx.Buf)
+	// if ctx.Buf.Cursor.Char >= len(line.Value) {
+	// CmdGotoLineEnd(ctx)
+	// }
+	// ctx.Buf.TxEnd()
+
+	CmdNormalMode(ctx)
 }
 
 func CmdNormalMode(ctx Context) {
@@ -532,6 +528,8 @@ func CmdNormalMode(ctx Context) {
 			CmdGotoLineEnd(ctx)
 		}
 	}
+	ctx.Buf.TxEnd()
+
 	ctx.Buf.SetMode(MODE_NORMAL)
 	ctx.Buf.Selection = nil
 }
@@ -542,5 +540,29 @@ func CmdVisualLineMode(ctx Context) {
 	ctx.Buf.Selection.Start.Char = 0
 	ctx.Buf.Selection.End.Char = len(line.Value) - 1
 	ctx.Buf.SetMode(MODE_VISUAL_LINE)
+}
+
+func CmdMacroRecord(ctx Context) func(Context) {
+	if ctx.Editor.Keys.macros.Recording() {
+		ctx.Editor.Keys.macros.Stop()
+		ctx.Editor.Keys.resetState()
+		return nil
+	}
+
+	return func(ctx Context) {
+		ctx.Editor.Keys.macros.Start(ctx.Char)
+	}
+}
+
+func CmdMacroPlay(ctx Context) func(Context) {
+	return func(ctx Context) {
+		ctx.Editor.Keys.resetState()
+
+		reg := ctx.Char
+		count := max(ctx.Count, 1)
+		for i := uint32(0); i < count; i++ {
+			ctx.Editor.Keys.macros.Play(reg)
+		}
+	}
 }
 

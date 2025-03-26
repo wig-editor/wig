@@ -48,6 +48,8 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"/":      ui.CmdSearchPromptInit,
 			";":      commands.CmdBufferPicker,
 			"*":      commands.CmdSearchWordUnderCursor,
+			"q":      mcwig.CmdMacroRecord,
+			"@":      mcwig.CmdMacroPlay,
 			"c": mcwig.KeyMap{
 				"$": mcwig.CmdChangeEndOfLine,
 				"c": mcwig.CmdChangeLine,

@@ -9,10 +9,8 @@ import (
 )
 
 type ModeKeyMap map[Mode]KeyMap
-type KeyMap map[string]interface{}
+type KeyMap map[string]any
 type KeyFallbackFn func(ctx Context, ev *tcell.EventKey)
-
-const kspace = "Space"
 
 type KeyHandler struct {
 	keymap ModeKeyMap
@@ -21,17 +19,21 @@ type KeyHandler struct {
 	fallback KeyFallbackFn
 
 	// KeyMap or func(Context)
-	waitingForInput interface{}
+	waitingForInput any
 	times           []string
+
+	macros *MacrosManager
 }
 
 func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
-	return &KeyHandler{
+	k := &KeyHandler{
 		keymap:          mkeymap,
 		fallback:        HandleInsertKey, // Default handler for "insert" mode.
 		waitingForInput: nil,
 		times:           []string{},
 	}
+	k.macros = NewMacrosManager(k)
+	return k
 }
 
 // Map/merge keymap by selected mode
@@ -62,13 +64,16 @@ func (k *KeyHandler) GetFallback() KeyFallbackFn {
 }
 
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
-	key := k.normalizeKeyName(ev)
+	const kspace = "Space"
 
 	var keySet KeyMap
+
+	k.macros.Push(ev)
 
 	ctx := editor.NewContext()
 	ctx.Count = uint32(k.GetCount())
 
+	key := k.normalizeKeyName(ev)
 	switch v := k.waitingForInput.(type) {
 	case func(ctx Context):
 		ctx.Char = key
@@ -101,7 +106,10 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 			action(ctx)
 			k.resetState()
 		case func(Context) func(Context): // func return next func
-			k.waitingForInput = action(ctx)
+			v := action(ctx)
+			if v != nil {
+				k.waitingForInput = v
+			}
 		default:
 			k.resetState()
 		}
@@ -112,6 +120,14 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	// insert mode
 	k.fallback(ctx, ev)
 	k.resetState()
+}
+
+func (k *KeyHandler) StartMacroRecording(reg string) {
+	k.macros.Start(reg)
+}
+
+func (k *KeyHandler) StopMacroRecording() {
+	k.macros.Stop()
 }
 
 func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {
