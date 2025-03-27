@@ -36,33 +36,6 @@ func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
 	return k
 }
 
-// Map/merge keymap by selected mode
-func (k *KeyHandler) Map(editor *Editor, mode Mode, newMappings KeyMap) {
-	mergeKeyMaps(k.keymap[mode], newMappings)
-}
-
-func mergeKeyMaps(k1 KeyMap, k2 KeyMap) {
-	for rkey := range k2 {
-		if currentVal, ok := k1[rkey]; ok {
-			lval, lok := currentVal.(KeyMap)
-			rval, rok := k2[rkey].(KeyMap)
-			if lok && rok {
-				mergeKeyMaps(lval, rval)
-				continue
-			}
-		}
-		k1[rkey] = k2[rkey]
-	}
-}
-
-func (k *KeyHandler) Fallback(fn func(ctx Context, ev *tcell.EventKey)) {
-	k.fallback = fn
-}
-
-func (k *KeyHandler) GetFallback() KeyFallbackFn {
-	return k.fallback
-}
-
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	const kspace = "Space"
 
@@ -120,6 +93,33 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	// insert mode
 	k.fallback(ctx, ev)
 	k.resetState()
+}
+
+// Map/merge keymap by selected mode
+func (k *KeyHandler) Map(editor *Editor, mode Mode, newMappings KeyMap) {
+	mergeKeyMaps(k.keymap[mode], newMappings)
+}
+
+func mergeKeyMaps(k1 KeyMap, k2 KeyMap) {
+	for rkey := range k2 {
+		if currentVal, ok := k1[rkey]; ok {
+			lval, lok := currentVal.(KeyMap)
+			rval, rok := k2[rkey].(KeyMap)
+			if lok && rok {
+				mergeKeyMaps(lval, rval)
+				continue
+			}
+		}
+		k1[rkey] = k2[rkey]
+	}
+}
+
+func (k *KeyHandler) Fallback(fn func(ctx Context, ev *tcell.EventKey)) {
+	k.fallback = fn
+}
+
+func (k *KeyHandler) GetFallback() KeyFallbackFn {
+	return k.fallback
 }
 
 func (k *KeyHandler) StartMacroRecording(reg string) {

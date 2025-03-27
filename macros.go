@@ -23,18 +23,12 @@ func NewMacrosManager(keyHandler *KeyHandler) *MacrosManager {
 }
 
 func (m *MacrosManager) Start(reg string) {
-	fmt.Println("...recording", reg)
 	m.Reset()
 	m.recording = true
 	m.register = reg
 }
 
 func (m *MacrosManager) Stop() {
-	fmt.Println(".......stop........")
-	for _, k := range m.keys[:len(m.keys)-1] {
-		fmt.Println(m.keyHandler.normalizeKeyName(&k))
-	}
-
 	keys := make([]tcell.EventKey, 0, len(m.keys)-1)
 	keys = append(keys, m.keys[:len(m.keys)-1]...)
 	m.registers[m.register] = keys
@@ -46,8 +40,6 @@ func (m *MacrosManager) Recording() bool {
 }
 
 func (m *MacrosManager) Play(reg string) {
-	fmt.Println("........play.........")
-
 	if val, ok := m.registers[reg]; ok {
 		for _, eventKey := range val {
 			fmt.Println(m.keyHandler.normalizeKeyName(&eventKey))
