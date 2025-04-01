@@ -4,6 +4,10 @@ Release v0.1:
 - move themes and tree-sitter queries
 - save cursor position for undo/redo records
 - per-window cursors
+- tab stop
+- snippets
+- autocomplete filter
+- indend
 
 Bugs:
 - delete+insert on last line causes panic

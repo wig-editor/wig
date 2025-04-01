@@ -22,7 +22,7 @@ func (p ProjectManager) GetRoot() (root string) {
 	return p.root
 }
 
-// Find project root by file path. Project root must contain .git directory in it.
+// Find project root by file path. Project root must have .git directory in it.
 // otherwise "working directory" will be returned.
 func (p ProjectManager) FindRoot(buf *Buffer) (root string, err error) {
 	root = p.root
@@ -48,3 +48,4 @@ func (p ProjectManager) Dir(buf *Buffer) (dir string) {
 	}
 	return p.root
 }
+

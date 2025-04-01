@@ -50,6 +50,8 @@ type Buffer struct {
 	Tx           *Transaction
 	UndoRedo     *UndoRedo
 	Highlighter  *Highlighter
+
+	rootDir string
 }
 
 func NewBuffer() *Buffer {
@@ -120,6 +122,13 @@ func (buf *Buffer) SetMode(m Mode) {
 	buf.mode = m
 }
 
+func (buf *Buffer) GetRootRir() string {
+	if buf.rootDir == "" {
+		buf.rootDir, _ = EditorInst.Projects.FindRoot(buf)
+	}
+	return buf.rootDir
+}
+
 func (b *Buffer) TxStart() (started bool) {
 	if b.Tx != nil {
 		return
@@ -141,7 +150,7 @@ func (b *Buffer) TxEnd() {
 
 func (b *Buffer) GetName() string {
 	if len(b.FilePath) > 0 {
-		return b.FilePath
+		return strings.Replace(b.FilePath, b.GetRootRir()+"/", "", 1)
 	}
 	return "[No Name]"
 }
