@@ -12,7 +12,7 @@ type MacrosManager struct {
 
 	keys      []tcell.EventKey
 	recording bool
-	register  string
+	Register  string
 }
 
 func NewMacrosManager(keyHandler *KeyHandler) *MacrosManager {
@@ -25,13 +25,13 @@ func NewMacrosManager(keyHandler *KeyHandler) *MacrosManager {
 func (m *MacrosManager) Start(reg string) {
 	m.Reset()
 	m.recording = true
-	m.register = reg
+	m.Register = reg
 }
 
 func (m *MacrosManager) Stop() {
 	keys := make([]tcell.EventKey, 0, len(m.keys)-1)
 	keys = append(keys, m.keys[:len(m.keys)-1]...)
-	m.registers[m.register] = keys
+	m.registers[m.Register] = keys
 	m.Reset()
 }
 
@@ -42,8 +42,6 @@ func (m *MacrosManager) Recording() bool {
 func (m *MacrosManager) Play(reg string) {
 	if val, ok := m.registers[reg]; ok {
 		for _, eventKey := range val {
-			fmt.Println(m.keyHandler.normalizeKeyName(&eventKey))
-
 			EditorInst.HandleInput(&eventKey)
 		}
 	}
@@ -51,7 +49,7 @@ func (m *MacrosManager) Play(reg string) {
 
 func (m *MacrosManager) Reset() {
 	m.keys = []tcell.EventKey{}
-	m.register = ""
+	m.Register = ""
 	m.recording = false
 }
 
@@ -60,5 +58,19 @@ func (m *MacrosManager) Push(ev *tcell.EventKey) {
 		return
 	}
 	m.keys = append(m.keys, *ev)
+}
+
+func (m *MacrosManager) PushRepeat(ev *tcell.EventKey) {
+	m.keys = append(m.keys, *ev)
+}
+
+func (m *MacrosManager) RepeatSave() {
+	fmt.Println("---repeat save----------")
+	defer m.Reset()
+
+	for _, v := range m.keys {
+		fmt.Println(EditorInst.Keys.normalizeKeyName(&v))
+	}
+
 }
 

@@ -33,8 +33,13 @@ func StatuslineRender(
 	bg := strings.Repeat(" ", w)
 	view.SetContent(0, h, bg, st)
 
+	macroStatus := ""
+	if e.Keys.Macros.Recording() {
+		macroStatus = "recording @" + e.Keys.Macros.Register
+	}
+
 	leftSide := ""
-	leftSide = fmt.Sprintf("%s %s", buf.Mode().String(), buf.GetName())
+	leftSide = fmt.Sprintf("%s %s %s ", buf.Mode().String(), buf.GetName(), macroStatus)
 
 	if win.Buffer() == e.ActiveWindow().Buffer() && len(e.Message) > 0 {
 		leftSide = e.Message

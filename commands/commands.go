@@ -255,13 +255,16 @@ func CmdSearchLine(ctx mcwig.Context) {
 	}
 
 	action := func(p *ui.UiPicker[int], i *ui.PickerItem[int]) {
+		defer ctx.Editor.PopUi()
+		if i == nil {
+			return
+		}
 		ctx.Editor.ActiveWindow().VisitBuffer(ctx.Buf, mcwig.Cursor{
 			Line: i.Value,
 			Char: 0,
 		})
 		mcwig.CmdCursorBeginningOfTheLine(ctx)
 		mcwig.CmdCursorCenter(ctx)
-		ctx.Editor.PopUi()
 	}
 
 	ui.PickerInit(

@@ -505,18 +505,6 @@ func CmdVisualMode(ctx Context) {
 }
 
 func CmdExitInsertMode(ctx Context) {
-	// defer func() {
-	// ctx.Buf.SetMode(MODE_NORMAL)
-	// ctx.Buf.Selection = nil
-	// }()
-
-	// CmdCursorLeft(ctx)
-	// line := CursorLine(ctx.Buf)
-	// if ctx.Buf.Cursor.Char >= len(line.Value) {
-	// CmdGotoLineEnd(ctx)
-	// }
-	// ctx.Buf.TxEnd()
-
 	CmdNormalMode(ctx)
 }
 
@@ -528,7 +516,9 @@ func CmdNormalMode(ctx Context) {
 			CmdGotoLineEnd(ctx)
 		}
 	}
+
 	ctx.Buf.TxEnd()
+	// macro-repeat-save
 
 	ctx.Buf.SetMode(MODE_NORMAL)
 	ctx.Buf.Selection = nil
@@ -543,14 +533,14 @@ func CmdVisualLineMode(ctx Context) {
 }
 
 func CmdMacroRecord(ctx Context) func(Context) {
-	if ctx.Editor.Keys.macros.Recording() {
-		ctx.Editor.Keys.macros.Stop()
+	if ctx.Editor.Keys.Macros.Recording() {
+		ctx.Editor.Keys.Macros.Stop()
 		ctx.Editor.Keys.resetState()
 		return nil
 	}
 
 	return func(ctx Context) {
-		ctx.Editor.Keys.macros.Start(ctx.Char)
+		ctx.Editor.Keys.Macros.Start(ctx.Char)
 	}
 }
 
@@ -561,7 +551,7 @@ func CmdMacroPlay(ctx Context) func(Context) {
 		reg := ctx.Char
 		count := max(ctx.Count, 1)
 		for i := uint32(0); i < count; i++ {
-			ctx.Editor.Keys.macros.Play(reg)
+			ctx.Editor.Keys.Macros.Play(reg)
 		}
 	}
 }

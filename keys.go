@@ -22,7 +22,7 @@ type KeyHandler struct {
 	waitingForInput any
 	times           []string
 
-	macros *MacrosManager
+	Macros *MacrosManager
 }
 
 func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
@@ -32,16 +32,14 @@ func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
 		waitingForInput: nil,
 		times:           []string{},
 	}
-	k.macros = NewMacrosManager(k)
+	k.Macros = NewMacrosManager(k)
 	return k
 }
 
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
-	const kspace = "Space"
-
 	var keySet KeyMap
 
-	k.macros.Push(ev)
+	k.Macros.Push(ev)
 
 	ctx := editor.NewContext()
 	ctx.Count = uint32(k.GetCount())
@@ -68,12 +66,15 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	}
 
 	if key == " " {
-		key = kspace
+		key = "Space"
 	}
 
 	if action, ok := keySet[key]; ok {
 		switch action := action.(type) {
 		case KeyMap:
+
+			fmt.Println("start recording")
+
 			k.waitingForInput = action
 		case func(Context):
 			action(ctx)
@@ -123,11 +124,11 @@ func (k *KeyHandler) GetFallback() KeyFallbackFn {
 }
 
 func (k *KeyHandler) StartMacroRecording(reg string) {
-	k.macros.Start(reg)
+	k.Macros.Start(reg)
 }
 
 func (k *KeyHandler) StopMacroRecording() {
-	k.macros.Stop()
+	k.Macros.Stop()
 }
 
 func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {

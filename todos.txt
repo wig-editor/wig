@@ -1,8 +1,12 @@
-TODO:
+Release v0.1:
 - macros
-- delete+insert on last line causes panic
+- get rid of hard-code paths
+- move themes and tree-sitter queries
 - save cursor position for undo/redo records
 - per-window cursors
+
+Bugs:
+- delete+insert on last line causes panic
 
 
 

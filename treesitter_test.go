@@ -109,7 +109,6 @@ func add(a int, b int) {
 		}
 		require.Equal(t, expected, actual)
 	}()
-	wg.Wait()
 
 	line := CursorLineByNum(buf, 4)
 	TextDelete(buf, &Selection{
@@ -118,6 +117,7 @@ func add(a int, b int) {
 	})
 	require.Equal(t, "func (a int, b int) {\n", line.Value.String())
 
+	wg.Wait()
 }
 
 func TestTreeSitter_AdaptEventTextChangeDeleteLine(t *testing.T) {
@@ -133,6 +133,7 @@ func add(a int, b int) {
 		testutils.Viewport,
 		nil,
 	)
+
 	buf := e.BufferFindByFilePath("testfile", true)
 	buf.ResetLines()
 	buf.Append(source)
@@ -167,7 +168,6 @@ func add(a int, b int) {
 		actual := HighlighterAdaptEditInput(event)
 		require.Equal(t, expected, actual)
 	}()
-	wg.Wait()
 
 	CmdDeleteLine(Context{
 		Editor: e,
@@ -176,5 +176,6 @@ func add(a int, b int) {
 		Char:   "",
 	})
 
+	wg.Wait()
 }
 

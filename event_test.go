@@ -40,11 +40,11 @@ func add(a int, b int) {
 			Text:  " int",
 		}, event)
 	}()
-	wg.Wait()
 
 	line := CursorLineByNum(buf, 4)
 	TextInsert(buf, line, 22, " int")
 	require.Equal(t, "func add(a int, b int) int {\n", line.Value.String())
 
+	wg.Wait()
 }
 
