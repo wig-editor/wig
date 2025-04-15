@@ -18,6 +18,7 @@ func NewProjectManager() ProjectManager {
 	}
 }
 
+// TODO: this must be also base on git dir
 func (p ProjectManager) GetRoot() (root string) {
 	return p.root
 }

@@ -28,7 +28,7 @@ func TestMacroRepeat(t *testing.T) {
 		testutils.Viewport,
 		keys,
 	)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 
 	e.HandleInput(key('d'))

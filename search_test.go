@@ -9,7 +9,7 @@ import (
 
 func TestSearch(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 
 	ctx := Context{
 		Editor: e,
@@ -28,3 +28,4 @@ func TestSearch(t *testing.T) {
 	require.Equal(t, 0, buf.Cursor.Line)
 	require.Equal(t, 5, buf.Cursor.Char)
 }
+

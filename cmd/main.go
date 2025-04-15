@@ -38,13 +38,12 @@ func main() {
 	)
 	editor.AutocompleteTrigger = autocomplete.Register(editor)
 
-	buf := editor.OpenFile("/home/andrew/code/mcwig/core.go")
-	editor.ActiveWindow().VisitBuffer(buf)
-
 	args := os.Args
 	if len(args) > 1 {
-		buf = editor.OpenFile(args[1])
+		buf := editor.OpenFile(args[1])
 		editor.ActiveWindow().VisitBuffer(buf)
+	} else {
+		mcwig.CmdNewBuffer(editor.NewContext())
 	}
 
 	renderer := render.New(editor, tscreen)

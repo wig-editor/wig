@@ -97,7 +97,7 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 		}
 
 		// starts server and returns client conn
-		client, err = l.startAndInitializeServer(conf)
+		client, err = l.startAndInitializeServer(conf, buf)
 		if err != nil {
 			l.e.LogMessage("failed to start tcp server")
 			l.e.EchoMessage("failed to start tcp server")
@@ -392,7 +392,7 @@ func (m *LspManager) Diagnostics(buf *Buffer, lineNum int) []protocol.Diagnostic
 	return nil
 }
 
-func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspConn, err error) {
+func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer) (conn *lspConn, err error) {
 	cmd := exec.Command(conf.Cmd[0], conf.Cmd[1:]...)
 
 	pout, _ := cmd.StdoutPipe()
@@ -501,6 +501,8 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig) (conn *lspCo
 	// initialize connection sequence
 	r := &protocol.InitializeParams{}
 	json.Unmarshal([]byte(lspServerInitJson), r)
+	fileRoot, _ := l.e.Projects.FindRoot(buf)
+	r.RootURI = protocol.DocumentURI(fmt.Sprintf("file://%s", fileRoot))
 
 	var result protocol.InitializeResult
 	_, err = c.Call(context.Background(), protocol.MethodInitialize, r, &result)
@@ -532,7 +534,5 @@ func (l *lspConn) didOpen(buf *Buffer) {
 	if err != nil {
 		panic(err.Error())
 	}
-	// fmt.Println("DIDOPEN DONE", id, err)
-	// didOpen
 }
 

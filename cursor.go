@@ -27,11 +27,6 @@ func restoreCharPosition(buf *Buffer) {
 	}
 }
 
-func cursorGotoChar(buf *Buffer, ch int) {
-	buf.Cursor.Char = ch
-	buf.Cursor.PreserveCharPosition = buf.Cursor.Char
-}
-
 func CursorInc(buf *Buffer) (moved bool) {
 	line := CursorLine(buf)
 	if buf.Cursor.Char < len(line.Value)-1 {

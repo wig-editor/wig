@@ -2,12 +2,12 @@ package mcwig
 
 var lspServerInitJson = `{
   "processId": null,
-  "rootPath": "/home/andrew/code/mcwig",
+  "rootPath": "",
   "clientInfo": {
     "name": "mcwig",
     "version": "001"
   },
-  "rootUri": "file:///home/andrew/code/mcwig",
+  "rootUri": "",
   "capabilities": {
     "general": {
       "positionEncodings": [
@@ -255,4 +255,5 @@ var lspServerInitJson = `{
   "initializationOptions": null,
   "workDoneToken": "1"
 }`
+
 

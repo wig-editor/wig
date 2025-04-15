@@ -2,6 +2,7 @@ package mcwig
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -132,10 +133,14 @@ func HighlighterInitBuffer(e *Editor, buf *Buffer) {
 	h.parser = sitter.NewParser()
 	h.parser.SetLanguage(golang.GetLanguage())
 
-	hgFile := "/home/andrew/code/mcwig/runtime/helix/go/highlights.scm"
-	highlightQ, _ := os.ReadFile(hgFile)
-
 	var err error
+
+	hgFile := e.RuntimeDir("queries", "go", "highlights.scm")
+	highlightQ, err := os.ReadFile(hgFile)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	h.q, err = sitter.NewQuery(highlightQ, golang.GetLanguage())
 	if err != nil {
 		h.e.LogError(errors.Wrap(err, "tree sitter query error"))

@@ -9,10 +9,8 @@ import (
 )
 
 func TestYankSingleLine(t *testing.T) {
-	return
-
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	ctx := Context{
 		Editor: e,
 		Buf:    buf,
@@ -40,10 +38,8 @@ line five
 }
 
 func TestYankSelection(t *testing.T) {
-	return
-
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	ctx := Context{
 		Editor: e,
 		Buf:    buf,

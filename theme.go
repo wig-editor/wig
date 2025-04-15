@@ -71,8 +71,7 @@ func mergeThemes(base, child Theme) Theme {
 }
 
 func loadColors(name string) Theme {
-	tname := fmt.Sprintf("/home/andrew/code/helix/runtime/themes/%s.toml", name)
-	colorThemeFile := tname
+	colorThemeFile := EditorInst.RuntimeDir("themes", fmt.Sprintf("%s.toml", name))
 	theme, err := os.ReadFile(colorThemeFile)
 	if err != nil {
 		panic(err.Error())

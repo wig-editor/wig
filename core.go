@@ -433,13 +433,19 @@ func CmdKillBuffer(ctx Context) {
 	ctx.Editor.Buffers = buffers
 
 	if len(buffers) == 0 {
-		buf := NewBuffer()
-		buf.FilePath = "[No Name]"
-		ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)
-		ctx.Editor.ActiveWindow().ShowBuffer(buf)
+		CmdNewBuffer(ctx)
 	}
 
 	ctx.Editor.Lsp.DidClose(ctx.Buf)
+}
+
+func CmdNewBuffer(ctx Context) {
+	buf := NewBuffer()
+	buf.Lines = List[Line]{}
+	buf.Lines.PushBack([]rune("\n"))
+	buf.FilePath = "[No Name]"
+	ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)
+	ctx.Editor.ActiveWindow().ShowBuffer(buf)
 }
 
 func CmdIndentOrComplete(ctx Context) {

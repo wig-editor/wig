@@ -1,6 +1,9 @@
 package mcwig
 
 import (
+	"os"
+	"path"
+
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -195,6 +198,12 @@ func (e *Editor) LogError(err error, echo ...bool) {
 func (e *Editor) LogMessage(msg string) {
 	buf := e.BufferFindByFilePath("[Messages]", true)
 	buf.Append(msg)
+}
+
+func (e *Editor) RuntimeDir(elems ...string) string {
+	p := []string{os.Getenv("HOME"), ".config", "mcwig"}
+	elems = append(p, elems...)
+	return path.Join(elems...)
 }
 
 func (e *Editor) EchoMessage(msg string) {

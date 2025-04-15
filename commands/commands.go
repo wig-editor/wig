@@ -14,7 +14,7 @@ import (
 )
 
 func CmdThemeSelect(ctx mcwig.Context) {
-	currentDir := "/home/andrew/code/helix/runtime/themes"
+	currentDir := ctx.Editor.RuntimeDir("themes")
 
 	files, err := os.ReadDir(currentDir)
 	if err != nil {
@@ -349,7 +349,7 @@ func CmdReloadBuffer(ctx mcwig.Context) {
 
 func CmdMakeRun(ctx mcwig.Context) {
 	cmd := exec.Command("tmux", "send-keys", "-t", "mcwig:1.2", "make run", "Enter")
-	cmd.Dir = "/home/andrew/code/mcwig"
+	cmd.Dir = ctx.Editor.Projects.GetRoot()
 	cmd.Start()
 }
 

@@ -17,7 +17,7 @@ func TestBuffer(t *testing.T) {
 }
 
 func TestBufferReadFile(t *testing.T) {
-	buf, err := BufferReadFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf, err := BufferReadFile(testutils.Filepath("buffer_test.txt"))
 	if err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
@@ -25,7 +25,7 @@ func TestBufferReadFile(t *testing.T) {
 }
 
 func TestLineByNum(t *testing.T) {
-	buf, err := BufferReadFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf, err := BufferReadFile(testutils.Filepath("buffer_test.txt"))
 	if err != nil {
 		t.Errorf("expected nil, got %v", err)
 	}
@@ -36,7 +36,7 @@ func TestLineByNum(t *testing.T) {
 
 func TestSelectionDelete(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 	buf.Selection = &Selection{
 		Start: Cursor{Line: 0, Char: 0},
@@ -53,7 +53,7 @@ func TestSelectionDelete(t *testing.T) {
 
 func TestSaveFile(t *testing.T) {
 	tmpFilePath := "/tmp/wcwig_test.go"
-	testFilePath := "/home/andrew/code/mcwig/buffer_test.txt"
+	testFilePath := testutils.Filepath("buffer_test.txt")
 
 	err := copyFile(testFilePath, tmpFilePath)
 	assert.NoError(t, err)
@@ -74,7 +74,7 @@ func TestSaveFile(t *testing.T) {
 
 func TestWordUnderCusor(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 	buf.Selection = &Selection{
 		Start: Cursor{Line: 0, Char: 0},
@@ -91,7 +91,7 @@ func TestWordUnderCusor(t *testing.T) {
 
 func TestTextInsertNewLine(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 	defer CmdKillBuffer(e.NewContext())
 
@@ -109,7 +109,7 @@ line five
 
 func TestTextInsertDelete(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 	defer CmdKillBuffer(e.NewContext())
 
@@ -125,7 +125,7 @@ func TestTextInsertDelete(t *testing.T) {
 
 func TestTextDeleteMultiline(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 	defer CmdKillBuffer(e.NewContext())
 	TextDelete(buf, &Selection{
@@ -142,7 +142,7 @@ line five
 
 func TestTextDeleteMultiline2(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 	defer CmdKillBuffer(e.NewContext())
 	TextDelete(buf, &Selection{
@@ -158,7 +158,7 @@ line five
 
 func TestTextDeleteToEOL(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 	defer CmdKillBuffer(e.NewContext())
 	TextDelete(buf, &Selection{
@@ -176,7 +176,7 @@ line five
 
 func TestTextDelete_EOL(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 	defer CmdKillBuffer(e.NewContext())
 	TextDelete(buf, &Selection{
@@ -193,7 +193,7 @@ line five
 
 func TestTextDelete_EOL_EOF(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	e.ActiveWindow().ShowBuffer(buf)
 	defer CmdKillBuffer(e.NewContext())
 	// delete last line
@@ -216,3 +216,4 @@ func copyFile(src string, dst string) error {
 	}
 	return os.WriteFile(dst, data, 0644)
 }
+

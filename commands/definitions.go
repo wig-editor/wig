@@ -14,4 +14,6 @@ var AllCommands = map[string]CmdDefinition{
 	"CmdSearchProject": {Desc: "", Fn: CmdSearchProject},
 	"CmdJumpForward":   {Desc: "", Fn: mcwig.CmdJumpForward},
 	"CmdReloadBuffer":  {Desc: "", Fn: CmdReloadBuffer},
+	"CmdNewBuffer":     {Desc: "", Fn: mcwig.CmdNewBuffer},
 }
+

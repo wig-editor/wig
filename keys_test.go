@@ -42,7 +42,7 @@ func TestKeyHandler(t *testing.T) {
 		NewKeyHandler(keyMap()),
 	)
 
-	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	buf := editor.OpenFile(testutils.Filepath("buffer_test.txt"))
 	editor.ActiveWindow().VisitBuffer(buf)
 
 	t.Run("f", func(t *testing.T) {
@@ -76,7 +76,7 @@ func TestKeyHandlerMap(t *testing.T) {
 		nil,
 	)
 
-	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	buf := editor.OpenFile(testutils.Filepath("buffer_test.txt"))
 	editor.ActiveWindow().VisitBuffer(buf)
 
 	commandlineCalled := false
@@ -154,7 +154,7 @@ func TestKeyTimes(t *testing.T) {
 		h,
 	)
 
-	buf := editor.OpenFile("/home/andrew/code/mcwig/keys_test.go")
+	buf := editor.OpenFile(testutils.Filepath("buffer_test.txt"))
 	editor.ActiveWindow().VisitBuffer(buf)
 
 	// test remap sinle key

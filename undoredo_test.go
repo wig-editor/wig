@@ -10,7 +10,7 @@ import (
 
 func TestEdits(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile("/home/andrew/code/mcwig/buffer_test.txt")
+	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
 	buf.Cursor.Char = 0
 	buf.Cursor.Line = 0
 	buf.Selection = nil
@@ -40,3 +40,4 @@ func linesToString(l List[Line]) string {
 
 	return buf.String()
 }
+
