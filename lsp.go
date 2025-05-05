@@ -1,11 +1,10 @@
 package mcwig
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
+	"io"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -18,9 +17,7 @@ import (
 )
 
 type LspServerConfig struct {
-	Cmd  []string // gopls serve -listen=127.0.0.1:101010
-	Type string   // unix or tcp
-	Addr string
+	Cmd []string
 }
 
 type lspConn struct {
@@ -29,9 +26,7 @@ type lspConn struct {
 
 var lspConfigs = map[string]LspServerConfig{
 	".go": {
-		Cmd:  []string{"gopls", "-listen", "127.0.0.1:12345"}, // TODO: use unix file sockets
-		Type: "tcp",
-		Addr: "127.0.0.1:12345",
+		Cmd: []string{"gopls"},
 	},
 }
 
@@ -392,29 +387,35 @@ func (m *LspManager) Diagnostics(buf *Buffer, lineNum int) []protocol.Diagnostic
 	return nil
 }
 
+type pipeWrapper struct {
+	reader io.Reader
+	writer io.Writer
+	closer io.Closer
+}
+
+func (pw *pipeWrapper) Read(p []byte) (n int, err error) {
+	return pw.reader.Read(p)
+}
+
+func (pw *pipeWrapper) Write(p []byte) (n int, err error) {
+	return pw.writer.Write(p)
+}
+
+func (pw *pipeWrapper) Close() error {
+	return nil
+}
+
 func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer) (conn *lspConn, err error) {
 	cmd := exec.Command(conf.Cmd[0], conf.Cmd[1:]...)
 
+	pin, _ := cmd.StdinPipe()
 	pout, _ := cmd.StdoutPipe()
-	perr, _ := cmd.StderrPipe()
+	// perr, _ := cmd.StderrPipe()
 
 	err = cmd.Start()
 	if err != nil {
 		l.e.LogError(err)
 	}
-
-	go func() {
-		scanner := bufio.NewScanner(pout)
-		for scanner.Scan() {
-			l.e.LogMessage("lsp:" + scanner.Text())
-		}
-	}()
-	go func() {
-		scanner := bufio.NewScanner(perr)
-		for scanner.Scan() {
-			l.e.LogMessage("lsp:" + scanner.Text())
-		}
-	}()
 
 	go func() {
 		cmd.Wait()
@@ -423,15 +424,12 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer)
 		l.conns = make(map[string]*lspConn)
 	}()
 
-	// TODO: replace with wait channel
-	time.Sleep(100 * time.Millisecond)
-
-	tcpc, err := net.Dial(conf.Type, conf.Addr)
-	if err != nil {
-		l.e.LogError(err)
+	st := &pipeWrapper{
+		reader: pout,
+		writer: pin,
 	}
 
-	s := jsonrpc2.NewStream(tcpc)
+	s := jsonrpc2.NewStream(st)
 	c := jsonrpc2.NewConn(s)
 
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
@@ -440,8 +438,8 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer)
 			resp := []any{
 				map[string]any{
 					"analysisProgressReporting": true,
-					"buildFlags":                []interface{}{},
-					"codelenses": map[string]interface{}{
+					"buildFlags":                []any{},
+					"codelenses": map[string]any{
 						"gc_details":         false,
 						"generate":           true,
 						"regenerate_cgo":     true,
@@ -453,7 +451,7 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer)
 					"completeFunctionCalls": true,
 					"completionBudget":      "100ms",
 					"diagnosticsDelay":      "1s",
-					"directoryFilters":      []interface{}{},
+					"directoryFilters":      []any{},
 					"gofumpt":               false,
 					"hoverKind":             "SynopsisDocumentation",
 					"importShortcut":        "Both",
@@ -475,7 +473,6 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer)
 		}
 
 		if req.Method() == "textDocument/publishDiagnostics" {
-
 			rest := protocol.PublishDiagnosticsParams{}
 			json.Unmarshal(req.Params(), &rest)
 
