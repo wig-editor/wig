@@ -49,6 +49,7 @@ func (e *EventsManager) Subscribe() <-chan Event {
 
 func (e *EventsManager) Unsubscribe(ch <-chan any) {
 	// TODO
+	// why even should I impleent it?
 }
 
 type Event struct {
@@ -57,6 +58,8 @@ type Event struct {
 }
 
 // this is very quick and dirty implementation.
+// we need sync processing to not mess up lsp and treesitter.
+// TODO: rewrite.
 func (e *EventsManager) Broadcast(msg any) {
 	wg := sync.WaitGroup{}
 	for _, l := range e.listeners {

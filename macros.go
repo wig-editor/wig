@@ -1,8 +1,6 @@
 package mcwig
 
 import (
-	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -58,19 +56,5 @@ func (m *MacrosManager) Push(ev *tcell.EventKey) {
 		return
 	}
 	m.keys = append(m.keys, *ev)
-}
-
-func (m *MacrosManager) PushRepeat(ev *tcell.EventKey) {
-	m.keys = append(m.keys, *ev)
-}
-
-func (m *MacrosManager) RepeatSave() {
-	fmt.Println("---repeat save----------")
-	defer m.Reset()
-
-	for _, v := range m.keys {
-		fmt.Println(EditorInst.Keys.normalizeKeyName(&v))
-	}
-
 }
 
