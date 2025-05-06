@@ -23,6 +23,14 @@ type EventTextChange struct {
 	wg *sync.WaitGroup
 }
 
+type EventBufferModeChange struct {
+	Buf     *Buffer
+	OldMode Mode
+	NewMode Mode
+
+	wg *sync.WaitGroup
+}
+
 type EventsManager struct {
 	source         chan any
 	listeners      []chan Event
@@ -37,7 +45,15 @@ func NewEventsManager() *EventsManager {
 		newListener:    make(chan chan Event, 32),
 		removeListener: make(chan (<-chan any)),
 	}
-	go e.start()
+	go func() {
+		for {
+			select {
+			case l := <-e.newListener:
+				e.listeners = append(e.listeners, l)
+			}
+		}
+	}()
+
 	return e
 }
 
@@ -69,25 +85,6 @@ func (e *EventsManager) Broadcast(msg any) {
 		wg.Add(1)
 		l <- Event{msg, &wg}
 		wg.Wait()
-	}
-}
-
-func (e *EventsManager) start() {
-	for {
-		select {
-		case l := <-e.newListener:
-			e.listeners = append(e.listeners, l)
-			// case msg := <-e.source:
-			// wg := sync.WaitGroup{}
-			// for _, l := range e.listeners {
-			// if l == nil {
-			// continue
-			// }
-			// wg.Add(1)
-			// l <- Event{msg, &wg}
-			// wg.Wait()
-			// }
-		}
 	}
 }
 

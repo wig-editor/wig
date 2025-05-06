@@ -22,7 +22,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"i":      mcwig.CmdEnterInsertMode,
 			"v":      mcwig.CmdVisualMode,
 			"V":      mcwig.CmdVisualLineMode,
-			"a":      mcwig.CmdInsertModeAfter,
+			"a":      mcwig.CmdEnterInsertModeAppend,
 			"A":      mcwig.CmdAppendLine,
 			"w":      mcwig.CmdForwardWord,
 			"b":      mcwig.CmdBackwardWord,
@@ -66,6 +66,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"w": mcwig.CmdDeleteWord,
 				"f": mcwig.CmdDeleteTo,
 				"t": mcwig.CmdDeleteBefore,
+				"$": mcwig.CmdDeleteEndOfLine,
 			},
 			"y": mcwig.KeyMap{
 				"y": mcwig.CmdYank,

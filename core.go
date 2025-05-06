@@ -164,7 +164,7 @@ func CmdDeleteCharBackward(ctx Context) {
 
 func CmdAppendLine(ctx Context) {
 	CmdGotoLineEnd(ctx)
-	CmdInsertModeAfter(ctx)
+	CmdEnterInsertModeAppend(ctx)
 }
 
 func CmdLineOpenBelow(ctx Context) {
@@ -273,6 +273,12 @@ func CmdChangeLine(ctx Context) {
 func CmdChangeEndOfLine(ctx Context) {
 	ctx.Char = "\n"
 	CmdChangeBefore(ctx)(ctx)
+}
+
+func CmdDeleteEndOfLine(ctx Context) {
+	ctx.Char = "\n"
+	CmdChangeBefore(ctx)(ctx)
+	CmdNormalMode(ctx)
 }
 
 func CmdDeleteTo(_ Context) func(Context) {
@@ -495,19 +501,18 @@ func CmdEnterInsertMode(ctx Context) {
 	if line == nil {
 		return
 	}
-
 	ctx.Buf.TxStart()
-	ctx.Buf.SetMode(MODE_INSERT)
+	setBufferMode(ctx, MODE_INSERT)
 }
 
-func CmdInsertModeAfter(ctx Context) {
+func CmdEnterInsertModeAppend(ctx Context) {
 	CmdCursorRight(ctx)
 	CmdEnterInsertMode(ctx)
 }
 
 func CmdVisualMode(ctx Context) {
 	SelectionStart(ctx.Buf)
-	ctx.Buf.SetMode(MODE_VISUAL)
+	setBufferMode(ctx, MODE_VISUAL)
 }
 
 func CmdExitInsertMode(ctx Context) {
@@ -526,7 +531,7 @@ func CmdNormalMode(ctx Context) {
 	ctx.Buf.TxEnd()
 	// macro-repeat-save
 
-	ctx.Buf.SetMode(MODE_NORMAL)
+	setBufferMode(ctx, MODE_NORMAL)
 	ctx.Buf.Selection = nil
 }
 
@@ -535,7 +540,16 @@ func CmdVisualLineMode(ctx Context) {
 	SelectionStart(ctx.Buf)
 	ctx.Buf.Selection.Start.Char = 0
 	ctx.Buf.Selection.End.Char = len(line.Value) - 1
-	ctx.Buf.SetMode(MODE_VISUAL_LINE)
+	setBufferMode(ctx, MODE_VISUAL_LINE)
+}
+
+func setBufferMode(ctx Context, newMode Mode) {
+	ctx.Editor.Events.Broadcast(EventBufferModeChange{
+		Buf:     ctx.Buf,
+		OldMode: ctx.Buf.Mode(),
+		NewMode: newMode,
+	})
+	ctx.Buf.SetMode(newMode)
 }
 
 func CmdMacroRecord(ctx Context) func(Context) {

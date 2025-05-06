@@ -9,6 +9,7 @@ Release v0.1:
 - snippets
 - autocomplete filter
 - indend
+- "e" command
 
 Bugs:
 - delete+insert on last line causes panic
