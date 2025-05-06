@@ -60,8 +60,8 @@ func NewLspManager(e *Editor) *LspManager {
 				switch e := event.Msg.(type) {
 				case EventTextChange:
 					r.DidChange(e)
-					event.Wg.Done()
 				}
+				event.Wg.Done()
 			}
 		}
 	}()
@@ -532,4 +532,3 @@ func (l *lspConn) didOpen(buf *Buffer) {
 		panic(err.Error())
 	}
 }
-

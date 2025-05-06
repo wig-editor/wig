@@ -46,8 +46,8 @@ func HighlighterGo(e *Editor) {
 				switch e := event.Msg.(type) {
 				case EventTextChange:
 					HighlighterEditTree(e)
-					event.Wg.Done()
 				}
+				event.Wg.Done()
 			}
 		}
 	}()
@@ -272,4 +272,3 @@ func (c *TreeSitterNodeCursor) Seek(line, ch uint32) (node *Element[TreeSitterRa
 
 	return nil, false
 }
-

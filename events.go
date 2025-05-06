@@ -19,16 +19,12 @@ type EventTextChange struct {
 	NewEnd  Position
 	Text    string
 	OldText string
-
-	wg *sync.WaitGroup
 }
 
 type EventBufferModeChange struct {
 	Buf     *Buffer
 	OldMode Mode
 	NewMode Mode
-
-	wg *sync.WaitGroup
 }
 
 type EventsManager struct {
@@ -65,7 +61,7 @@ func (e *EventsManager) Subscribe() <-chan Event {
 
 func (e *EventsManager) Unsubscribe(ch <-chan any) {
 	// TODO
-	// why even should I impleent it?
+	// why even should I implement it?
 }
 
 type Event struct {
@@ -87,4 +83,3 @@ func (e *EventsManager) Broadcast(msg any) {
 		wg.Wait()
 	}
 }
-

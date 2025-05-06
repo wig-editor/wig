@@ -529,8 +529,6 @@ func CmdNormalMode(ctx Context) {
 	}
 
 	ctx.Buf.TxEnd()
-	// macro-repeat-save
-
 	setBufferMode(ctx, MODE_NORMAL)
 	ctx.Buf.Selection = nil
 }
@@ -575,4 +573,3 @@ func CmdMacroPlay(ctx Context) func(Context) {
 		}
 	}
 }
-

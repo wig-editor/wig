@@ -44,12 +44,16 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	ctx := editor.NewContext()
 	ctx.Count = uint32(k.GetCount())
 
+	cmdExec := func(cmd func(ctx Context), ctx Context) {
+		cmd(ctx)
+		k.resetState()
+	}
+
 	key := k.normalizeKeyName(ev)
 	switch v := k.waitingForInput.(type) {
 	case func(ctx Context):
 		ctx.Char = key
-		v(ctx)
-		k.resetState()
+		cmdExec(v, ctx)
 		return
 	case KeyMap:
 		keySet = v
@@ -72,13 +76,9 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	if action, ok := keySet[key]; ok {
 		switch action := action.(type) {
 		case KeyMap:
-
-			fmt.Println("start recording")
-
 			k.waitingForInput = action
 		case func(Context):
-			action(ctx)
-			k.resetState()
+			cmdExec(action, ctx)
 		case func(Context) func(Context): // func return next func
 			v := action(ctx)
 			if v != nil {

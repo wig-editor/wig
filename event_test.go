@@ -39,6 +39,7 @@ func add(a int, b int) {
 			End:   Position{Line: 4, Char: 22},
 			Text:  " int",
 		}, event)
+		msg.Wg.Done()
 	}()
 
 	line := CursorLineByNum(buf, 4)
@@ -47,4 +48,3 @@ func add(a int, b int) {
 
 	wg.Wait()
 }
-
