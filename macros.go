@@ -11,6 +11,9 @@ type MacrosManager struct {
 	keys      []tcell.EventKey
 	recording bool
 	Register  string
+
+	recordRepeat bool
+	repeatKeys   []tcell.EventKey
 }
 
 func NewMacrosManager(keyHandler *KeyHandler) *MacrosManager {
@@ -56,5 +59,20 @@ func (m *MacrosManager) Push(ev *tcell.EventKey) {
 		return
 	}
 	m.keys = append(m.keys, *ev)
+}
+
+func (m *MacrosManager) StartRepeatRecording() {
+	m.recordRepeat = true
+}
+
+func (m *MacrosManager) StopRepeatRecording() {
+	if m.recordRepeat == false {
+		return
+	}
+	m.recordRepeat = false
+	if len(m.repeatKeys) >= 2 {
+		m.registers["."] = m.repeatKeys
+	}
+	m.repeatKeys = []tcell.EventKey{}
 }
 

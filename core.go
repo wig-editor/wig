@@ -542,11 +542,11 @@ func CmdVisualLineMode(ctx Context) {
 }
 
 func setBufferMode(ctx Context, newMode Mode) {
-	ctx.Editor.Events.Broadcast(EventBufferModeChange{
-		Buf:     ctx.Buf,
-		OldMode: ctx.Buf.Mode(),
-		NewMode: newMode,
-	})
+	// ctx.Editor.Events.Broadcast(EventBufferModeChange{
+	// Buf:     ctx.Buf,
+	// OldMode: ctx.Buf.Mode(),
+	// NewMode: newMode,
+	// })
 	ctx.Buf.SetMode(newMode)
 }
 
@@ -573,3 +573,8 @@ func CmdMacroPlay(ctx Context) func(Context) {
 		}
 	}
 }
+
+func CmdMacroRepeat(ctx Context) {
+	ctx.Editor.Keys.Macros.Play(".")
+}
+

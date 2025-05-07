@@ -38,18 +38,31 @@ func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
 
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	var keySet KeyMap
+	key := k.normalizeKeyName(ev)
 
 	k.Macros.Push(ev)
 
 	ctx := editor.NewContext()
 	ctx.Count = uint32(k.GetCount())
 
+	// macro-repeat
+	{
+		if k.waitingForInput == nil && !k.Macros.recordRepeat {
+			k.Macros.StartRepeatRecording()
+		}
+		if k.Macros.recordRepeat && key != "." {
+			k.Macros.repeatKeys = append(k.Macros.repeatKeys, *ev)
+		}
+	}
+
 	cmdExec := func(cmd func(ctx Context), ctx Context) {
 		cmd(ctx)
 		k.resetState()
+		if ctx.Buf.Mode() == MODE_NORMAL {
+			k.Macros.StopRepeatRecording()
+		}
 	}
 
-	key := k.normalizeKeyName(ev)
 	switch v := k.waitingForInput.(type) {
 	case func(ctx Context):
 		ctx.Char = key
