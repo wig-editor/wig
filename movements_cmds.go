@@ -343,6 +343,9 @@ func CmdJumpForward(ctx Context) {
 // Cycle between last two buffers in jump list
 func CmdBufferCycle(ctx Context) {
 	last := ctx.Editor.ActiveWindow().Jumps.List.Last()
+	if last == nil {
+		return
+	}
 	prev := last.Prev()
 
 	if last == nil || prev == nil {
