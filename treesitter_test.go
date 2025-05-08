@@ -68,7 +68,6 @@ func TestTreeSitterNodeCursor(t *testing.T) {
 }
 
 func TestTreeSitter_AdaptEventTextChange(t *testing.T) {
-	return
 	source := `package mcwig
 
 import "fmt"
@@ -92,8 +91,8 @@ func add(a int, b int) {
 		events := e.Events.Subscribe()
 		wg.Done()
 		msg := <-events
-		event := msg.Msg.(EventTextChange)
 		msg.Wg.Done()
+		event := msg.Msg.(EventTextChange)
 		require.Equal(t, EventTextChange{
 			Buf:     buf,
 			Start:   Position{Line: 4, Char: 5},
@@ -113,6 +112,7 @@ func add(a int, b int) {
 		}
 		require.Equal(t, expected, actual)
 	}()
+	wg.Wait()
 
 	line := CursorLineByNum(buf, 4)
 	TextDelete(buf, &Selection{
@@ -121,11 +121,9 @@ func add(a int, b int) {
 	})
 	require.Equal(t, "func (a int, b int) {\n", line.Value.String())
 
-	wg.Wait()
 }
 
 func TestTreeSitter_AdaptEventTextChangeDeleteLine(t *testing.T) {
-	return
 	source := `package mcwig
 
 import "fmt"
@@ -152,9 +150,10 @@ func add(a int, b int) {
 		events := e.Events.Subscribe()
 		wg.Done()
 		msg := <-events
-		msg = <-events
-		event := msg.Msg.(EventTextChange)
 		msg.Wg.Done()
+		msg = <-events
+		msg.Wg.Done()
+		event := msg.Msg.(EventTextChange)
 		require.Equal(t, EventTextChange{
 			Buf:     buf,
 			Start:   Position{Line: 4, Char: 0},
@@ -184,3 +183,4 @@ func add(a int, b int) {
 		Char:   "",
 	})
 }
+

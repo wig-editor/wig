@@ -32,6 +32,7 @@ func add(a int, b int) {
 		events := e.Events.Subscribe()
 		wg.Done()
 		msg := <-events
+		msg.Wg.Done()
 		event := msg.Msg.(EventTextChange)
 		require.Equal(t, EventTextChange{
 			Buf:   buf,
@@ -39,7 +40,6 @@ func add(a int, b int) {
 			End:   Position{Line: 4, Char: 22},
 			Text:  " int",
 		}, event)
-		msg.Wg.Done()
 	}()
 
 	line := CursorLineByNum(buf, 4)
@@ -48,3 +48,4 @@ func add(a int, b int) {
 
 	wg.Wait()
 }
+
