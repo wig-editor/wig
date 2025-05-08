@@ -354,7 +354,7 @@ func CmdBufferCycle(ctx Context) {
 	}
 
 	var b *Buffer
-	if last.Value.FilePath == ctx.Editor.ActiveWindow().Buffer().GetName() {
+	if last.Value.FilePath == ctx.Editor.ActiveWindow().Buffer().FilePath {
 		b = ctx.Editor.BufferFindByFilePath(prev.Value.FilePath, false)
 	} else {
 		b = ctx.Editor.BufferFindByFilePath(last.Value.FilePath, false)
