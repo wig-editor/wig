@@ -1,6 +1,6 @@
 Release v0.1:
 + macros
-- macros repeat
++ macros repeat
 + get rid of hard-code paths
 + move themes and tree-sitter queries
 - save cursor position for undo/redo records
