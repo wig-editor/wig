@@ -200,26 +200,6 @@ func CmdBackwardWord(ctx Context) {
 	}
 }
 
-func CmdForwardToChar(_ Context) func(Context) {
-	return func(ctx Context) {
-		if ctx.Buf.Mode() == MODE_VISUAL {
-			defer SelectionStop(ctx.Buf)
-		}
-
-		line := CursorLine(ctx.Buf)
-		if line.Value.IsEmpty() {
-			return
-		}
-		for i := ctx.Buf.Cursor.Char + 1; i < len(line.Value); i++ {
-			if strings.EqualFold(string(line.Value[i]), ctx.Char) {
-				ctx.Buf.Cursor.Char = i
-				ctx.Buf.Cursor.PreserveCharPosition = i
-				break
-			}
-		}
-	}
-}
-
 func CmdForwardBeforeChar(_ Context) func(Context) {
 	return func(ctx Context) {
 		if ctx.Buf.Mode() == MODE_VISUAL {
@@ -240,17 +220,39 @@ func CmdForwardBeforeChar(_ Context) func(Context) {
 	}
 }
 
-func CmdBackwardChar(ctx Context) {
-	line := CursorLine(ctx.Buf)
-	if len(line.Value) == 0 {
-		return
-	}
+func CmdForwardToChar(_ Context) func(Context) {
+	return func(ctx Context) {
+		if ctx.Buf.Mode() == MODE_VISUAL {
+			defer SelectionStop(ctx.Buf)
+		}
 
-	for i := ctx.Buf.Cursor.Char - 1; i >= 0; i-- {
-		if string(line.Value[i]) == ctx.Char {
-			ctx.Buf.Cursor.Char = i
-			ctx.Buf.Cursor.PreserveCharPosition = i
-			break
+		line := CursorLine(ctx.Buf)
+		if line.Value.IsEmpty() {
+			return
+		}
+		for i := ctx.Buf.Cursor.Char + 1; i < len(line.Value); i++ {
+			if strings.EqualFold(string(line.Value[i]), ctx.Char) {
+				ctx.Buf.Cursor.Char = i
+				ctx.Buf.Cursor.PreserveCharPosition = i
+				break
+			}
+		}
+	}
+}
+
+func CmdBackwardChar(ctx Context) func(Context) {
+	return func(ctx Context) {
+		line := CursorLine(ctx.Buf)
+		if len(line.Value) == 0 {
+			return
+		}
+
+		for i := ctx.Buf.Cursor.Char - 1; i >= 0; i-- {
+			if string(line.Value[i]) == ctx.Char {
+				ctx.Buf.Cursor.Char = i
+				ctx.Buf.Cursor.PreserveCharPosition = i
+				break
+			}
 		}
 	}
 }
