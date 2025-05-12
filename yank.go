@@ -10,6 +10,7 @@ type Yanks struct {
 }
 
 func CmdYank(ctx Context) {
+	defer CmdNormalMode(ctx)
 	defer func() {
 		if ctx.Buf.Selection != nil {
 			ctx.Buf.Cursor = ctx.Buf.Selection.Start

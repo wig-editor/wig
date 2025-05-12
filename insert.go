@@ -1,23 +1,25 @@
 package mcwig
 
 import (
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 )
 
 func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
-	if ctx.Buf.Mode() != MODE_INSERT {
-		return
-	}
+	line := CursorLine(ctx.Buf)
 
 	{
-		if ev.Modifiers()&tcell.ModCtrl != 0 {
+		if ctx.Buf.Mode() != MODE_INSERT {
 			return
 		}
+		if ev.Modifiers()&tcell.ModCtrl != 0 {
 
+			return
+		}
 		if ev.Modifiers()&tcell.ModAlt != 0 {
 			return
 		}
-
 		if ev.Modifiers()&tcell.ModMeta != 0 {
 			return
 		}
@@ -28,18 +30,24 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		ch = '\n'
 	}
 
-	if ch == '\t' {
-		// exit on autocomplete twigger.
-		if ctx.Editor.AutocompleteTrigger(ctx) {
-			return
+	{
+		if ch == '\t' {
+			if strings.TrimSpace(line.Value.String()) == "" {
+				goto insertChar
+			}
+			if ctx.Buf.Cursor.Char >= len(line.Value.String())-1 {
+				if ctx.Editor.AutocompleteTrigger(ctx) {
+					return
+				}
+			}
 		}
 	}
+
+insertChar:
 
 	if ch == 0 {
 		return
 	}
-
-	line := CursorLine(ctx.Buf)
 
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 		start := ctx.Buf.Cursor
