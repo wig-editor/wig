@@ -7,7 +7,7 @@ Release v0.1:
 - per-window cursors
 - tab stop
 - snippets
-- autocomplete filter
++ autocomplete filter
 - indend
 - "e" command
 
