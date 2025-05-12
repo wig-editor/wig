@@ -2,6 +2,7 @@ package mcwig
 
 import (
 	"bytes"
+	"slices"
 	"testing"
 
 	"github.com/firstrow/mcwig/testutils"
@@ -20,8 +21,7 @@ func TestEdits(t *testing.T) {
 	// dup lines
 	cl := buf.Lines.First()
 	for cl != nil {
-		tmpData := make([]rune, len(cl.Value))
-		copy(tmpData, cl.Value)
+		tmpData := slices.Clone(cl.Value)
 		dupLines.PushBack(Line(tmpData))
 		cl = cl.Next()
 	}

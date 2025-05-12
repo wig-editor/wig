@@ -1,6 +1,9 @@
 package mcwig
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 type Position struct {
 	Line int
@@ -31,7 +34,7 @@ type EventsManager struct {
 	source         chan any
 	listeners      []chan Event
 	newListener    chan chan Event
-	removeListener chan (<-chan any)
+	removeListener chan (<-chan Event)
 }
 
 func NewEventsManager() *EventsManager {
@@ -39,13 +42,17 @@ func NewEventsManager() *EventsManager {
 		source:         make(chan any, 32),
 		listeners:      make([]chan Event, 32),
 		newListener:    make(chan chan Event, 32),
-		removeListener: make(chan (<-chan any)),
+		removeListener: make(chan (<-chan Event), 32),
 	}
 	go func() {
 		for {
 			select {
 			case l := <-e.newListener:
 				e.listeners = append(e.listeners, l)
+			case l := <-e.removeListener:
+				e.listeners = slices.DeleteFunc(e.listeners, func(delCh chan Event) bool {
+					return delCh == l
+				})
 			}
 		}
 	}()
@@ -59,9 +66,8 @@ func (e *EventsManager) Subscribe() <-chan Event {
 	return c
 }
 
-func (e *EventsManager) Unsubscribe(ch <-chan any) {
-	// TODO
-	// why even should I implement it?
+func (e *EventsManager) Unsubscribe(ch <-chan Event) {
+	e.removeListener <- ch
 }
 
 type Event struct {
@@ -83,3 +89,4 @@ func (e *EventsManager) Broadcast(msg any) {
 		wg.Wait()
 	}
 }
+

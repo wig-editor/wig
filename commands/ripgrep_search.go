@@ -167,3 +167,4 @@ func CmdProjectSearchWordUnderCursor(ctx mcwig.Context) {
 
 	rgDoSearch(ctx, pat)
 }
+

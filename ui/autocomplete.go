@@ -7,19 +7,24 @@ import (
 )
 
 type AutocompleteWidget struct {
-	ctx        mcwig.Context
-	triggerPos mcwig.Cursor
-	keymap     *mcwig.KeyHandler
-	pos        mcwig.Position
-	items      mcwig.CompletionItems
-	activeItem int
+	ctx            mcwig.Context
+	triggerPos     mcwig.Cursor
+	keymap         *mcwig.KeyHandler
+	pos            mcwig.Position
+	items          mcwig.CompletionItems
+	eventsListener <-chan mcwig.Event
+	activeItem     int
 }
 
 func (u *AutocompleteWidget) Plane() mcwig.RenderPlane {
 	return mcwig.PlaneWin
 }
 
-func AutocompleteInit(ctx mcwig.Context, pos mcwig.Position, items mcwig.CompletionItems) *AutocompleteWidget {
+func AutocompleteInit(
+	ctx mcwig.Context,
+	pos mcwig.Position,
+	items mcwig.CompletionItems,
+) *AutocompleteWidget {
 	if len(items.Items) == 0 {
 		return nil
 	}
@@ -34,7 +39,7 @@ func AutocompleteInit(ctx mcwig.Context, pos mcwig.Position, items mcwig.Complet
 	widget.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
 		mcwig.MODE_INSERT: mcwig.KeyMap{
 			"Esc": func(ctx mcwig.Context) {
-				ctx.Editor.PopUi()
+				widget.Close()
 			},
 			"Tab": func(ctx mcwig.Context) {
 				if widget.activeItem < len(widget.items.Items)-1 {
@@ -50,12 +55,35 @@ func AutocompleteInit(ctx mcwig.Context, pos mcwig.Position, items mcwig.Complet
 		},
 	})
 
-	// watch text change event for filter
-	// TODO....
+	widget.eventsListener = ctx.Editor.Events.Subscribe()
+	go func() {
+		for {
+			select {
+			case event := <-widget.eventsListener:
+				event.Wg.Done()
+
+				switch e := event.Msg.(type) {
+				case mcwig.EventTextChange:
+					widget.activeItem = 0
+					widget.items = ctx.Editor.Lsp.Completion(e.Buf)
+					if len(widget.items.Items) == 0 {
+						widget.Close()
+					}
+
+					ctx.Editor.Redraw()
+				}
+			}
+		}
+	}()
 
 	ctx.Editor.PushUi(widget)
 
 	return widget
+}
+
+func (w *AutocompleteWidget) Close() {
+	w.ctx.Editor.PopUi()
+	w.ctx.Editor.Events.Unsubscribe(w.eventsListener)
 }
 
 func (w *AutocompleteWidget) Mode() mcwig.Mode {
@@ -67,7 +95,7 @@ func (w *AutocompleteWidget) Keymap() *mcwig.KeyHandler {
 }
 
 func (w *AutocompleteWidget) selectItem(ctx mcwig.Context) {
-	defer ctx.Editor.PopUi()
+	defer w.Close()
 
 	line := mcwig.CursorLine(ctx.Buf)
 

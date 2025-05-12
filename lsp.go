@@ -360,9 +360,9 @@ func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 			},
 		},
 		Context: &protocol.CompletionContext{
-			// TriggerKind: protocol.CompletionTriggerKindInvoked,
 			TriggerCharacter: ".",
 			TriggerKind:      protocol.CompletionTriggerKindTriggerCharacter,
+			// TriggerKind: protocol.CompletionTriggerKindInvoked,
 		},
 	}
 
@@ -532,3 +532,4 @@ func (l *lspConn) didOpen(buf *Buffer) {
 		panic(err.Error())
 	}
 }
+
