@@ -8,7 +8,7 @@ Release v0.1:
 - tab stop
 - snippets
 + autocomplete filter
-- indend for text(TAB)
++ indend for text(TAB)
 - auto indent with tree-sitter
 - "e" command
 

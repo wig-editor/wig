@@ -98,7 +98,6 @@ func (w *AutocompleteWidget) selectItem(ctx mcwig.Context) {
 	defer w.Close()
 
 	line := mcwig.CursorLine(ctx.Buf)
-
 	item := w.items.Items[w.activeItem]
 	text := item.TextEdit.NewText
 	pos := item.TextEdit.Insert.Start.Character
@@ -113,8 +112,14 @@ func (w *AutocompleteWidget) selectItem(ctx mcwig.Context) {
 			Char: item.TextEdit.Replace.End.Character,
 		},
 	})
+
+	chpos := len(text)
+	if item.InsertTextFormat == 2 {
+		text, chpos = mcwig.SnippetProcessString(text)
+	}
+
 	mcwig.TextInsert(ctx.Buf, line, int(pos), text)
-	ctx.Buf.Cursor.Char = item.TextEdit.Replace.Start.Character + len(text)
+	ctx.Buf.Cursor.Char = item.TextEdit.Replace.Start.Character + chpos
 }
 
 func (w *AutocompleteWidget) Render(view mcwig.View) {

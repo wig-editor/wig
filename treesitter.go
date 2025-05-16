@@ -272,3 +272,4 @@ func (c *TreeSitterNodeCursor) Seek(line, ch uint32) (node *Element[TreeSitterRa
 
 	return nil, false
 }
+

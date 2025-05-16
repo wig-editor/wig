@@ -20,6 +20,21 @@ func CmdYank(ctx Context) {
 	yankSave(ctx)
 }
 
+func CmdYankEol(ctx Context) {
+	defer CmdNormalMode(ctx)
+	defer func() {
+		if ctx.Buf.Selection != nil {
+			ctx.Buf.Cursor = ctx.Buf.Selection.Start
+		}
+		ctx.Buf.Selection = nil
+	}()
+	SelectionStart(ctx.Buf)
+	WithSelection(CmdGotoLineEnd)(ctx)
+	CmdCursorLeft(ctx)
+	SelectionStop(ctx.Buf)
+	yankSave(ctx)
+}
+
 func CmdYankPut(ctx Context) {
 	if ctx.Editor.Yanks.Len == 0 {
 		return

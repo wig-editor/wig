@@ -518,7 +518,6 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer)
 }
 
 func (l *lspConn) didOpen(buf *Buffer) {
-	// didOpen
 	didOpen := protocol.DidOpenTextDocumentParams{
 		TextDocument: protocol.TextDocumentItem{
 			URI:        protocol.DocumentURI(fmt.Sprintf("file://%s", buf.FilePath)),

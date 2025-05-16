@@ -71,6 +71,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			},
 			"y": mcwig.KeyMap{
 				"y": mcwig.CmdYank,
+				"$": mcwig.CmdYankEol,
 			},
 			"g": mcwig.KeyMap{
 				"g": mcwig.CmdGotoLine0,
@@ -159,6 +160,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"ctrl+b": mcwig.CmdCursorLeft,
 			"ctrl+j": mcwig.CmdCursorLineDown,
 			"ctrl+k": mcwig.CmdCursorLineUp,
+			"ctrl+n": mcwig.CmdAutocompleteTrigger,
 		},
 	}
 }

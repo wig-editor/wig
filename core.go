@@ -578,3 +578,7 @@ func CmdMacroRepeat(ctx Context) {
 	ctx.Editor.Keys.Macros.Play(".")
 }
 
+func CmdAutocompleteTrigger(ctx Context) {
+	ctx.Editor.AutocompleteTrigger(ctx)
+}
+

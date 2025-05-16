@@ -27,7 +27,7 @@ var styles map[string]tcell.Style
 var currentTheme Theme
 
 func init() {
-	ApplyTheme("boo_berry")
+	ApplyTheme("kaolin-dark")
 }
 
 func ApplyTheme(name string) {
