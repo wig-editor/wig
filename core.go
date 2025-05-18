@@ -422,15 +422,13 @@ func CmdKillBuffer(ctx Context) {
 	}
 
 	// remove from buffers list
-	// ands moves to the next buffer
+	// and move to the next buffer
 	for i, b := range buffers {
 		if b == ctx.Buf {
-			buffers = append(buffers[:i], buffers[i+1:]...)
+			buffers = slices.Delete(buffers, i, i)
 			if len(buffers) > 0 {
 				idx := i - 1
-				if idx < 0 {
-					idx = 0
-				}
+				idx = max(idx, 0)
 				ctx.Editor.ActiveWindow().VisitBuffer(buffers[idx])
 			}
 		}
