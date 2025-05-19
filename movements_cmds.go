@@ -119,33 +119,50 @@ func CmdGotoLineEnd(ctx Context) {
 func CmdForwardWord(ctx Context) {
 	defer CmdEnsureCursorVisible(ctx)
 
-	line := CursorLine(ctx.Buf)
-	cls := CursorChClass(ctx.Buf)
-	CursorInc(ctx.Buf)
+	// on line change skip all whitespaces
+	startLine := ctx.Buf.Cursor.Char
+	defer func() {
+		if startLine != ctx.Buf.Cursor.Line {
+			for CursorChClass(ctx.Buf) == chWhitespace {
+				if !CursorInc(ctx.Buf) {
+					return
+				}
+			}
+		}
+	}()
 
-	// return on line change
-	if line != CursorLine(ctx.Buf) {
-		return
-	}
+	count := max(ctx.Count, 1)
 
-	if cls != chWhitespace {
-		for CursorChClass(ctx.Buf) == cls {
+	for i := uint32(0); i < count; i++ {
+		line := CursorLine(ctx.Buf)
+		cls := CursorChClass(ctx.Buf)
+		CursorInc(ctx.Buf)
+
+		// return on line change
+		if line != CursorLine(ctx.Buf) {
+			return
+		}
+
+		if cls != chWhitespace {
+			for CursorChClass(ctx.Buf) == cls {
+				if !CursorInc(ctx.Buf) {
+					return
+				}
+			}
+		}
+
+		// skip whitespace
+		line = CursorLine(ctx.Buf)
+		for CursorChClass(ctx.Buf) == chWhitespace {
 			if !CursorInc(ctx.Buf) {
+				return
+			}
+			if line != CursorLine(ctx.Buf) {
 				return
 			}
 		}
 	}
 
-	// skip whitespace
-	line = CursorLine(ctx.Buf)
-	for CursorChClass(ctx.Buf) == chWhitespace {
-		if !CursorInc(ctx.Buf) {
-			return
-		}
-		if line != CursorLine(ctx.Buf) {
-			return
-		}
-	}
 }
 
 func CmdBackwardWord(ctx Context) {
@@ -338,4 +355,3 @@ func CmdBufferCycle(ctx Context) {
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
 }
-
