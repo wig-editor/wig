@@ -120,7 +120,6 @@ func CmdForwardWord(ctx Context) {
 	defer CmdEnsureCursorVisible(ctx)
 
 	line := CursorLine(ctx.Buf)
-
 	cls := CursorChClass(ctx.Buf)
 	CursorInc(ctx.Buf)
 
@@ -151,33 +150,11 @@ func CmdForwardWord(ctx Context) {
 
 func CmdBackwardWord(ctx Context) {
 	defer CmdEnsureCursorVisible(ctx)
+	defer CursorInc(ctx.Buf)
 
-	line := CursorLine(ctx.Buf)
 	cls := CursorChClass(ctx.Buf)
 	CursorDec(ctx.Buf)
 
-	// return on line change
-	if line != CursorLine(ctx.Buf) {
-		return
-	}
-
-	if cls != chWhitespace && CursorChClass(ctx.Buf) == cls {
-		for {
-			if ctx.Buf.Cursor.Char == 0 {
-				return
-			}
-			if CursorChClass(ctx.Buf) != cls {
-				CursorInc(ctx.Buf)
-				return
-			}
-
-			if !CursorDec(ctx.Buf) {
-				return
-			}
-		}
-	}
-
-	// skip !=cls and whitespace
 	for CursorChClass(ctx.Buf) == chWhitespace {
 		if !CursorDec(ctx.Buf) {
 			return
@@ -186,17 +163,13 @@ func CmdBackwardWord(ctx Context) {
 
 	cls = CursorChClass(ctx.Buf)
 	for {
-		if ctx.Buf.Cursor.Char == 0 {
-			return
-		}
 		if CursorChClass(ctx.Buf) == cls {
 			if !CursorDec(ctx.Buf) {
 				return
 			}
 			continue
 		}
-		CursorInc(ctx.Buf)
-		break
+		return
 	}
 }
 
