@@ -162,7 +162,6 @@ func CmdForwardWord(ctx Context) {
 			}
 		}
 	}
-
 }
 
 func CmdBackwardWord(ctx Context) {
@@ -172,21 +171,25 @@ func CmdBackwardWord(ctx Context) {
 	cls := CursorChClass(ctx.Buf)
 	CursorDec(ctx.Buf)
 
-	for CursorChClass(ctx.Buf) == chWhitespace {
-		if !CursorDec(ctx.Buf) {
-			return
-		}
-	}
+	count := max(ctx.Count, 1)
 
-	cls = CursorChClass(ctx.Buf)
-	for {
-		if CursorChClass(ctx.Buf) == cls {
+	for i := uint32(0); i < count; i++ {
+		for CursorChClass(ctx.Buf) == chWhitespace {
 			if !CursorDec(ctx.Buf) {
 				return
 			}
-			continue
 		}
-		return
+
+		cls = CursorChClass(ctx.Buf)
+		for {
+			if CursorChClass(ctx.Buf) == cls {
+				if !CursorDec(ctx.Buf) {
+					return
+				}
+				continue
+			}
+			break
+		}
 	}
 }
 
@@ -355,3 +358,4 @@ func CmdBufferCycle(ctx Context) {
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
 }
+
