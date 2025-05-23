@@ -11,7 +11,6 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 		mcwig.MODE_NORMAL: mcwig.KeyMap{
 			// personal config
 			"F2": commands.CmdFormatBufferAndSave,
-			"F5": commands.CmdMakeRun,
 
 			"ctrl+e": mcwig.CmdScrollDown,
 			"ctrl+y": mcwig.CmdScrollUp,

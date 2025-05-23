@@ -347,9 +347,3 @@ func CmdReloadBuffer(ctx mcwig.Context) {
 	}
 }
 
-func CmdMakeRun(ctx mcwig.Context) {
-	cmd := exec.Command("tmux", "send-keys", "-t", "mcwig:1.2", "make run", "Enter")
-	cmd.Dir = ctx.Editor.Projects.GetRoot()
-	cmd.Start()
-}
-
