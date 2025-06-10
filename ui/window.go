@@ -95,6 +95,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				ch := getRenderChar(currentLine.Value[i])
 
 				// todo: handle tabs colors?
+				// render text
 				view.SetContent(x, y, string(ch), textStyle)
 
 				// render cursor

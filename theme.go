@@ -21,6 +21,7 @@ type Style struct {
 		Color string
 		Style string
 	}
+	Modifiers []string
 }
 
 var styles map[string]tcell.Style
