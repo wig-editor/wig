@@ -32,13 +32,14 @@ Most common Vim keybindings are implemented, providing minimal but enough (for m
 
 To get started:
 
-| **Key**     | **Description**           |
-|-------------|---------------------------|
-| Space + F   | Find files in Git project  |
-| Space + B   | Buffers                   |
-| Ctrl-W + V  | Split window              |
-| Space + `   | Toggle file               |
-| Space + /   | Search text in project    |
+| **Key**       | **Description**           |
+|-------------- |---------------------------|
+| Space + f     | Find files in Git project |
+| Space + b     | Buffers                   |
+| Space + s + s | Fuzzy text search         |
+| Ctrl-W + V    | Split window              |
+| Space + `     | Toggle file               |
+| Space +   /   | Search text in project    |
 
 ---
 
