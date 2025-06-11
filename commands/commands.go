@@ -51,8 +51,11 @@ func CmdThemeSelect(ctx mcwig.Context) {
 		action,
 		items,
 	)
+
 	picker.OnSelect(func(item *ui.PickerItem[string]) {
 		mcwig.ApplyTheme(item.Value)
+		ctx.Editor.Redraw()
+		ctx.Editor.ScreenSync()
 	})
 }
 

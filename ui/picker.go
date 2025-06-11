@@ -65,18 +65,13 @@ func PickerInit[T any](e *mcwig.Editor, action PickerAction[T], items []PickerIt
 			"Tab": func(ctx mcwig.Context) {
 				if picker.activeItem < len(picker.filtered)-1 {
 					picker.activeItem++
-					if picker.activeItemT != nil {
-						// TODO: fixme. this selects previous theme
-						picker.onSelect(picker.activeItemT)
-					}
+					picker.onSelect(&picker.filtered[picker.activeItem])
 				}
 			},
 			"Backtab": func(ctx mcwig.Context) {
 				if picker.activeItem > 0 {
 					picker.activeItem--
-					if picker.activeItemT != nil {
-						picker.onSelect(picker.activeItemT)
-					}
+					picker.onSelect(&picker.filtered[picker.activeItem])
 				}
 			},
 			"Enter": func(ctx mcwig.Context) {
