@@ -3,6 +3,8 @@
 Hi! Welcome to my text editor page.
 McWig is a modal, Vim-like text editor written in Go. I use it as my daily driver, btw.
 
+[<img src="preview.png">](https://asciinema.org/a/GOLMKg40rnXNlkjNUt3Mt8q2k)
+
 **Note:** McWig currently supports only `.go` files. Do not edit files that are not backed up. McWig is still in an early stage of development and may damage your files.
 
 ### Features
