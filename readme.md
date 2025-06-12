@@ -36,6 +36,8 @@ To get started:
 
 | **Key**       | **Description**           |
 |-------------- |---------------------------|
+| Tab           | Next element in popup     |
+| Shift-Tab     | Prev element in popup     |
 | Space + f     | Find files in Git project |
 | Space + b     | Buffers                   |
 | Space + s + s | Fuzzy text search         |
