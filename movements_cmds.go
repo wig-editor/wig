@@ -110,6 +110,12 @@ func CmdGotoLine0(ctx Context) {
 	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf)
 }
 
+func CmdGotoLineEndOfFile(ctx Context) {
+	defer CmdEnsureCursorVisible(ctx)
+	ctx.Buf.Cursor.Line = ctx.Buf.Lines.Len-1
+	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf)
+}
+
 func CmdGotoLineEnd(ctx Context) {
 	line := CursorLine(ctx.Buf)
 	ctx.Buf.Cursor.Char = len(line.Value) - 1
@@ -358,4 +364,3 @@ func CmdBufferCycle(ctx Context) {
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
 }
-

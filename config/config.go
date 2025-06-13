@@ -39,6 +39,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 			"f":      mcwig.CmdForwardToChar,
 			"t":      mcwig.CmdForwardBeforeChar,
 			"F":      mcwig.CmdBackwardChar,
+			"G":      mcwig.CmdGotoLineEndOfFile,
 			"n":      mcwig.CmdSearchNext,
 			"N":      mcwig.CmdSearchPrev,
 			"u":      mcwig.CmdUndo,
@@ -163,4 +164,3 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 		},
 	}
 }
-
