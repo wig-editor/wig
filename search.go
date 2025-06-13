@@ -6,7 +6,7 @@ import (
 	str "github.com/boyter/go-string"
 )
 
-// Move cursor to the next search patten match
+// Move cursor to the next search pattern match
 func SearchNext(ctx Context, pattern string) {
 	defer CmdEnsureCursorVisible(ctx)
 
