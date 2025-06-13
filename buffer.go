@@ -29,7 +29,7 @@ func (m Mode) String() string {
 	return "VIS"
 }
 
-// Driver represents anything that can run selected text. it can be sql conncetion,
+// Driver represents anything that can run selected text. it can be sql connection,
 // or rest client.
 type Driver interface {
 	// Execute thing under cursor: line or seleciton
