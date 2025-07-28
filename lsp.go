@@ -69,7 +69,6 @@ func NewLspManager(e *Editor) *LspManager {
 	return r
 }
 
-// TODO: check for supported file extension before doing anything
 func (l *LspManager) DidOpen(buf *Buffer) {
 	root, _ := l.e.Projects.FindRoot(buf)
 
