@@ -84,21 +84,24 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 
 	// initialize
 	if !ok {
-		conf, ok := LspConfigByFileName(buf.FilePath)
-		if !ok {
-			l.ignore[root] = true
-			return
-		}
+		go func() {
+			conf, ok := LspConfigByFileName(buf.FilePath)
+			if !ok {
+				l.ignore[root] = true
+				return
+			}
 
-		// starts server and returns client conn
-		client, err = l.startAndInitializeServer(conf, buf)
-		if err != nil {
-			l.e.LogMessage("failed to start tcp server")
-			l.e.EchoMessage("failed to start tcp server")
-			return
-		}
+			// starts server and returns client conn
+			client, err = l.startAndInitializeServer(conf, buf)
+			if err != nil {
+				l.e.LogMessage("failed to start tcp server")
+				l.e.EchoMessage("failed to start tcp server")
+				return
+			}
 
-		l.conns[root] = client
+			l.conns[root] = client
+		}()
+		return
 	}
 
 	client.didOpen(buf)
