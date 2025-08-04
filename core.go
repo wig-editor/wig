@@ -405,26 +405,27 @@ func CmdKillBuffer(ctx Context) {
 		return
 	}
 
-	// cleanup all nodes
-	{
-		l := ctx.Buf.Lines.First()
-		for l != nil {
-			next := l.Next()
-			l.Value = nil
-			ctx.Buf.Lines.Remove(l)
-			l = next
-		}
-		ctx.Buf.Selection = nil
-		ctx.Buf.Highlighter = nil
-		ctx.Buf.UndoRedo = nil
-		ctx.Buf.Tx = nil
-
-	}
-
 	// remove from buffers list
 	// and move to the next buffer
 	for i, b := range buffers {
 		if b == ctx.Buf {
+
+			// cleanup all nodes
+			{
+				l := ctx.Buf.Lines.First()
+				for l != nil {
+					next := l.Next()
+					l.Value = nil
+					ctx.Buf.Lines.Remove(l)
+					l = next
+				}
+				ctx.Buf.Selection = nil
+				ctx.Buf.Highlighter = nil
+				ctx.Buf.UndoRedo = nil
+				ctx.Buf.Tx = nil
+
+			}
+
 			buffers = slices.Delete(buffers, i, i+1)
 			if len(buffers) > 0 {
 				idx := i - 1
