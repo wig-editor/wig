@@ -425,7 +425,7 @@ func CmdKillBuffer(ctx Context) {
 	// and move to the next buffer
 	for i, b := range buffers {
 		if b == ctx.Buf {
-			buffers = slices.Delete(buffers, i, i)
+			buffers = slices.Delete(buffers, i, i+1)
 			if len(buffers) > 0 {
 				idx := i - 1
 				idx = max(idx, 0)
