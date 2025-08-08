@@ -112,7 +112,7 @@ func CmdGotoLine0(ctx Context) {
 
 func CmdGotoLineEndOfFile(ctx Context) {
 	defer CmdEnsureCursorVisible(ctx)
-	ctx.Buf.Cursor.Line = ctx.Buf.Lines.Len-1
+	ctx.Buf.Cursor.Line = ctx.Buf.Lines.Len - 1
 	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf)
 }
 
@@ -301,6 +301,11 @@ func CmdWindowClose(ctx Context) {
 	}
 }
 
+func CmdWindowCloseAndKillBuffer(ctx Context) {
+	CmdKillBuffer(ctx)
+	CmdWindowClose(ctx)
+}
+
 func CmdEnsureCursorVisible(ctx Context) {
 	defer func() {
 		if ctx.Buf.ScrollOffset < 0 {
@@ -364,3 +369,4 @@ func CmdBufferCycle(ctx Context) {
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
 }
+

@@ -88,6 +88,7 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 				"v":      mcwig.CmdWindowVSplit,
 				"w":      mcwig.CmdWindowNext,
 				"q":      mcwig.CmdWindowClose,
+				"c":      mcwig.CmdWindowCloseAndKillBuffer,
 				"ctrl+w": mcwig.CmdWindowNext,
 				"t":      mcwig.CmdWindowToggleLayout,
 			},
@@ -164,3 +165,4 @@ func DefaultKeyMap() mcwig.ModeKeyMap {
 		},
 	}
 }
+
