@@ -101,11 +101,24 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				// render cursor
 				if isActiveWin {
 					if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {
-						s := mcwig.Color("ui.cursor")
-						if buf.Mode() == mcwig.MODE_INSERT {
-							s = mcwig.Color("ui.cursor.insert")
+						baseCursor, found := mcwig.FindColor("ui.selection")
+						if !found {
+							panic("theme ui.selection not defined")
 						}
-						view.SetContent(x, y, string(ch[0]), s)
+						if c, found := mcwig.FindColor("ui.cursor"); found {
+							baseCursor = c
+						}
+						if buf.Mode() == mcwig.MODE_INSERT {
+							if c, found := mcwig.FindColor("ui.cursor.primary.insert"); found {
+								baseCursor = c
+							}
+						}
+						if buf.Mode() == mcwig.MODE_VISUAL {
+							if c, found := mcwig.FindColor("ui.cursor.primary.select"); found {
+								baseCursor = c
+							}
+						}
+						view.SetContent(x, y, string(ch[0]), baseCursor)
 					}
 				}
 

@@ -21,7 +21,8 @@ type Style struct {
 		Color string
 		Style string
 	}
-	Modifiers []string
+	Reversed bool
+	Tcell    tcell.Style
 }
 
 var styles map[string]tcell.Style
@@ -94,6 +95,7 @@ func loadColors(name string) Theme {
 // ui.menu.selected should be build from ui.menu
 func buildStyles() {
 	styles = map[string]tcell.Style{}
+
 	for k := range currentTheme.Colors {
 		styles[k] = getColor(k)
 	}
@@ -144,10 +146,21 @@ func parseColors(theme map[string]any) map[string]Style {
 				}
 			}
 
+			reversed := false
+			if values["modifiers"] != nil {
+				v := values["modifiers"].([]any)
+				for _, v := range v {
+					if v.(string) == "reversed" {
+						reversed = true
+					}
+				}
+			}
+
 			conf = Style{
 				Fg:        fg,
 				Bg:        bg,
 				Underline: underline,
+				Reversed:  reversed,
 			}
 		}
 
@@ -196,6 +209,15 @@ func Color(color string) tcell.Style {
 	return styles["default"]
 }
 
+func FindColor(color string) (s tcell.Style, found bool) {
+	s, ok := styles[color]
+	if ok {
+		return s, true
+	}
+
+	return styles["default"], false
+}
+
 func getColor(color string) tcell.Style {
 	defaultBg := currentTheme.Palette[currentTheme.Colors["ui.background"].Bg]
 	defaultFg := currentTheme.Palette[currentTheme.Colors["ui.text"].Fg]
@@ -219,6 +241,9 @@ func getColor(color string) tcell.Style {
 			bgColor = defaultBg
 		}
 
+		for val.Reversed {
+			return tcell.StyleDefault.Background(tcell.GetColor(fgColor)).Foreground(tcell.GetColor(bgColor))
+		}
 		return tcell.StyleDefault.Background(tcell.GetColor(bgColor)).Foreground(tcell.GetColor(fgColor))
 	}
 
