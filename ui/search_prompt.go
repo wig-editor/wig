@@ -4,29 +4,29 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/firstrow/mcwig"
+	"github.com/firstrow/wig"
 	"github.com/gdamore/tcell/v2"
 )
 
 type uiSearchPrompt struct {
-	e      *mcwig.Editor
-	keymap *mcwig.KeyHandler
+	e      *wig.Editor
+	keymap *wig.KeyHandler
 	chBuf  []rune
 }
 
-func (u *uiSearchPrompt) Plane() mcwig.RenderPlane {
-	return mcwig.PlaneEditor
+func (u *uiSearchPrompt) Plane() wig.RenderPlane {
+	return wig.PlaneEditor
 }
 
-func CmdSearchPromptInit(ctx mcwig.Context) {
+func CmdSearchPromptInit(ctx wig.Context) {
 	cmdLine := &uiSearchPrompt{
 		e:     ctx.Editor,
 		chBuf: []rune{},
 	}
 
-	cmdLine.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
-		mcwig.MODE_NORMAL: mcwig.KeyMap{
-			"Esc": func(ctx mcwig.Context) {
+	cmdLine.keymap = wig.NewKeyHandler(wig.ModeKeyMap{
+		wig.MODE_NORMAL: wig.KeyMap{
+			"Esc": func(ctx wig.Context) {
 				ctx.Editor.PopUi()
 			},
 		},
@@ -35,7 +35,7 @@ func CmdSearchPromptInit(ctx mcwig.Context) {
 	ctx.Editor.PushUi(cmdLine)
 }
 
-func (u *uiSearchPrompt) insertCh(ctx mcwig.Context, ev *tcell.EventKey) {
+func (u *uiSearchPrompt) insertCh(ctx wig.Context, ev *tcell.EventKey) {
 	if ev.Modifiers()&tcell.ModCtrl != 0 {
 		return
 	}
@@ -68,16 +68,16 @@ func (u *uiSearchPrompt) insertCh(ctx mcwig.Context, ev *tcell.EventKey) {
 
 func (u *uiSearchPrompt) execute(cmd string) {
 	pat := strings.TrimSpace(cmd)
-	mcwig.LastSearchPattern = pat
-	mcwig.SearchNext(u.e.NewContext(), pat)
+	wig.LastSearchPattern = pat
+	wig.SearchNext(u.e.NewContext(), pat)
 }
 
-func (u *uiSearchPrompt) Keymap() *mcwig.KeyHandler {
+func (u *uiSearchPrompt) Keymap() *wig.KeyHandler {
 	return u.keymap
 }
 
-func (u *uiSearchPrompt) Render(view mcwig.View) {
-	st := mcwig.Color("statusline")
+func (u *uiSearchPrompt) Render(view wig.View) {
+	st := wig.Color("statusline")
 	w, h := view.Size()
 	h -= 1
 
@@ -88,7 +88,7 @@ func (u *uiSearchPrompt) Render(view mcwig.View) {
 	view.SetContent(0, h, msg, st)
 }
 
-func (u *uiSearchPrompt) Mode() mcwig.Mode {
-	return mcwig.MODE_NORMAL
+func (u *uiSearchPrompt) Mode() wig.Mode {
+	return wig.MODE_NORMAL
 }
 

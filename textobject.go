@@ -1,4 +1,4 @@
-package mcwig
+package wig
 
 func TextObjectWord(buf *Buffer, bigword bool) (start, end int) {
 	start = buf.Cursor.Char

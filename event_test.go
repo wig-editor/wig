@@ -1,15 +1,15 @@
-package mcwig
+package wig
 
 import (
 	"sync"
 	"testing"
 
-	"github.com/firstrow/mcwig/testutils"
+	"github.com/firstrow/wig/testutils"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBuildTextChangeEvent(t *testing.T) {
-	source := `package mcwig
+	source := `package wig
 
 import "fmt"
 

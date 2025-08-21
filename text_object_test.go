@@ -1,10 +1,10 @@
-package mcwig
+package wig
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/firstrow/mcwig/testutils"
+	"github.com/firstrow/wig/testutils"
 	"github.com/stretchr/testify/require"
 )
 

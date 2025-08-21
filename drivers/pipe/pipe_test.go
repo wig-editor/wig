@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/firstrow/mcwig"
-	"github.com/firstrow/mcwig/testutils"
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/testutils"
 )
 
 func TestPipe(t *testing.T) {
-	e := mcwig.NewEditor(
+	e := wig.NewEditor(
 		testutils.Viewport,
 		nil,
 	)
@@ -45,7 +45,7 @@ func TestPipe(t *testing.T) {
 }
 
 func Test_LongRunningProcess(t *testing.T) {
-	e := mcwig.NewEditor(
+	e := wig.NewEditor(
 		testutils.Viewport,
 		nil,
 	)
@@ -75,7 +75,7 @@ func Test_LongRunningProcess(t *testing.T) {
 }
 
 func Test_ParseHeader(t *testing.T) {
-	e := mcwig.NewEditor(
+	e := wig.NewEditor(
 		testutils.Viewport,
 		nil,
 	)

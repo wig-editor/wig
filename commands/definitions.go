@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/firstrow/mcwig"
+	"github.com/firstrow/wig"
 )
 
 type CmdDefinition struct {
@@ -12,8 +12,8 @@ type CmdDefinition struct {
 var AllCommands = map[string]CmdDefinition{
 	"CmdFormatBuffer":  {Desc: "", Fn: CmdFormatBuffer},
 	"CmdSearchProject": {Desc: "", Fn: CmdSearchProject},
-	"CmdJumpForward":   {Desc: "", Fn: mcwig.CmdJumpForward},
+	"CmdJumpForward":   {Desc: "", Fn: wig.CmdJumpForward},
 	"CmdReloadBuffer":  {Desc: "", Fn: CmdReloadBuffer},
-	"CmdNewBuffer":     {Desc: "", Fn: mcwig.CmdNewBuffer},
+	"CmdNewBuffer":     {Desc: "", Fn: wig.CmdNewBuffer},
 }
 

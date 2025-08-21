@@ -1,4 +1,4 @@
-package mcwig
+package wig
 
 import (
 	"bufio"

@@ -1,10 +1,10 @@
-package mcwig
+package wig
 
 var lspServerInitJson = `{
   "processId": null,
   "rootPath": "",
   "clientInfo": {
-    "name": "mcwig",
+    "name": "wig",
     "version": "001"
   },
   "rootUri": "",

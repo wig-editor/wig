@@ -3,27 +3,27 @@ package ui
 import (
 	"math"
 
-	"github.com/firstrow/mcwig"
+	"github.com/firstrow/wig"
 )
 
 type AutocompleteWidget struct {
-	ctx            mcwig.Context
-	triggerPos     mcwig.Cursor
-	keymap         *mcwig.KeyHandler
-	pos            mcwig.Position
-	items          mcwig.CompletionItems
-	eventsListener <-chan mcwig.Event
+	ctx            wig.Context
+	triggerPos     wig.Cursor
+	keymap         *wig.KeyHandler
+	pos            wig.Position
+	items          wig.CompletionItems
+	eventsListener <-chan wig.Event
 	activeItem     int
 }
 
-func (u *AutocompleteWidget) Plane() mcwig.RenderPlane {
-	return mcwig.PlaneWin
+func (u *AutocompleteWidget) Plane() wig.RenderPlane {
+	return wig.PlaneWin
 }
 
 func AutocompleteInit(
-	ctx mcwig.Context,
-	pos mcwig.Position,
-	items mcwig.CompletionItems,
+	ctx wig.Context,
+	pos wig.Position,
+	items wig.CompletionItems,
 ) *AutocompleteWidget {
 	if len(items.Items) == 0 {
 		return nil
@@ -36,17 +36,17 @@ func AutocompleteInit(
 		activeItem: 0,
 	}
 
-	widget.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
-		mcwig.MODE_INSERT: mcwig.KeyMap{
-			"Esc": func(ctx mcwig.Context) {
+	widget.keymap = wig.NewKeyHandler(wig.ModeKeyMap{
+		wig.MODE_INSERT: wig.KeyMap{
+			"Esc": func(ctx wig.Context) {
 				widget.Close()
 			},
-			"Tab": func(ctx mcwig.Context) {
+			"Tab": func(ctx wig.Context) {
 				if widget.activeItem < len(widget.items.Items)-1 {
 					widget.activeItem++
 				}
 			},
-			"Backtab": func(ctx mcwig.Context) {
+			"Backtab": func(ctx wig.Context) {
 				if widget.activeItem > 0 {
 					widget.activeItem--
 				}
@@ -63,7 +63,7 @@ func AutocompleteInit(
 				event.Wg.Done()
 
 				switch e := event.Msg.(type) {
-				case mcwig.EventTextChange:
+				case wig.EventTextChange:
 					widget.activeItem = 0
 					widget.items = ctx.Editor.Lsp.Completion(e.Buf)
 					if len(widget.items.Items) == 0 {
@@ -86,28 +86,28 @@ func (w *AutocompleteWidget) Close() {
 	w.ctx.Editor.Events.Unsubscribe(w.eventsListener)
 }
 
-func (w *AutocompleteWidget) Mode() mcwig.Mode {
-	return mcwig.MODE_INSERT
+func (w *AutocompleteWidget) Mode() wig.Mode {
+	return wig.MODE_INSERT
 }
 
-func (w *AutocompleteWidget) Keymap() *mcwig.KeyHandler {
+func (w *AutocompleteWidget) Keymap() *wig.KeyHandler {
 	return w.keymap
 }
 
-func (w *AutocompleteWidget) selectItem(ctx mcwig.Context) {
+func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 	defer w.Close()
 
-	line := mcwig.CursorLine(ctx.Buf)
+	line := wig.CursorLine(ctx.Buf)
 	item := w.items.Items[w.activeItem]
 	text := item.TextEdit.NewText
 	pos := item.TextEdit.Insert.Start.Character
 
-	mcwig.TextDelete(ctx.Buf, &mcwig.Selection{
-		Start: mcwig.Cursor{
+	wig.TextDelete(ctx.Buf, &wig.Selection{
+		Start: wig.Cursor{
 			Line: item.TextEdit.Replace.Start.Line,
 			Char: item.TextEdit.Replace.Start.Character,
 		},
-		End: mcwig.Cursor{
+		End: wig.Cursor{
 			Line: item.TextEdit.Replace.End.Line,
 			Char: item.TextEdit.Replace.End.Character,
 		},
@@ -115,14 +115,14 @@ func (w *AutocompleteWidget) selectItem(ctx mcwig.Context) {
 
 	chpos := len(text)
 	if item.InsertTextFormat == 2 {
-		text, chpos = mcwig.SnippetProcessString(text)
+		text, chpos = wig.SnippetProcessString(text)
 	}
 
-	mcwig.TextInsert(ctx.Buf, line, int(pos), text)
+	wig.TextInsert(ctx.Buf, line, int(pos), text)
 	ctx.Buf.Cursor.Char = item.TextEdit.Replace.Start.Character + chpos
 }
 
-func (w *AutocompleteWidget) Render(view mcwig.View) {
+func (w *AutocompleteWidget) Render(view wig.View) {
 	x := w.pos.Char + 2
 	y := w.pos.Line - w.ctx.Buf.ScrollOffset + 1
 
@@ -133,7 +133,7 @@ func (w *AutocompleteWidget) Render(view mcwig.View) {
 		y -= maxItems + 2
 	}
 
-	drawBoxNoBorder(view, w.pos.Char, y, 50, maxItems, mcwig.Color("ui.menu"))
+	drawBoxNoBorder(view, w.pos.Char, y, 50, maxItems, wig.Color("ui.menu"))
 
 	// pagination
 	pageSize := maxItems
@@ -146,9 +146,9 @@ func (w *AutocompleteWidget) Render(view mcwig.View) {
 	dataset := w.items.Items[startIndex:endIndex]
 
 	for i, row := range dataset {
-		st := mcwig.Color("ui.menu")
+		st := wig.Color("ui.menu")
 		if i+startIndex == w.activeItem {
-			st = mcwig.Color("ui.menu.selected")
+			st = wig.Color("ui.menu.selected")
 		}
 
 		label := row.Label

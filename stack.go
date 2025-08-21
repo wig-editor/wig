@@ -1,4 +1,4 @@
-package mcwig
+package wig
 
 type Stack[T any] struct {
 	elements []T

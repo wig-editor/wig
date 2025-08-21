@@ -1,4 +1,4 @@
-module github.com/firstrow/mcwig
+module github.com/firstrow/wig
 
 go 1.22.2
 

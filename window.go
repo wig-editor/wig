@@ -1,4 +1,4 @@
-package mcwig
+package wig
 
 type Window struct {
 	buf   *Buffer // active buffer

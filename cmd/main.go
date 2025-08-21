@@ -8,11 +8,11 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 
-	"github.com/firstrow/mcwig"
-	"github.com/firstrow/mcwig/autocomplete"
-	"github.com/firstrow/mcwig/config"
-	"github.com/firstrow/mcwig/metrics"
-	"github.com/firstrow/mcwig/render"
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/autocomplete"
+	"github.com/firstrow/wig/config"
+	"github.com/firstrow/wig/metrics"
+	"github.com/firstrow/wig/render"
 )
 
 func main() {
@@ -32,9 +32,9 @@ func main() {
 	tscreen.Sync()
 	w, h := tscreen.Size()
 
-	editor := mcwig.NewEditor(
+	editor := wig.NewEditor(
 		render.NewMView(tscreen, 0, 0, w, h),
-		mcwig.NewKeyHandler(config.DefaultKeyMap()),
+		wig.NewKeyHandler(config.DefaultKeyMap()),
 	)
 	editor.AutocompleteTrigger = autocomplete.Register(editor)
 
@@ -43,7 +43,7 @@ func main() {
 		buf := editor.OpenFile(args[1])
 		editor.ActiveWindow().VisitBuffer(buf)
 	} else {
-		mcwig.CmdNewBuffer(editor.NewContext())
+		wig.CmdNewBuffer(editor.NewContext())
 	}
 
 	renderer := render.New(editor, tscreen)

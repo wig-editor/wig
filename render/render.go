@@ -10,17 +10,17 @@ import (
 	"github.com/gdamore/tcell/v2/views"
 	"github.com/mattn/go-runewidth"
 
-	"github.com/firstrow/mcwig"
-	"github.com/firstrow/mcwig/ui"
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/ui"
 )
 
 type Renderer struct {
 	rw     sync.Mutex
-	e      *mcwig.Editor
+	e      *wig.Editor
 	screen tcell.Screen
 }
 
-func New(e *mcwig.Editor, screen tcell.Screen) *Renderer {
+func New(e *wig.Editor, screen tcell.Screen) *Renderer {
 	r := &Renderer{
 		e:      e,
 		screen: screen,
@@ -34,13 +34,13 @@ func (r *Renderer) Render() {
 	r.rw.Lock()
 	defer r.rw.Unlock()
 
-	r.screen.Fill(' ', mcwig.Color("ui.background"))
+	r.screen.Fill(' ', wig.Color("ui.background"))
 
 	w, h := r.screen.Size()
 
 	var winW int
 	// var winH int
-	if r.e.Layout == mcwig.LayoutVertical {
+	if r.e.Layout == wig.LayoutVertical {
 		winW = w / len(r.e.Windows)
 		// winH = h
 	} else {
@@ -53,10 +53,10 @@ func (r *Renderer) Render() {
 	var activeWinView *mview
 	for i, win := range r.e.Windows {
 		// TODO: for now Vertical only. I never use horizontal splits
-		// if r.e.Layout == mcwig.LayoutVertical {
+		// if r.e.Layout == wig.LayoutVertical {
 		x := winW * i
 		if i > 0 {
-			st := mcwig.Color("ui.virtual.indent-guide")
+			st := wig.Color("ui.virtual.indent-guide")
 			for i := 0; i <= h; i++ {
 				r.SetContent(x, i, string(tcell.RuneVLine), st)
 			}
@@ -76,7 +76,7 @@ func (r *Renderer) Render() {
 	mainView := NewMView(r.screen, 0, 0, w, h)
 	for _, c := range r.e.UiComponents {
 		switch c.Plane() {
-		case mcwig.PlaneWin:
+		case wig.PlaneWin:
 			c.Render(activeWinView)
 		default:
 			c.Render(mainView)

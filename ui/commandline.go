@@ -4,32 +4,32 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/firstrow/mcwig"
+	"github.com/firstrow/wig"
 	"github.com/gdamore/tcell/v2"
 )
 
 type uiCommandLine struct {
-	e      *mcwig.Editor
-	keymap *mcwig.KeyHandler
+	e      *wig.Editor
+	keymap *wig.KeyHandler
 	chBuf  []rune
 }
 
-func (u *uiCommandLine) Plane() mcwig.RenderPlane {
-	return mcwig.PlaneEditor
+func (u *uiCommandLine) Plane() wig.RenderPlane {
+	return wig.PlaneEditor
 }
 
-func CmdLineInit(ctx mcwig.Context) {
+func CmdLineInit(ctx wig.Context) {
 	cmdLine := &uiCommandLine{
 		e:     ctx.Editor,
 		chBuf: []rune{},
 	}
 
-	cmdLine.keymap = mcwig.NewKeyHandler(mcwig.ModeKeyMap{
-		mcwig.MODE_NORMAL: mcwig.KeyMap{
-			"Esc": func(ctx mcwig.Context) {
+	cmdLine.keymap = wig.NewKeyHandler(wig.ModeKeyMap{
+		wig.MODE_NORMAL: wig.KeyMap{
+			"Esc": func(ctx wig.Context) {
 				ctx.Editor.PopUi()
 			},
-			"Tab": func(ctx mcwig.Context) {
+			"Tab": func(ctx wig.Context) {
 				// todo autocomplete
 			},
 		},
@@ -39,7 +39,7 @@ func CmdLineInit(ctx mcwig.Context) {
 	ctx.Editor.PushUi(cmdLine)
 }
 
-func (u *uiCommandLine) insertCh(ctx mcwig.Context, ev *tcell.EventKey) {
+func (u *uiCommandLine) insertCh(ctx wig.Context, ev *tcell.EventKey) {
 	if ev.Modifiers()&tcell.ModCtrl != 0 {
 		return
 	}
@@ -75,22 +75,22 @@ func (u *uiCommandLine) execute(cmd string) {
 
 	switch cmd {
 	case "q":
-		mcwig.CmdExit(ctx)
+		wig.CmdExit(ctx)
 	case "q!":
-		mcwig.CmdExit(ctx)
+		wig.CmdExit(ctx)
 	case "w":
-		mcwig.CmdSaveFile(ctx)
+		wig.CmdSaveFile(ctx)
 	case "bd":
-		mcwig.CmdKillBuffer(ctx)
+		wig.CmdKillBuffer(ctx)
 	}
 }
 
-func (u *uiCommandLine) Keymap() *mcwig.KeyHandler {
+func (u *uiCommandLine) Keymap() *wig.KeyHandler {
 	return u.keymap
 }
 
-func (u *uiCommandLine) Render(view mcwig.View) {
-	st := mcwig.Color("statusline")
+func (u *uiCommandLine) Render(view wig.View) {
+	st := wig.Color("statusline")
 	w, h := view.Size()
 	h -= 1
 
@@ -101,7 +101,7 @@ func (u *uiCommandLine) Render(view mcwig.View) {
 	view.SetContent(0, h, msg, st)
 }
 
-func (u *uiCommandLine) Mode() mcwig.Mode {
-	return mcwig.MODE_NORMAL
+func (u *uiCommandLine) Mode() wig.Mode {
+	return wig.MODE_NORMAL
 }
 

@@ -1,11 +1,11 @@
-package mcwig
+package wig
 
 import (
 	"bytes"
 	"slices"
 	"testing"
 
-	"github.com/firstrow/mcwig/testutils"
+	"github.com/firstrow/wig/testutils"
 	"github.com/stretchr/testify/assert"
 )
 

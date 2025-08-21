@@ -1,11 +1,11 @@
-package mcwig
+package wig
 
 import (
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/firstrow/mcwig/testutils"
+	"github.com/firstrow/wig/testutils"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/assert"

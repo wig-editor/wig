@@ -6,11 +6,11 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/firstrow/mcwig"
-	"github.com/firstrow/mcwig/ui"
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/ui"
 )
 
-func CmdFindProjectFilePicker(ctx mcwig.Context) {
+func CmdFindProjectFilePicker(ctx wig.Context) {
 	rootDir, err := ctx.Editor.Projects.FindRoot(ctx.Buf)
 	if err != nil {
 		return
@@ -51,7 +51,7 @@ func CmdFindProjectFilePicker(ctx mcwig.Context) {
 	)
 }
 
-func rgDoSearch(ctx mcwig.Context, pat string) {
+func rgDoSearch(ctx wig.Context, pat string) {
 	type RgJson struct {
 		Type string `json:"type"`
 		Data struct {
@@ -126,13 +126,13 @@ func rgDoSearch(ctx mcwig.Context, pat string) {
 		buf := ctx.Editor.OpenFile(rootDir + "/" + i.Value.Data.Path.Text)
 		ctx.Editor.ActiveWindow().VisitBuffer(
 			buf,
-			mcwig.Cursor{
+			wig.Cursor{
 				Line: i.Value.Data.LineNumber - 1,
 				Char: i.Value.Data.Submatches[0].Start,
 			},
 		)
 		ctx.Buf = buf
-		mcwig.CmdCursorCenter(ctx)
+		wig.CmdCursorCenter(ctx)
 	}
 
 	p := ui.PickerInit(
@@ -148,19 +148,19 @@ func rgDoSearch(ctx mcwig.Context, pat string) {
 	})
 }
 
-func CmdSearchProject(ctx mcwig.Context) {
+func CmdSearchProject(ctx wig.Context) {
 	rgDoSearch(ctx, "")
 }
 
-func CmdProjectSearchWordUnderCursor(ctx mcwig.Context) {
+func CmdProjectSearchWordUnderCursor(ctx wig.Context) {
 	pat := ""
 
 	if ctx.Buf.Selection != nil {
-		pat = mcwig.SelectionToString(ctx.Buf, ctx.Buf.Selection)
+		pat = wig.SelectionToString(ctx.Buf, ctx.Buf.Selection)
 	} else {
-		start, end := mcwig.TextObjectWord(ctx.Buf, true)
+		start, end := wig.TextObjectWord(ctx.Buf, true)
 		if end+1 > start {
-			line := mcwig.CursorLine(ctx.Buf)
+			line := wig.CursorLine(ctx.Buf)
 			pat = string(line.Value.Range(start, end+1))
 		}
 	}

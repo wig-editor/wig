@@ -1,4 +1,4 @@
-package mcwig
+package wig
 
 import (
 	"os"
@@ -201,7 +201,7 @@ func (e *Editor) LogMessage(msg string) {
 }
 
 func (e *Editor) RuntimeDir(elems ...string) string {
-	p := []string{os.Getenv("HOME"), ".config", "mcwig"}
+	p := []string{os.Getenv("HOME"), ".config", "wig"}
 	elems = append(p, elems...)
 	return path.Join(elems...)
 }

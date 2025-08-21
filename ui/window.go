@@ -4,10 +4,10 @@ import (
 	str "github.com/boyter/go-string"
 	"github.com/mattn/go-runewidth"
 
-	"github.com/firstrow/mcwig"
+	"github.com/firstrow/wig"
 )
 
-func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
+func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	buf := win.Buffer()
 	if buf == nil {
 		return
@@ -29,14 +29,14 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 		skip = buf.Cursor.Char - termWidth
 	}
 
-	var tsNodeCursor *mcwig.TreeSitterNodeCursor
+	var tsNodeCursor *wig.TreeSitterNodeCursor
 	if buf.Highlighter != nil {
 		startLine := uint32(0)
 		if offset > 0 {
 			startLine = uint32(offset)
 		}
 		buf.Highlighter.Highlights(uint32(startLine), startLine+uint32(termHeight))
-		tsNodeCursor = mcwig.NewColorNodeCursor(buf.Highlighter.RootNode())
+		tsNodeCursor = wig.NewColorNodeCursor(buf.Highlighter.RootNode())
 	}
 
 	for currentLine != nil {
@@ -46,8 +46,8 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 
 			// highlight search
 			searchMatches := [][]int{}
-			if mcwig.LastSearchPattern != "" {
-				searchMatches = str.IndexAllIgnoreCase(string(currentLine.Value), mcwig.LastSearchPattern, -1)
+			if wig.LastSearchPattern != "" {
+				searchMatches = str.IndexAllIgnoreCase(string(currentLine.Value), wig.LastSearchPattern, -1)
 			}
 
 			diagnostics := e.Lsp.Diagnostics(buf, lineNum)
@@ -55,20 +55,20 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 			// render line
 			for i := skip; i < len(currentLine.Value); i++ {
 				// render selection
-				textStyle := mcwig.Color("default")
+				textStyle := wig.Color("default")
 
 				if tsNodeCursor != nil {
 					colorNode, ok := tsNodeCursor.Seek(uint32(lineNum), uint32(i))
 					if ok {
-						textStyle = mcwig.NodeToColor(colorNode)
+						textStyle = wig.NodeToColor(colorNode)
 					}
 				}
 
 				// Colors and styles
 				// selection
 				if buf.Selection != nil {
-					if mcwig.SelectionCursorInRange(buf.Selection, mcwig.Cursor{Line: lineNum, Char: i}) {
-						textStyle = mcwig.ApplyBg("ui.selection.primary", textStyle)
+					if wig.SelectionCursorInRange(buf.Selection, wig.Cursor{Line: lineNum, Char: i}) {
+						textStyle = wig.ApplyBg("ui.selection.primary", textStyle)
 					}
 				}
 
@@ -76,7 +76,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				if len(searchMatches) > 0 {
 					for _, m := range searchMatches {
 						if i >= m[0] && i < m[1] {
-							textStyle = mcwig.ApplyBg("ui.selection", textStyle)
+							textStyle = wig.ApplyBg("ui.selection", textStyle)
 						}
 					}
 				}
@@ -85,7 +85,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				if len(diagnostics) > 0 {
 					for _, info := range diagnostics {
 						if i >= int(info.Range.Start.Character) && i < int(info.Range.End.Character) {
-							textStyle = mcwig.MergeStyles(textStyle, "diagnostic.error")
+							textStyle = wig.MergeStyles(textStyle, "diagnostic.error")
 						}
 					}
 				}
@@ -101,20 +101,20 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 				// render cursor
 				if isActiveWin {
 					if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {
-						baseCursor, found := mcwig.FindColor("ui.selection")
+						baseCursor, found := wig.FindColor("ui.selection")
 						if !found {
 							panic("theme ui.selection not defined")
 						}
-						if c, found := mcwig.FindColor("ui.cursor"); found {
+						if c, found := wig.FindColor("ui.cursor"); found {
 							baseCursor = c
 						}
-						if buf.Mode() == mcwig.MODE_INSERT {
-							if c, found := mcwig.FindColor("ui.cursor.primary.insert"); found {
+						if buf.Mode() == wig.MODE_INSERT {
+							if c, found := wig.FindColor("ui.cursor.primary.insert"); found {
 								baseCursor = c
 							}
 						}
-						if buf.Mode() == mcwig.MODE_VISUAL {
-							if c, found := mcwig.FindColor("ui.cursor.primary.select"); found {
+						if buf.Mode() == wig.MODE_VISUAL {
+							if c, found := wig.FindColor("ui.cursor.primary.select"); found {
 								baseCursor = c
 							}
 						}
@@ -127,7 +127,7 @@ func WindowRender(e *mcwig.Editor, view mcwig.View, win *mcwig.Window) {
 
 			// render cursor after the end of the line in insert mode
 			if lineNum == buf.Cursor.Line && buf.Cursor.Char >= len(currentLine.Value) && isActiveWin {
-				view.SetContent(x, y, " ", mcwig.Color("ui.cursor"))
+				view.SetContent(x, y, " ", wig.Color("ui.cursor"))
 			}
 
 			y++

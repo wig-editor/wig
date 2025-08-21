@@ -6,13 +6,13 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/stretchr/testify/require"
 
-	"github.com/firstrow/mcwig"
-	"github.com/firstrow/mcwig/testutils"
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/testutils"
 )
 
 func TestEditing(t *testing.T) {
-	keys := mcwig.NewKeyHandler(DefaultKeyMap())
-	e := mcwig.NewEditor(
+	keys := wig.NewKeyHandler(DefaultKeyMap())
+	e := wig.NewEditor(
 		testutils.Viewport,
 		keys,
 	)
@@ -45,7 +45,7 @@ line five
 	keys.HandleKey(e, key('t'), buf.Mode())
 	keys.HandleKey(e, tcell.NewEventKey(tcell.KeyEsc, 0, tcell.ModNone), buf.Mode())
 	require.Equal(t, expected, buf.String())
-	require.Equal(t, mcwig.MODE_NORMAL, buf.Mode())
+	require.Equal(t, wig.MODE_NORMAL, buf.Mode())
 
 	// go to line three. split it. enter @. append !.
 	keys.HandleKey(e, key('2'), buf.Mode())
@@ -89,8 +89,8 @@ line four
 }
 
 func TestComment(t *testing.T) {
-	keys := mcwig.NewKeyHandler(DefaultKeyMap())
-	e := mcwig.NewEditor(
+	keys := wig.NewKeyHandler(DefaultKeyMap())
+	e := wig.NewEditor(
 		testutils.Viewport,
 		keys,
 	)

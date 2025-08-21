@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/firstrow/mcwig"
+	"github.com/firstrow/wig"
 )
 
 func StatuslineRender(
-	e *mcwig.Editor,
-	view mcwig.View,
-	win *mcwig.Window,
+	e *wig.Editor,
+	view wig.View,
+	win *wig.Window,
 ) {
 	buf := win.Buffer()
 	if buf == nil {
@@ -20,13 +20,13 @@ func StatuslineRender(
 	w, h := view.Size()
 	h -= 1
 
-	st := mcwig.Color("ui.statusline.inactive")
+	st := wig.Color("ui.statusline.inactive")
 
 	if win == e.ActiveWindow() {
-		st = mcwig.Color("ui.statusline")
+		st = wig.Color("ui.statusline")
 
-		if buf.Mode() == mcwig.MODE_INSERT {
-			st = mcwig.Color("ui.statusline.insert")
+		if buf.Mode() == wig.MODE_INSERT {
+			st = wig.Color("ui.statusline.insert")
 		}
 	}
 

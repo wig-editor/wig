@@ -1,5 +1,5 @@
 // Movement and window related funcs
-package mcwig
+package wig
 
 import (
 	"strings"

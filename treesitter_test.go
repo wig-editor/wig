@@ -1,10 +1,10 @@
-package mcwig
+package wig
 
 import (
 	"sync"
 	"testing"
 
-	"github.com/firstrow/mcwig/testutils"
+	"github.com/firstrow/wig/testutils"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/stretchr/testify/require"
 )
@@ -68,7 +68,7 @@ func TestTreeSitterNodeCursor(t *testing.T) {
 }
 
 func TestTreeSitter_AdaptEventTextChange(t *testing.T) {
-	source := `package mcwig
+	source := `package wig
 
 import "fmt"
 
@@ -124,7 +124,7 @@ func add(a int, b int) {
 }
 
 func TestTreeSitter_AdaptEventTextChangeDeleteLine(t *testing.T) {
-	source := `package mcwig
+	source := `package wig
 
 import "fmt"
 

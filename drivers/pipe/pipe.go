@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/firstrow/mcwig"
+	"github.com/firstrow/wig"
 	"github.com/google/shlex"
 )
 
@@ -18,23 +18,23 @@ type header struct {
 }
 
 type pipeDrv struct {
-	e *mcwig.Editor
+	e *wig.Editor
 	// TODO: store cmds per-command. so it will be possible to keep many long running commands in same buffer
 	cmd    *exec.Cmd
 	stdin  io.WriteCloser
-	outBuf *mcwig.Buffer
+	outBuf *wig.Buffer
 }
 
-func New(e *mcwig.Editor) *pipeDrv {
+func New(e *wig.Editor) *pipeDrv {
 	return &pipeDrv{
 		e: e,
 	}
 }
 
-func (p *pipeDrv) parseHeader(buf *mcwig.Buffer) header {
+func (p *pipeDrv) parseHeader(buf *wig.Buffer) header {
 	result := make(map[string]string, 10)
 
-	currentLine := mcwig.CursorLine(buf)
+	currentLine := wig.CursorLine(buf)
 	for currentLine != nil {
 		if len(currentLine.Value) > 0 && currentLine.Value[0] == '#' {
 			line := strings.TrimSpace(currentLine.Value.String())
@@ -95,7 +95,7 @@ func (p *pipeDrv) buildArgs(cmd string, input string) []string {
 	return []string{}
 }
 
-func (p *pipeDrv) outBufferFor(buf *mcwig.Buffer) *mcwig.Buffer {
+func (p *pipeDrv) outBufferFor(buf *wig.Buffer) *wig.Buffer {
 	if p.outBuf != nil {
 		return p.outBuf
 	}
@@ -104,7 +104,7 @@ func (p *pipeDrv) outBufferFor(buf *mcwig.Buffer) *mcwig.Buffer {
 }
 
 // TODO: add exit conditions to goroutines. handle buffer close.
-func (p *pipeDrv) send(opts header, outBuf *mcwig.Buffer, input string) {
+func (p *pipeDrv) send(opts header, outBuf *wig.Buffer, input string) {
 	if opts.append == false {
 		outBuf.ResetLines()
 	}
@@ -159,7 +159,7 @@ func (p *pipeDrv) send(opts header, outBuf *mcwig.Buffer, input string) {
 	}()
 }
 
-func (p *pipeDrv) Exec(e *mcwig.Editor, buf *mcwig.Buffer, line *mcwig.Element[mcwig.Line]) {
+func (p *pipeDrv) Exec(e *wig.Editor, buf *wig.Buffer, line *wig.Element[wig.Line]) {
 	outBuf := p.outBufferFor(buf)
 	opts := p.parseHeader(buf)
 	p.send(opts, outBuf, string(line.Value))

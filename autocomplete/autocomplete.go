@@ -1,17 +1,17 @@
 package autocomplete
 
 import (
-	"github.com/firstrow/mcwig"
-	"github.com/firstrow/mcwig/ui"
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/ui"
 )
 
-func Register(e *mcwig.Editor) mcwig.AutocompleteFn {
-	return func(ctx mcwig.Context) bool {
+func Register(e *wig.Editor) wig.AutocompleteFn {
+	return func(ctx wig.Context) bool {
 		items := ctx.Editor.Lsp.Completion(ctx.Buf)
 
 		ui.AutocompleteInit(
 			ctx,
-			mcwig.Position{
+			wig.Position{
 				Line: ctx.Buf.Cursor.Line,
 				Char: ctx.Buf.Cursor.Char,
 			},

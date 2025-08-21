@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"github.com/firstrow/mcwig"
+	"github.com/firstrow/wig"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -16,7 +16,7 @@ func truncate(s string, maxLen int) string {
 	return string(runes[0:maxLen-3]) + "..."
 }
 
-func drawBox(s mcwig.View, x1, y1, x2, y2 int, style tcell.Style) {
+func drawBox(s wig.View, x1, y1, x2, y2 int, style tcell.Style) {
 	if y2 < y1 {
 		y1, y2 = y2, y1
 	}
@@ -48,11 +48,11 @@ func drawBox(s mcwig.View, x1, y1, x2, y2 int, style tcell.Style) {
 	}
 }
 
-func drawBox2(s mcwig.View, x, y, width, height int, style tcell.Style) {
+func drawBox2(s wig.View, x, y, width, height int, style tcell.Style) {
 	drawBox(s, x, y, x+width, y+height, style)
 }
 
-func drawBoxNoBorder(s mcwig.View, x1, y1, width, height int, style tcell.Style) {
+func drawBoxNoBorder(s wig.View, x1, y1, width, height int, style tcell.Style) {
 	x2 := x1 + width
 	y2 := y1 + height
 	if y2 < y1 {

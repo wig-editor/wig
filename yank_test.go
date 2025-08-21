@@ -1,11 +1,11 @@
-package mcwig
+package wig
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/firstrow/mcwig/testutils"
+	"github.com/firstrow/wig/testutils"
 )
 
 func TestYankSingleLine(t *testing.T) {

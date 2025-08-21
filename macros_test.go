@@ -1,9 +1,9 @@
-package mcwig
+package wig
 
 import (
 	"testing"
 
-	"github.com/firstrow/mcwig/testutils"
+	"github.com/firstrow/wig/testutils"
 )
 
 func TestMacroRepeat(t *testing.T) {

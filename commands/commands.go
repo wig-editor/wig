@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/firstrow/mcwig"
-	"github.com/firstrow/mcwig/drivers/pipe"
-	"github.com/firstrow/mcwig/ui"
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/drivers/pipe"
+	"github.com/firstrow/wig/ui"
 )
 
-func CmdThemeSelect(ctx mcwig.Context) {
+func CmdThemeSelect(ctx wig.Context) {
 	currentDir := ctx.Editor.RuntimeDir("themes")
 
 	files, err := os.ReadDir(currentDir)
@@ -43,7 +43,7 @@ func CmdThemeSelect(ctx mcwig.Context) {
 		if i == nil {
 			return
 		}
-		mcwig.ApplyTheme(i.Value)
+		wig.ApplyTheme(i.Value)
 	}
 
 	picker := ui.PickerInit(
@@ -53,23 +53,23 @@ func CmdThemeSelect(ctx mcwig.Context) {
 	)
 
 	picker.OnSelect(func(item *ui.PickerItem[string]) {
-		mcwig.ApplyTheme(item.Value)
+		wig.ApplyTheme(item.Value)
 		ctx.Editor.Redraw()
 		ctx.Editor.ScreenSync()
 	})
 }
 
-func CmdBufferPicker(ctx mcwig.Context) {
-	items := make([]ui.PickerItem[*mcwig.Buffer], 0, 32)
+func CmdBufferPicker(ctx wig.Context) {
+	items := make([]ui.PickerItem[*wig.Buffer], 0, 32)
 	for _, b := range ctx.Editor.Buffers {
-		items = append(items, ui.PickerItem[*mcwig.Buffer]{
+		items = append(items, ui.PickerItem[*wig.Buffer]{
 			Name:   b.GetName(),
 			Value:  b,
 			Active: b == ctx.Editor.ActiveBuffer(),
 		})
 	}
 
-	action := func(p *ui.UiPicker[*mcwig.Buffer], i *ui.PickerItem[*mcwig.Buffer]) {
+	action := func(p *ui.UiPicker[*wig.Buffer], i *ui.PickerItem[*wig.Buffer]) {
 		defer ctx.Editor.PopUi()
 		if i == nil {
 			return
@@ -84,7 +84,7 @@ func CmdBufferPicker(ctx mcwig.Context) {
 	)
 }
 
-func CmdCommandPalettePicker(ctx mcwig.Context) {
+func CmdCommandPalettePicker(ctx wig.Context) {
 	items := make([]ui.PickerItem[CmdDefinition], 0, 128)
 
 	for k, v := range AllCommands {
@@ -103,7 +103,7 @@ func CmdCommandPalettePicker(ctx mcwig.Context) {
 		}
 
 		switch cmd := i.Value.Fn.(type) {
-		case func(mcwig.Context):
+		case func(wig.Context):
 			cmd(ctx)
 		}
 	}
@@ -115,14 +115,14 @@ func CmdCommandPalettePicker(ctx mcwig.Context) {
 	)
 }
 
-func CmdExecute(ctx mcwig.Context) {
+func CmdExecute(ctx wig.Context) {
 	if ctx.Buf.Driver == nil {
 		ctx.Buf.Driver = pipe.New(ctx.Editor)
 	}
-	ctx.Buf.Driver.Exec(ctx.Editor, ctx.Buf, mcwig.CursorLine(ctx.Buf))
+	ctx.Buf.Driver.Exec(ctx.Editor, ctx.Buf, wig.CursorLine(ctx.Buf))
 }
 
-func CmdCurrentBufferDirFilePicker(ctx mcwig.Context) {
+func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 	rootDir := ctx.Editor.Projects.Dir(ctx.Buf)
 	ctx.Editor.EchoMessage("listing dir: " + rootDir)
 
@@ -188,7 +188,7 @@ func CmdCurrentBufferDirFilePicker(ctx mcwig.Context) {
 	)
 }
 
-func CmdFormatBuffer(ctx mcwig.Context) {
+func CmdFormatBuffer(ctx wig.Context) {
 	if strings.HasSuffix(ctx.Buf.FilePath, ".go") {
 		formatcmd := fmt.Sprintf("cat %s | goimports", ctx.Buf.FilePath)
 		cmd := exec.Command("bash", "-c", formatcmd)
@@ -207,41 +207,41 @@ func CmdFormatBuffer(ctx mcwig.Context) {
 	}
 }
 
-func CmdSearchWordUnderCursor(ctx mcwig.Context) {
+func CmdSearchWordUnderCursor(ctx wig.Context) {
 	pat := ""
 	defer func() {
-		mcwig.LastSearchPattern = pat
-		mcwig.SearchNext(ctx, pat)
+		wig.LastSearchPattern = pat
+		wig.SearchNext(ctx, pat)
 	}()
 
-	if mcwig.CursorChClass(ctx.Buf) == 0 {
-		mcwig.CmdBackwardWord(ctx)
+	if wig.CursorChClass(ctx.Buf) == 0 {
+		wig.CmdBackwardWord(ctx)
 	}
 
 	if ctx.Buf.Selection != nil {
-		pat = mcwig.SelectionToString(ctx.Buf, ctx.Buf.Selection)
-		mcwig.CmdNormalMode(ctx)
+		pat = wig.SelectionToString(ctx.Buf, ctx.Buf.Selection)
+		wig.CmdNormalMode(ctx)
 		return
 	}
 
-	start, end := mcwig.TextObjectWord(ctx.Buf, true)
+	start, end := wig.TextObjectWord(ctx.Buf, true)
 	if end+1 > start {
-		line := mcwig.CursorLine(ctx.Buf)
+		line := wig.CursorLine(ctx.Buf)
 		pat = string(line.Value.Range(start, end+1))
 	}
 }
 
-func CmdFormatBufferAndSave(ctx mcwig.Context) {
-	mcwig.CmdSaveFile(ctx)
+func CmdFormatBufferAndSave(ctx wig.Context) {
+	wig.CmdSaveFile(ctx)
 	CmdFormatBuffer(ctx)
-	mcwig.CmdSaveFile(ctx)
+	wig.CmdSaveFile(ctx)
 
 	ctx.Editor.Lsp.DidClose(ctx.Buf)
 	ctx.Editor.Lsp.DidOpen(ctx.Buf)
 	ctx.Buf.Highlighter.Build()
 }
 
-func CmdSearchLine(ctx mcwig.Context) {
+func CmdSearchLine(ctx wig.Context) {
 	items := make([]ui.PickerItem[int], 0, 256)
 
 	line := ctx.Buf.Lines.First()
@@ -262,12 +262,12 @@ func CmdSearchLine(ctx mcwig.Context) {
 		if i == nil {
 			return
 		}
-		ctx.Editor.ActiveWindow().VisitBuffer(ctx.Buf, mcwig.Cursor{
+		ctx.Editor.ActiveWindow().VisitBuffer(ctx.Buf, wig.Cursor{
 			Line: i.Value,
 			Char: 0,
 		})
-		mcwig.CmdCursorBeginningOfTheLine(ctx)
-		mcwig.CmdCursorCenter(ctx)
+		wig.CmdCursorBeginningOfTheLine(ctx)
+		wig.CmdCursorCenter(ctx)
 	}
 
 	ui.PickerInit(
@@ -277,7 +277,7 @@ func CmdSearchLine(ctx mcwig.Context) {
 	)
 }
 
-func CmdGotoDefinition(ctx mcwig.Context) {
+func CmdGotoDefinition(ctx wig.Context) {
 	filePath, cursor := ctx.Editor.Lsp.Definition(ctx.Buf, ctx.Buf.Cursor)
 	if filePath == "" {
 		return
@@ -288,48 +288,48 @@ func CmdGotoDefinition(ctx mcwig.Context) {
 		return
 	}
 	ctx.Editor.ActiveWindow().VisitBuffer(nbuf, cursor)
-	mcwig.CmdCursorCenter(ctx.Editor.NewContext())
+	wig.CmdCursorCenter(ctx.Editor.NewContext())
 }
 
 // TODO: fix when per-window cursors
-func CmdGotoDefinitionOtherWindow(ctx mcwig.Context) {
+func CmdGotoDefinitionOtherWindow(ctx wig.Context) {
 	if len(ctx.Editor.Windows) == 1 {
-		mcwig.CmdWindowVSplit(ctx)
+		wig.CmdWindowVSplit(ctx)
 	}
 
-	mcwig.CmdWindowNext(ctx)
+	wig.CmdWindowNext(ctx)
 	ctx.Editor.ActiveWindow().ShowBuffer(ctx.Buf)
 	CmdGotoDefinition(ctx)
 }
 
-func CmdViewDefinitionOtherWindow(ctx mcwig.Context) {
+func CmdViewDefinitionOtherWindow(ctx wig.Context) {
 	curWin := ctx.Editor.ActiveWindow()
 
 	if len(ctx.Editor.Windows) == 1 {
-		mcwig.CmdWindowVSplit(ctx)
+		wig.CmdWindowVSplit(ctx)
 	}
 
-	mcwig.CmdWindowNext(ctx)
+	wig.CmdWindowNext(ctx)
 	ctx.Editor.ActiveWindow().ShowBuffer(ctx.Buf)
 	CmdGotoDefinition(ctx)
 	ctx.Editor.SetActiveWindow(curWin)
 }
 
-func CmdLspShowSignature(ctx mcwig.Context) {
+func CmdLspShowSignature(ctx wig.Context) {
 	sign := ctx.Editor.Lsp.Signature(ctx.Buf, ctx.Buf.Cursor)
 	if sign != "" {
 		ctx.Editor.EchoMessage(sign)
 	}
 }
 
-func CmdLspHover(ctx mcwig.Context) {
+func CmdLspHover(ctx wig.Context) {
 	sign := ctx.Editor.Lsp.Hover(ctx.Buf, ctx.Buf.Cursor)
 	if sign != "" {
 		ctx.Editor.EchoMessage(sign)
 	}
 }
 
-func CmdLspShowDiagnostics(ctx mcwig.Context) {
+func CmdLspShowDiagnostics(ctx wig.Context) {
 	diagnostics := ctx.Editor.Lsp.Diagnostics(ctx.Buf, ctx.Buf.Cursor.Line)
 	if len(diagnostics) == 0 {
 		return
@@ -343,8 +343,8 @@ func CmdLspShowDiagnostics(ctx mcwig.Context) {
 	}
 }
 
-func CmdReloadBuffer(ctx mcwig.Context) {
-	err := mcwig.BufferReloadFile(ctx.Buf)
+func CmdReloadBuffer(ctx wig.Context) {
+	err := wig.BufferReloadFile(ctx.Buf)
 	if err != nil {
 		ctx.Editor.EchoMessage(err.Error())
 	}
