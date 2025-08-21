@@ -1,4 +1,4 @@
-# wig (temporary name)
+# Wig 
 
 Hi! Welcome to my text editor page.
 wig is a modal, Vim-like text editor written in Go. I use it as my daily driver, btw.
