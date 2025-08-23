@@ -5,6 +5,16 @@ import (
 	"strings"
 )
 
+type Snippet struct {
+	Perfix string
+	Body   string
+	Desc   string
+}
+
+type SnippetsManager struct {
+	snippets map[string]Snippet
+}
+
 func SnippetProcessString(s string) (str string, cursorPos int) {
 	re := regexp.MustCompile(`\$\{\d+:[^}]*}`)
 	indices := re.FindAllIndex([]byte(s), -1)

@@ -64,7 +64,7 @@
 "ui.selection" = { bg = "bogster-base2" }
 "ui.selection.primary" = { bg = "bogster-base3" }
 "ui.cursor.match" = { fg = "bogster-base3", bg = "bogster-orange" }
-"ui.cursor" = { bg = "bogster-base5", modifiers = ["reversed"] }
+"ui.cursor" = { fg = "bogster-base5", modifiers = ["reversed"] }
 
 "ui.menu" = { fg = "bogster-fg1", bg = "bogster-base2" }
 "ui.menu.selected" = { bg = "bogster-base3" }
