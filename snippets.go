@@ -79,7 +79,8 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 		if k == lookup {
 			CmdCursorFirstNonBlank(ctx)
 			CmdDeleteEndOfLine(ctx)
-			TextInsert(ctx.Buf, line, len(line.Value), v.Body)
+			body, _ := SnippetProcessString(v.Body)
+			TextInsert(ctx.Buf, line, len(line.Value), body)
 			CmdGotoLineEnd(ctx)
 			return true
 		}
