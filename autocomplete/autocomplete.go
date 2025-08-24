@@ -7,8 +7,13 @@ import (
 
 func Register(e *wig.Editor) wig.AutocompleteFn {
 	return func(ctx wig.Context) bool {
-		items := ctx.Editor.Lsp.Completion(ctx.Buf)
+		// Check for snippets first
+		// if ctx.Editor.Snippets.Complete(ctx) {
+		// return true
+		// }
 
+		// Lsp completion
+		items := ctx.Editor.Lsp.Completion(ctx.Buf)
 		ui.AutocompleteInit(
 			ctx,
 			wig.Position{

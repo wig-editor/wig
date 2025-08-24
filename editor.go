@@ -62,6 +62,7 @@ type Editor struct {
 	Lsp                 *LspManager
 	Events              *EventsManager
 	AutocompleteTrigger AutocompleteFn
+	Snippets            *SnippetsManager
 }
 
 func NewEditor(
@@ -83,6 +84,7 @@ func NewEditor(
 		RedrawCh:     make(chan int, 10),
 		ScreenSyncCh: make(chan int),
 		Events:       NewEventsManager(),
+		Snippets:     NewSnippetsManager(),
 	}
 	EditorInst.Lsp = NewLspManager(EditorInst)
 	HighlighterGo(EditorInst)
