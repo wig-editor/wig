@@ -57,21 +57,17 @@ func AutocompleteInit(
 
 	widget.eventsListener = ctx.Editor.Events.Subscribe()
 	go func() {
-		for {
-			select {
-			case event := <-widget.eventsListener:
-				event.Wg.Done()
-
-				switch e := event.Msg.(type) {
-				case wig.EventTextChange:
-					widget.activeItem = 0
-					widget.items = ctx.Editor.Lsp.Completion(e.Buf)
-					if len(widget.items.Items) == 0 {
-						widget.Close()
-					}
-
-					ctx.Editor.Redraw()
+		for event := range widget.eventsListener {
+			event.Wg.Done()
+			switch e := event.Msg.(type) {
+			case wig.EventTextChange:
+				widget.activeItem = 0
+				widget.items = ctx.Editor.Lsp.Completion(e.Buf)
+				if len(widget.items.Items) == 0 {
+					widget.Close()
 				}
+
+				ctx.Editor.Redraw()
 			}
 		}
 	}()
@@ -84,6 +80,7 @@ func AutocompleteInit(
 func (w *AutocompleteWidget) Close() {
 	w.ctx.Editor.PopUi()
 	w.ctx.Editor.Events.Unsubscribe(w.eventsListener)
+	w.ctx.Editor.Redraw()
 }
 
 func (w *AutocompleteWidget) Mode() wig.Mode {

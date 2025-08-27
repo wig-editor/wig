@@ -39,16 +39,12 @@ type Highlighter struct {
 // use context cancel()
 func HighlighterGo(e *Editor) {
 	go func() {
-		events := e.Events.Subscribe()
-		for {
-			select {
-			case event := <-events:
-				switch e := event.Msg.(type) {
-				case EventTextChange:
-					HighlighterEditTree(e)
-				}
-				event.Wg.Done()
+		for event := range e.Events.Subscribe() {
+			switch e := event.Msg.(type) {
+			case EventTextChange:
+				HighlighterEditTree(e)
 			}
+			event.Wg.Done()
 		}
 	}()
 }

@@ -37,7 +37,7 @@ func TestSnippetsDecode(t *testing.T) {
 	body := `{
   "For Loop": {
     "prefix": "for",
-    "body": ["for (const ${2:element} of ${1:array}) {", "\t$0", "}"],
+	"body": "const ${1:name} = ${2:value}",
     "description": "A for loop."
   }
 }`

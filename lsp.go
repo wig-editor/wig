@@ -53,16 +53,12 @@ func NewLspManager(e *Editor) *LspManager {
 	}
 
 	go func() {
-		events := e.Events.Subscribe()
-		for {
-			select {
-			case event := <-events:
-				switch e := event.Msg.(type) {
-				case EventTextChange:
-					r.DidChange(e)
-				}
-				event.Wg.Done()
+		for event := range e.Events.Subscribe() {
+			switch e := event.Msg.(type) {
+			case EventTextChange:
+				r.DidChange(e)
 			}
+			event.Wg.Done()
 		}
 	}()
 
@@ -100,7 +96,9 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 			}
 
 			l.conns[root] = client
+			client.didOpen(buf)
 		}()
+
 		return
 	}
 

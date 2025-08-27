@@ -51,7 +51,11 @@ func NewEventsManager() *EventsManager {
 				e.listeners = append(e.listeners, l)
 			case l := <-e.removeListener:
 				e.listeners = slices.DeleteFunc(e.listeners, func(delCh chan Event) bool {
-					return delCh == l
+					if delCh == l {
+						close(delCh)
+						return true
+					}
+					return false
 				})
 			}
 		}
@@ -61,7 +65,7 @@ func NewEventsManager() *EventsManager {
 }
 
 func (e *EventsManager) Subscribe() <-chan Event {
-	c := make(chan Event, 0)
+	c := make(chan Event)
 	e.newListener <- c
 	return c
 }
