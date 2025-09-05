@@ -7,6 +7,8 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -198,6 +200,7 @@ type SnippetTabstopLocation struct {
 }
 
 func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) {
+	original := s
 	re := regexp.MustCompile(`\$\d+`)
 	indices := re.FindAllIndex([]byte(s), -1)
 
@@ -207,20 +210,29 @@ func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) 
 
 	accum := 0
 	// Parse simple cases like $1, $2 and so on.
-	for i, idx := range indices {
+	for _, idx := range indices {
 		start, end := idx[0], idx[1]
-		// fmt.Println(start, end, s[start:end])
+
+		index, _ := strconv.ParseInt(original[idx[0]+1:idx[1]], 10, 64)
+		if index == 0 {
+			index = 99
+		}
+
 		start -= accum
 		end -= accum
 		accum += end - start
 		pos = append(pos, SnippetTabstopLocation{
-			Index:  i, // TODO: parse $1 number
+			Index:  int(index),
 			Char:   start,
 			Length: 0,
 			Line:   0,
 		})
 		s = s[:start] + s[end:]
 	}
+
+	sort.Slice(pos, func(i, j int) bool {
+		return pos[i].Index < pos[j].Index
+	})
 
 	return s, pos
 }

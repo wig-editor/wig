@@ -46,6 +46,31 @@ func TestSnipptes_ParseString2(t *testing.T) {
 	}, pos[1])
 }
 
+func TestSnipptes_ParseString3(t *testing.T) {
+	text := "($0, $1, $2)"
+	expected := "(, , )"
+	result, pos := SnippetParseLocations(text)
+	require.Equal(t, expected, result)
+	require.Equal(t, SnippetTabstopLocation{
+		Index:  1,
+		Char:   3,
+		Length: 0,
+		Line:   0,
+	}, pos[0])
+	require.Equal(t, SnippetTabstopLocation{
+		Index:  2,
+		Char:   5,
+		Length: 0,
+		Line:   0,
+	}, pos[1])
+	require.Equal(t, SnippetTabstopLocation{
+		Index:  99,
+		Char:   1,
+		Length: 0,
+		Line:   0,
+	}, pos[2])
+}
+
 func TestSnippetsDecode(t *testing.T) {
 	body := `{
   "For Loop": {
