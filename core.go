@@ -20,7 +20,6 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 		NewEnd: Position{Line: sline, Char: pos},
 		Text:   text,
 	}
-
 	if pos < 0 {
 		pos = 0
 	}

@@ -103,7 +103,6 @@ func (e *Editor) OpenFile(path string) *Buffer {
 		return nil
 	}
 	e.Buffers = append(e.Buffers, buf)
-
 	e.Lsp.DidOpen(buf)
 
 	HighlighterInitBuffer(e, buf)

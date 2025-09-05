@@ -32,6 +32,10 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 
 	{
 		if ch == '\t' {
+			if Tabstopped(ctx) {
+				TabstopNext(ctx)
+				return
+			}
 			if strings.TrimSpace(line.Value.String()) == "" {
 				goto insertChar
 			}

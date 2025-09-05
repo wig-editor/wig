@@ -112,7 +112,7 @@ func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 
 	chpos := len(text)
 	if item.InsertTextFormat == 2 {
-		text, chpos = wig.SnippetProcessString(text)
+		text, chpos = wig.SnippetParse(text)
 	}
 
 	wig.TextInsert(ctx.Buf, line, int(pos), text)

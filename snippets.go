@@ -10,6 +10,54 @@ import (
 	"strings"
 )
 
+// Tabstops
+
+var tabstops map[*Buffer][]SnippetTabstopLocation
+
+func init() {
+	tabstops = map[*Buffer][]SnippetTabstopLocation{}
+}
+
+func TabstopActivate(ctx Context, pos []SnippetTabstopLocation) {
+	tabstops[ctx.Buf] = pos
+
+	// TODO: exit
+	go func() {
+		events := ctx.Editor.Events.Subscribe()
+		defer ctx.Editor.Events.Unsubscribe(events)
+
+		for event := range events {
+			switch e := event.Msg.(type) {
+			case EventTextChange:
+				for i := range pos {
+					if len(e.OldText) > 0 {
+						pos[i].Char -= len(e.OldText)
+					} else {
+						pos[i].Char += len(e.Text)
+					}
+				}
+			}
+			event.Wg.Done()
+		}
+	}()
+}
+
+func Tabstopped(ctx Context) bool {
+	return len(tabstops[ctx.Buf]) > 0
+}
+
+func TabstopNext(ctx Context) {
+	val, ok := tabstops[ctx.Buf]
+	if !ok {
+		return
+	}
+	ctx.Buf.Cursor.Char = val[0].Char
+	tabstops[ctx.Buf] = tabstops[ctx.Buf][1:]
+	// CmdCursorRight(ctx)
+}
+
+// Tabstops End
+
 type Snippet struct {
 	Prefix string
 	Body   string
@@ -79,9 +127,18 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 		if k == lookup {
 			CmdCursorFirstNonBlank(ctx)
 			CmdDeleteEndOfLine(ctx)
-			body, _ := SnippetProcessString(v.Body)
+			body, pos := SnippetParseLocations(v.Body)
+			for i := range pos {
+				pos[i].Char += len(line.Value) - 1
+			}
 			TextInsert(ctx.Buf, line, len(line.Value), body)
-			CmdGotoLineEnd(ctx)
+			if len(pos) > 0 {
+				ctx.Buf.Cursor.Char = pos[0].Char
+				TabstopActivate(ctx, pos[1:])
+			} else {
+				CmdGotoLineEnd(ctx)
+			}
+			CmdEnterInsertMode(ctx)
 			return true
 		}
 	}
@@ -89,7 +146,7 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 	return false
 }
 
-func SnippetProcessString(s string) (str string, cursorPos int) {
+func SnippetParse(s string) (str string, cursorPos int) {
 	re := regexp.MustCompile(`\$\{\d+:[^}]*}`)
 	indices := re.FindAllIndex([]byte(s), -1)
 
@@ -131,5 +188,40 @@ func SnippetProcessString(s string) (str string, cursorPos int) {
 	}
 
 	return
+}
+
+type SnippetTabstopLocation struct {
+	Index  int
+	Char   int
+	Length int
+	Line   int
+}
+
+func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) {
+	re := regexp.MustCompile(`\$\d+`)
+	indices := re.FindAllIndex([]byte(s), -1)
+
+	if len(indices) == 0 {
+		return s, pos
+	}
+
+	accum := 0
+	// Parse simple cases like $1, $2 and so on.
+	for i, idx := range indices {
+		start, end := idx[0], idx[1]
+		// fmt.Println(start, end, s[start:end])
+		start -= accum
+		end -= accum
+		accum += end - start
+		pos = append(pos, SnippetTabstopLocation{
+			Index:  i, // TODO: parse $1 number
+			Char:   start,
+			Length: 0,
+			Line:   0,
+		})
+		s = s[:start] + s[end:]
+	}
+
+	return s, pos
 }
 
