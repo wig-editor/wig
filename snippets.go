@@ -54,8 +54,17 @@ func TabstopNext(ctx Context) {
 		return
 	}
 	ctx.Buf.Cursor.Char = val[0].Char
+
+	if val[0].Length > 0 {
+		selEnd := ctx.Buf.Cursor
+		selEnd.Char += val[0].Length - 1
+		ctx.Buf.Selection = &Selection{
+			Start: ctx.Buf.Cursor,
+			End:   selEnd,
+		}
+	}
+
 	tabstops[ctx.Buf] = tabstops[ctx.Buf][1:]
-	// CmdCursorRight(ctx)
 }
 
 // Tabstops End
@@ -134,8 +143,19 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 				pos[i].Char += len(line.Value) - 1
 			}
 			TextInsert(ctx.Buf, line, len(line.Value), body)
+
 			if len(pos) > 0 {
 				ctx.Buf.Cursor.Char = pos[0].Char
+
+				if pos[0].Length > 0 {
+					selEnd := ctx.Buf.Cursor
+					selEnd.Char += pos[0].Length - 1
+					ctx.Buf.Selection = &Selection{
+						Start: ctx.Buf.Cursor,
+						End:   selEnd,
+					}
+				}
+
 				TabstopActivate(ctx, pos[1:])
 			} else {
 				CmdGotoLineEnd(ctx)
@@ -204,10 +224,6 @@ func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) 
 	re := regexp.MustCompile(`\$\d+`)
 	indices := re.FindAllIndex([]byte(s), -1)
 
-	if len(indices) == 0 {
-		return s, pos
-	}
-
 	accum := 0
 	// Parse simple cases like $1, $2 and so on.
 	for _, idx := range indices {
@@ -228,6 +244,38 @@ func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) 
 			Line:   0,
 		})
 		s = s[:start] + s[end:]
+	}
+
+	// parse ${1:name}
+	re = regexp.MustCompile(`\$\{\d+:[^}]*}`)
+	indices = re.FindAllIndex([]byte(s), -1)
+
+	if len(indices) == 0 {
+		return s, pos
+	}
+
+	accum = 0
+	for _, idx := range indices {
+		start, end := idx[0], idx[1]
+
+		rr := strings.Split(original[start+2:end-1], ":")
+		num, label := rr[0], rr[1]
+
+		index, _ := strconv.ParseInt(num, 10, 64)
+		if index == 0 {
+			index = 99
+		}
+
+		start -= accum
+		end -= accum
+		accum += len(label) + 1
+		pos = append(pos, SnippetTabstopLocation{
+			Index:  int(index),
+			Char:   start,
+			Length: len(label),
+			Line:   0,
+		})
+		s = s[:start] + label + s[end:]
 	}
 
 	sort.Slice(pos, func(i, j int) bool {

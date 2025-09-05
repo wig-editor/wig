@@ -84,6 +84,7 @@ insertChar:
 		return
 	}
 
+	SelectionDelete(ctx)
 	TextInsert(ctx.Buf, line, ctx.Buf.Cursor.Char, string(ch))
 
 	if ev.Key() == tcell.KeyEnter {

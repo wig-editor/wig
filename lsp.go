@@ -370,7 +370,6 @@ func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 	if err != nil {
 		l.e.LogError(err)
 	}
-	// fmt.Printf("%+v\n", res.Items)
 
 	return
 }
