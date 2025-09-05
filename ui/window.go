@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strings"
+
 	str "github.com/boyter/go-string"
 	"github.com/mattn/go-runewidth"
 
@@ -93,6 +95,13 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				/////////////////////////////////
 
 				ch := getRenderChar(currentLine.Value[i])
+
+				// highlight current line
+				if lineNum == buf.Cursor.Line && isActiveWin {
+					textStyle = wig.ApplyBg("ui.cursorline", textStyle)
+					bg := strings.Repeat(" ", termWidth)
+					view.SetContent(x, y, bg, textStyle)
+				}
 
 				// todo: handle tabs colors?
 				// render text
