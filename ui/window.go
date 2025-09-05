@@ -67,6 +67,14 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				}
 
 				// Colors and styles
+
+				// highlight current line
+				if lineNum == buf.Cursor.Line && isActiveWin {
+					textStyle = wig.ApplyBg("ui.cursorline", textStyle)
+					bg := strings.Repeat(" ", termWidth)
+					view.SetContent(x, y, bg, textStyle)
+				}
+
 				// selection
 				if buf.Selection != nil {
 					if wig.SelectionCursorInRange(buf.Selection, wig.Cursor{Line: lineNum, Char: i}) {
@@ -95,13 +103,6 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				/////////////////////////////////
 
 				ch := getRenderChar(currentLine.Value[i])
-
-				// highlight current line
-				if lineNum == buf.Cursor.Line && isActiveWin {
-					textStyle = wig.ApplyBg("ui.cursorline", textStyle)
-					bg := strings.Repeat(" ", termWidth)
-					view.SetContent(x, y, bg, textStyle)
-				}
 
 				// todo: handle tabs colors?
 				// render text
