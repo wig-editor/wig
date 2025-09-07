@@ -53,7 +53,7 @@ func TabstopNext(ctx Context) {
 	if !ok {
 		return
 	}
-	ctx.Buf.Cursor.Char = val[0].Char
+	// ctx.Buf.Cursor.Char = val[0].Char
 
 	if val[0].Length > 0 {
 		selEnd := ctx.Buf.Cursor
@@ -213,10 +213,11 @@ func SnippetParse(s string) (str string, cursorPos int) {
 }
 
 type SnippetTabstopLocation struct {
-	Index  int
-	Char   int
-	Length int
-	Line   int
+	Index    int
+	Char     int
+	Length   int
+	Line     int
+	Distance int
 }
 
 func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) {
@@ -250,10 +251,6 @@ func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) 
 	re = regexp.MustCompile(`\$\{\d+:[^}]*}`)
 	indices = re.FindAllIndex([]byte(s), -1)
 
-	if len(indices) == 0 {
-		return s, pos
-	}
-
 	accum = 0
 	for _, idx := range indices {
 		start, end := idx[0], idx[1]
@@ -281,6 +278,8 @@ func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) 
 	sort.Slice(pos, func(i, j int) bool {
 		return pos[i].Index < pos[j].Index
 	})
+
+	// calculate distances
 
 	return s, pos
 }

@@ -33,13 +33,13 @@ func TestSnipptes_ParseString2(t *testing.T) {
 	result, pos := SnippetParseLocations(text)
 	require.Equal(t, expected, result)
 	require.Equal(t, SnippetTabstopLocation{
-		Index:  0,
+		Index:  1,
 		Char:   12,
 		Length: 0,
 		Line:   0,
 	}, pos[0])
 	require.Equal(t, SnippetTabstopLocation{
-		Index:  1,
+		Index:  2,
 		Char:   14,
 		Length: 0,
 		Line:   0,
