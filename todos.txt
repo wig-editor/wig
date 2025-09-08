@@ -5,8 +5,8 @@ Release v0.1:
 + move themes and tree-sitter queries
 - save cursor position for undo/redo records
 - per-window cursors
-- tab stop
-- snippets
++ tab stop
++ snippets
 + autocomplete filter
 + indend for text(TAB)
 - auto indent with tree-sitter
