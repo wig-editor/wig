@@ -23,26 +23,6 @@ func init() {
 
 func TabstopActivate(ctx Context, pos []SnippetTabstopLocation) {
 	tabstops[ctx.Buf] = pos
-
-	// TODO: exit
-	go func() {
-		events := ctx.Editor.Events.Subscribe()
-		defer ctx.Editor.Events.Unsubscribe(events)
-
-		for event := range events {
-			switch e := event.Msg.(type) {
-			case EventTextChange:
-				for i := range pos {
-					if len(e.OldText) > 0 {
-						pos[i].Char -= len(e.OldText)
-					} else {
-						pos[i].Char += len(e.Text)
-					}
-				}
-			}
-			event.Wg.Done()
-		}
-	}()
 }
 
 func Tabstopped(ctx Context) bool {
@@ -54,7 +34,6 @@ func TabstopNext(ctx Context) {
 	if !ok {
 		return
 	}
-	// ctx.Buf.Cursor.Char = val[0].Char
 	n := math.Abs(float64(val[0].Distance))
 	fmt.Println(n)
 	for i := 0; i < int(n); i++ {
