@@ -39,10 +39,31 @@ func TestSnipptes_ParseString2(t *testing.T) {
 		Line:   0,
 	}, pos[0])
 	require.Equal(t, SnippetTabstopLocation{
-		Index:  2,
-		Char:   14,
+		Index:    2,
+		Char:     14,
+		Length:   0,
+		Line:     0,
+		Distance: 2,
+	}, pos[1])
+}
+
+func TestSnipptes_ParseStringDistances(t *testing.T) {
+	text := "func $1($2) $3 {\n\t$0\n}"
+	expected := "func ()  {\n\t\n}"
+	result, pos := SnippetParseLocations(text)
+	require.Equal(t, expected, result)
+	require.Equal(t, SnippetTabstopLocation{
+		Index:  1,
+		Char:   5,
 		Length: 0,
 		Line:   0,
+	}, pos[0])
+	require.Equal(t, SnippetTabstopLocation{
+		Index:    2,
+		Char:     6,
+		Length:   0,
+		Line:     0,
+		Distance: 1,
 	}, pos[1])
 }
 
@@ -52,22 +73,25 @@ func TestSnipptes_ParseString3(t *testing.T) {
 	result, pos := SnippetParseLocations(text)
 	require.Equal(t, expected, result)
 	require.Equal(t, SnippetTabstopLocation{
-		Index:  1,
-		Char:   3,
-		Length: 0,
-		Line:   0,
+		Index:    1,
+		Char:     3,
+		Length:   0,
+		Line:     0,
+		Distance: 0,
 	}, pos[0])
 	require.Equal(t, SnippetTabstopLocation{
-		Index:  2,
-		Char:   5,
-		Length: 0,
-		Line:   0,
+		Index:    2,
+		Char:     5,
+		Length:   0,
+		Line:     0,
+		Distance: 2,
 	}, pos[1])
 	require.Equal(t, SnippetTabstopLocation{
-		Index:  99,
-		Char:   1,
-		Length: 0,
-		Line:   0,
+		Index:    99,
+		Char:     1,
+		Length:   0,
+		Line:     0,
+		Distance: -4,
 	}, pos[2])
 }
 
@@ -83,10 +107,11 @@ func TestSnipptes_ParseString4(t *testing.T) {
 		Line:   0,
 	}, pos[0])
 	require.Equal(t, SnippetTabstopLocation{
-		Index:  2,
-		Char:   7,
-		Length: 6,
-		Line:   0,
+		Index:    2,
+		Char:     7,
+		Length:   6,
+		Line:     0,
+		Distance: 2,
 	}, pos[1])
 }
 

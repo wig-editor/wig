@@ -3,6 +3,7 @@ package wig
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path"
 	"path/filepath"
@@ -54,6 +55,15 @@ func TabstopNext(ctx Context) {
 		return
 	}
 	// ctx.Buf.Cursor.Char = val[0].Char
+	n := math.Abs(float64(val[0].Distance))
+	fmt.Println(n)
+	for i := 0; i < int(n); i++ {
+		if val[0].Distance > 0 {
+			CursorInc(ctx.Buf)
+		} else {
+			CursorDec(ctx.Buf)
+		}
+	}
 
 	if val[0].Length > 0 {
 		selEnd := ctx.Buf.Cursor
@@ -145,7 +155,10 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 			TextInsert(ctx.Buf, line, len(line.Value), body)
 
 			if len(pos) > 0 {
-				ctx.Buf.Cursor.Char = pos[0].Char
+				// ctx.Buf.Cursor.Char = pos[0].Char
+				for i := 0; i < int(pos[0].Char); i++ {
+					CursorInc(ctx.Buf)
+				}
 
 				if pos[0].Length > 0 {
 					selEnd := ctx.Buf.Cursor
@@ -280,6 +293,15 @@ func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) 
 	})
 
 	// calculate distances
+	for k := range pos {
+		if k == 0 {
+			continue
+		}
+		pos[k].Distance = pos[k].Char - pos[k-1].Char
+		if pos[k-1].Length > 0 {
+			pos[k].Distance -= pos[k-1].Length
+		}
+	}
 
 	return s, pos
 }
