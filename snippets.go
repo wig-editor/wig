@@ -148,37 +148,38 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 		if k == lookup {
 			CmdCursorFirstNonBlank(ctx)
 			CmdDeleteEndOfLine(ctx)
-			body, pos := SnippetParseLocations(v.Body)
-			for i := range pos {
-				pos[i].Char += len(line.Value) - 1
-			}
-			TextInsert(ctx.Buf, line, len(line.Value), body)
-
-			if len(pos) > 0 {
-				// ctx.Buf.Cursor.Char = pos[0].Char
-				for i := 0; i < int(pos[0].Char); i++ {
-					CursorInc(ctx.Buf)
-				}
-
-				if pos[0].Length > 0 {
-					selEnd := ctx.Buf.Cursor
-					selEnd.Char += pos[0].Length - 1
-					ctx.Buf.Selection = &Selection{
-						Start: ctx.Buf.Cursor,
-						End:   selEnd,
-					}
-				}
-
-				TabstopActivate(ctx, pos[1:])
-			} else {
-				CmdGotoLineEnd(ctx)
-			}
-			CmdEnterInsertMode(ctx)
+			CmdCursorFirstNonBlank(ctx)
+			s.Expand(ctx, v)
 			return true
 		}
 	}
 
 	return false
+}
+
+func (s *SnippetsManager) Expand(ctx Context, v Snippet) {
+	line := CursorLine(ctx.Buf)
+	body, pos := SnippetParseLocations(v.Body)
+	TextInsert(ctx.Buf, line, len(line.Value), body)
+
+	if len(pos) > 0 {
+		for i := 0; i < int(pos[0].Char); i++ {
+			CursorInc(ctx.Buf)
+		}
+
+		if pos[0].Length > 0 {
+			selEnd := ctx.Buf.Cursor
+			selEnd.Char += pos[0].Length - 1
+			ctx.Buf.Selection = &Selection{
+				Start: ctx.Buf.Cursor,
+				End:   selEnd,
+			}
+		}
+		TabstopActivate(ctx, pos[1:])
+	} else {
+		CmdGotoLineEnd(ctx)
+	}
+	CmdEnterInsertMode(ctx)
 }
 
 func SnippetParse(s string) (str string, cursorPos int) {
@@ -278,13 +279,15 @@ func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) 
 
 		start -= accum
 		end -= accum
-		accum += len(label) + 1
+		accum += 5 // len(${N:}) = 5
+
 		pos = append(pos, SnippetTabstopLocation{
 			Index:  int(index),
 			Char:   start,
 			Length: len(label),
 			Line:   0,
 		})
+
 		s = s[:start] + label + s[end:]
 	}
 

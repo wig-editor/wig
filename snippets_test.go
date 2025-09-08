@@ -115,6 +115,26 @@ func TestSnipptes_ParseString4(t *testing.T) {
 	}, pos[1])
 }
 
+func TestSnipptes_ParseStringLsp(t *testing.T) {
+	text := "Sprintf(${1:f format}, ${2:a ...any})"
+	expected := "Sprintf(f format, a ...any)"
+	result, pos := SnippetParseLocations(text)
+	require.Equal(t, expected, result)
+	require.Equal(t, SnippetTabstopLocation{
+		Index:  1,
+		Char:   8,
+		Length: 8,
+		Line:   0,
+	}, pos[0])
+	require.Equal(t, SnippetTabstopLocation{
+		Index:    2,
+		Char:     18,
+		Length:   8,
+		Line:     0,
+		Distance: 2,
+	}, pos[1])
+}
+
 func TestSnippetsDecode(t *testing.T) {
 	body := `{
   "For Loop": {
