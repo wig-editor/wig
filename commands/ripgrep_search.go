@@ -44,7 +44,8 @@ func CmdFindProjectFilePicker(ctx wig.Context) {
 			if i == nil {
 				return
 			}
-			buf := ctx.Editor.OpenFile(rootDir + "/" + i.Value)
+			path := rootDir + "/" + i.Value
+			buf := ctx.Editor.OpenFile(path)
 			ctx.Editor.ActiveWindow().VisitBuffer(buf)
 		},
 		items,
