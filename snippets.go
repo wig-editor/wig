@@ -139,7 +139,7 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 func (s *SnippetsManager) Expand(ctx Context, v Snippet) {
 	line := CursorLine(ctx.Buf)
 	body, pos := SnippetParseLocations(v.Body)
-	TextInsert(ctx.Buf, line, len(line.Value), body)
+	TextInsert(ctx.Buf, line, len(line.Value)-1, body)
 
 	if len(pos) > 0 {
 		for i := 0; i < int(pos[0].Char); i++ {

@@ -118,6 +118,11 @@ func (l *LspManager) DidChange(event EventTextChange) {
 		return
 	}
 
+	rrange := &protocol.Range{
+		Start: protocol.Position{Line: uint32(event.Start.Line), Character: uint32(event.Start.Char)},
+		End:   protocol.Position{Line: uint32(event.End.Line), Character: uint32(event.End.Char)},
+	}
+
 	req := protocol.DidChangeTextDocumentParams{
 		TextDocument: protocol.VersionedTextDocumentIdentifier{
 			TextDocumentIdentifier: protocol.TextDocumentIdentifier{
@@ -127,11 +132,8 @@ func (l *LspManager) DidChange(event EventTextChange) {
 		},
 		ContentChanges: []protocol.TextDocumentContentChangeEvent{
 			{
-				Range: &protocol.Range{
-					Start: protocol.Position{Line: uint32(event.Start.Line), Character: uint32(event.Start.Char)},
-					End:   protocol.Position{Line: uint32(event.End.Line), Character: uint32(event.End.Char)},
-				},
-				Text: event.Text,
+				Range: rrange,
+				Text:  event.Text,
 			},
 		},
 	}
@@ -251,16 +253,17 @@ func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cu
 	if !ok {
 		return
 	}
+	pos := protocol.Position{
+		Line:      uint32(buf.Cursor.Line),
+		Character: uint32(buf.Cursor.Char),
+	}
 
 	definitionReq := protocol.DefinitionParams{
 		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 			TextDocument: protocol.TextDocumentIdentifier{
 				URI: protocol.DocumentURI(fmt.Sprintf("file://%s", buf.FilePath)),
 			},
-			Position: protocol.Position{
-				Line:      uint32(buf.Cursor.Line),
-				Character: uint32(buf.Cursor.Char),
-			},
+			Position: pos,
 		},
 	}
 	var definitionResp []protocol.Location

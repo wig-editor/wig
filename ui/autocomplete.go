@@ -66,7 +66,6 @@ func AutocompleteInit(
 				if len(widget.items.Items) == 0 {
 					widget.Close()
 				}
-
 				ctx.Editor.Redraw()
 			}
 		}

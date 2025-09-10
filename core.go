@@ -13,6 +13,7 @@ const smode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scan
 
 func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	sline := CursorNumByLine(buf, line)
+
 	event := EventTextChange{
 		Buf:    buf,
 		Start:  Position{Line: sline, Char: pos},
