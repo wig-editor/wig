@@ -96,8 +96,18 @@ func (u *UiPicker[T]) OnChange(callback func()) {
 	u.onChange = callback
 }
 
+func (u *UiPicker[T]) OnKey(key string, f func(wig.Context)) {
+	newMap := wig.KeyMap{}
+	newMap[key] = f
+	u.keymap.Map(u.e, wig.MODE_INSERT, newMap)
+}
+
 func (u *UiPicker[T]) OnSelect(callback func(*PickerItem[T])) {
 	u.onSelect = callback
+}
+
+func (u *UiPicker[T]) CallAction() {
+	u.action(u, u.activeItemT)
 }
 
 func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {

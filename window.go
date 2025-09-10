@@ -3,6 +3,9 @@ package wig
 type Window struct {
 	buf   *Buffer // active buffer
 	Jumps *Jumps
+
+	Cursor  Cursor
+	Cursors map[*Buffer]*Cursor
 }
 
 // Jump to buffer and location. Records jump history.
@@ -38,6 +41,7 @@ func CreateWindow() *Window {
 		Jumps: &Jumps{
 			List: List[Jump]{},
 		},
+		Cursors: map[*Buffer]*Cursor{},
 	}
 }
 

@@ -37,7 +37,7 @@ func CmdFindProjectFilePicker(ctx wig.Context) {
 		})
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		func(_ *ui.UiPicker[string], i *ui.PickerItem[string]) {
 			defer ctx.Editor.PopUi()
@@ -49,6 +49,11 @@ func CmdFindProjectFilePicker(ctx wig.Context) {
 		},
 		items,
 	)
+	picker.OnKey("ctrl+o", func(ctx wig.Context) {
+		wig.CmdWindowVSplit(ctx)
+		wig.CmdWindowNext(ctx)
+		picker.CallAction()
+	})
 }
 
 func rgDoSearch(ctx wig.Context, pat string) {
