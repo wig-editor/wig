@@ -348,5 +348,6 @@ func CmdReloadBuffer(ctx wig.Context) {
 	if err != nil {
 		ctx.Editor.EchoMessage(err.Error())
 	}
+	ctx.Buf.Highlighter.Build()
 }
 
