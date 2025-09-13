@@ -1,28 +1,33 @@
 package wig
 
 type Window struct {
-	buf   *Buffer // active buffer
-	Jumps *Jumps
+	buf     *Buffer // active buffer
+	cursors map[*Buffer]*Cursor
 
-	Cursor  Cursor
-	Cursors map[*Buffer]*Cursor
+	Jumps *Jumps
 }
 
 // Jump to buffer and location. Records jump history.
-func (win *Window) VisitBuffer(buf *Buffer, cursor ...Cursor) {
-	if buf != nil {
-		if win.buf != nil {
-			win.Jumps.Push(win.buf)
-		}
-
-		if len(cursor) > 0 {
-			buf.Cursor.Line = cursor[0].Line
-			buf.Cursor.Char = cursor[0].Char
-		}
-
-		win.Jumps.Push(buf)
-		win.buf = buf
+func (win *Window) VisitBuffer(ctx Context, cursor ...Cursor) {
+	if ctx.Buf == nil {
+		return
 	}
+
+	cur := WindowCursorGet(win, win.buf)
+	if win.buf != nil {
+		win.Jumps.Push(win.buf, cur)
+	}
+
+	if len(cursor) > 0 {
+		newCur := ContextCursorGet(ctx)
+		newCur.Line = cursor[0].Line
+		newCur.Char = cursor[0].Char
+		newCur.ScrollOffset = cursor[0].ScrollOffset
+		cur = newCur
+	}
+
+	win.Jumps.Push(ctx.Buf, cur)
+	win.buf = ctx.Buf
 }
 
 // Show buffer. No history.
@@ -41,7 +46,7 @@ func CreateWindow() *Window {
 		Jumps: &Jumps{
 			List: List[Jump]{},
 		},
-		Cursors: map[*Buffer]*Cursor{},
+		cursors: map[*Buffer]*Cursor{},
 	}
 }
 
@@ -56,17 +61,16 @@ type Jumps struct {
 	current *Element[Jump]
 }
 
-func (j *Jumps) Push(b *Buffer) {
+func (j *Jumps) Push(b *Buffer, cur *Cursor) {
 	// track only line jumps
 	if j.List.Last() != nil {
-		if j.List.Last().Value.FilePath == b.FilePath && j.List.Last().Value.Cursor.Line == b.Cursor.Line {
+		if j.List.Last().Value.FilePath == b.FilePath && j.List.Last().Value.Cursor.Line == cur.Line {
 			return
 		}
 	}
-
 	j.List.PushBack(Jump{
 		FilePath: b.FilePath,
-		Cursor:   b.Cursor,
+		Cursor:   *cur,
 	})
 	j.current = j.List.Last()
 }
@@ -84,12 +88,18 @@ func (j *Jumps) JumpBack() {
 	if elem.Prev() == nil {
 		return
 	}
+
 	item := elem.Prev().Value
 	b := EditorInst.BufferFindByFilePath(item.FilePath, false)
 	if b == nil {
 		return
 	}
-	b.Cursor = item.Cursor
+
+	cur := CursorGet(EditorInst, b)
+	cur.Line = item.Cursor.Line
+	cur.Char = item.Cursor.Char
+	cur.ScrollOffset = item.Cursor.ScrollOffset
+
 	EditorInst.ActiveWindow().buf = b
 	j.current = elem.Prev()
 }
@@ -108,7 +118,10 @@ func (j *Jumps) JumpForward() {
 	if b == nil {
 		return
 	}
-	b.Cursor = item.Value.Cursor
+	cur := CursorGet(EditorInst, b)
+	cur.Line = item.Value.Cursor.Line
+	cur.Char = item.Value.Cursor.Char
+	cur.ScrollOffset = item.Value.Cursor.ScrollOffset
 	EditorInst.ActiveWindow().buf = b
 	j.current = item
 }

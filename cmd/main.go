@@ -40,8 +40,9 @@ func main() {
 
 	args := os.Args
 	if len(args) > 1 {
-		buf := editor.OpenFile(args[1])
-		editor.ActiveWindow().VisitBuffer(buf)
+		ctx := wig.Context{Editor: editor}
+		ctx.Buf = editor.OpenFile(args[1])
+		editor.ActiveWindow().VisitBuffer(ctx)
 	} else {
 		wig.CmdNewBuffer(editor.NewContext())
 	}

@@ -7,7 +7,8 @@ import (
 )
 
 func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
-	line := CursorLine(ctx.Buf)
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
 
 	{
 		if ctx.Buf.Mode() != MODE_INSERT {
@@ -39,7 +40,7 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 			if strings.TrimSpace(line.Value.String()) == "" {
 				goto insertChar
 			}
-			if ctx.Buf.Cursor.Char >= len(line.Value.String())-1 {
+			if cur.Char >= len(line.Value.String())-1 {
 				if ctx.Editor.AutocompleteTrigger(ctx) {
 					return
 				}
@@ -54,7 +55,7 @@ insertChar:
 	}
 
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
-		start := ctx.Buf.Cursor
+		start := *cur
 		start.Char--
 
 		if start.Char < 0 {
@@ -62,7 +63,7 @@ insertChar:
 				return
 			}
 
-			ctx.Buf.Cursor.Line--
+			cur.Line--
 			CmdGotoLineEnd(ctx)
 
 			// delete \n on prev line
@@ -76,16 +77,16 @@ insertChar:
 
 		TextDelete(ctx.Buf, &Selection{
 			Start: start,
-			End:   ctx.Buf.Cursor,
+			End:   *cur,
 		})
-		if ctx.Buf.Cursor.Char > 0 {
-			ctx.Buf.Cursor.Char--
+		if cur.Char > 0 {
+			cur.Char--
 		}
 		return
 	}
 
-	SelectionDelete(ctx)
-	TextInsert(ctx.Buf, line, ctx.Buf.Cursor.Char, string(ch))
+	// SelectionDelete(ctx)
+	TextInsert(ctx.Buf, line, cur.Char, string(ch))
 
 	if ev.Key() == tcell.KeyEnter {
 		CmdCursorLineDown(ctx)
@@ -93,9 +94,9 @@ insertChar:
 		return
 	}
 
-	if ctx.Buf.Cursor.Char < len(line.Value) {
-		ctx.Buf.Cursor.Char++
-		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
+	if cur.Char < len(line.Value) {
+		cur.Char++
+		cur.PreserveCharPosition = cur.Char
 	}
 }
 

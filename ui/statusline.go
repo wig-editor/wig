@@ -47,7 +47,8 @@ func StatuslineRender(
 
 	view.SetContent(2, h, leftSide, st)
 
-	rightSide := fmt.Sprintf("%d:%d", buf.Cursor.Line+1, buf.Cursor.Char)
+	cur := wig.CursorGet(e, buf)
+	rightSide := fmt.Sprintf("%d:%d", cur.Line+1, cur.Char)
 
 	if e.Keys.GetCount() > 1 {
 		rightSide = fmt.Sprintf("%d   %s", e.Keys.GetCount(), rightSide)

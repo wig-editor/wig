@@ -1,11 +1,12 @@
 package wig
 
-func TextObjectWord(buf *Buffer, bigword bool) (start, end int) {
-	start = buf.Cursor.Char
+func TextObjectWord(ctx Context, bigword bool) (start, end int) {
+	cur := ContextCursorGet(ctx)
+	start = cur.Char
 	end = start
 
-	line := CursorLine(buf)
-	cls := CursorChClass(buf)
+	line := CursorLine(ctx.Buf, cur)
+	cls := CursorChClass(ctx.Buf, cur)
 
 	if bigword {
 		for start > 0 {
@@ -39,10 +40,11 @@ func TextObjectWord(buf *Buffer, bigword bool) (start, end int) {
 
 // Returns selection inside '(', '{', '[' as "Selection" range. This implementation is simple
 // and does not check if open/close symbols are "balanced".
+// TODO: rewrite
 func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel *Selection, cur Cursor) {
-	defer func(c Cursor) {
-		buf.Cursor = c
-	}(buf.Cursor)
+	// defer func(c Cursor) {
+	// buf.Cursor = c
+	// }(buf.Cursor)
 
 	openClose := map[rune]rune{
 		'(': ')',
@@ -64,11 +66,11 @@ func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel *Selec
 	// move cursor back until 'openCh' is found
 	openChFound := false
 	for {
-		if CursorChar(buf) == openCh {
+		if CursorChar(buf, nil) == openCh {
 			openChFound = true
 			break
 		}
-		if !CursorDec(buf) {
+		if !CursorDec(buf, nil) {
 			break
 		}
 	}
@@ -76,12 +78,14 @@ func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel *Selec
 		return
 	}
 
-	start := buf.Cursor
+	// TODO: fix
+	bufCursor := Cursor{}
+	start := bufCursor
 
 	// move cursor "left" till we find first "open" bracket
 	for {
-		if CursorChar(buf) == closeCh {
-			end := buf.Cursor
+		if CursorChar(buf, nil) == closeCh {
+			end := bufCursor
 			if include == false {
 				// no selection. empty ().
 				if end.Char == start.Char+1 {
@@ -95,12 +99,13 @@ func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel *Selec
 			return true, &Selection{
 				Start: start,
 				End:   end,
-			}, buf.Cursor
+			}, bufCursor
 		}
-		if !CursorInc(buf) {
+		if !CursorInc(buf, nil) {
 			break
 		}
 	}
 
-	return false, nil, buf.Cursor
+	return false, nil, bufCursor
 }
+

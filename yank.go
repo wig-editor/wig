@@ -10,10 +10,12 @@ type Yanks struct {
 }
 
 func CmdYank(ctx Context) {
+	cur := ContextCursorGet(ctx)
 	defer CmdNormalMode(ctx)
 	defer func() {
 		if ctx.Buf.Selection != nil {
-			ctx.Buf.Cursor = ctx.Buf.Selection.Start
+			cur.Line = ctx.Buf.Selection.Start.Line
+			cur.Char = ctx.Buf.Selection.Start.Char
 		}
 		ctx.Buf.Selection = nil
 	}()
@@ -21,17 +23,19 @@ func CmdYank(ctx Context) {
 }
 
 func CmdYankEol(ctx Context) {
+	cur := ContextCursorGet(ctx)
 	defer CmdNormalMode(ctx)
 	defer func() {
 		if ctx.Buf.Selection != nil {
-			ctx.Buf.Cursor = ctx.Buf.Selection.Start
+			cur.Line = ctx.Buf.Selection.Start.Line
+			cur.Char = ctx.Buf.Selection.Start.Char
 		}
 		ctx.Buf.Selection = nil
 	}()
-	SelectionStart(ctx.Buf)
+	SelectionStart(ctx.Buf, cur)
 	WithSelection(CmdGotoLineEnd)(ctx)
 	CmdCursorLeft(ctx)
-	SelectionStop(ctx.Buf)
+	SelectionStop(ctx.Buf, cur)
 	yankSave(ctx)
 }
 
@@ -58,6 +62,7 @@ func CmdYankPutBefore(ctx Context) {
 	if ctx.Editor.Yanks.Len == 0 {
 		return
 	}
+	cur := ContextCursorGet(ctx)
 
 	CmdEnterInsertMode(ctx)
 	defer CmdExitInsertMode(ctx)
@@ -68,9 +73,9 @@ func CmdYankPutBefore(ctx Context) {
 		CmdCursorBeginningOfTheLine(ctx)
 
 		// clear any indentation
-		SelectionStart(ctx.Buf)
+		SelectionStart(ctx.Buf, cur)
 		CmdGotoLineEnd(ctx)
-		SelectionStop(ctx.Buf)
+		SelectionStop(ctx.Buf, cur)
 		SelectionDelete(ctx)
 
 		yankPut(ctx)
@@ -80,8 +85,9 @@ func CmdYankPutBefore(ctx Context) {
 }
 
 func yankSave(ctx Context) {
+	cur := ContextCursorGet(ctx)
 	var y yank
-	line := CursorLine(ctx.Buf)
+	line := CursorLine(ctx.Buf, cur)
 	if ctx.Buf.Selection == nil {
 		y = yank{val: string(line.Value)}
 	} else {
@@ -104,12 +110,13 @@ func yankSave(ctx Context) {
 }
 
 func yankPut(ctx Context) {
+	cur := ContextCursorGet(ctx)
 	v := ctx.Editor.Yanks.Last()
-	TextInsert(ctx.Buf, CursorLine(ctx.Buf), ctx.Buf.Cursor.Char, v.Value.val)
+	TextInsert(ctx.Buf, CursorLine(ctx.Buf, cur), cur.Char, v.Value.val)
 	i := len(v.Value.val)
 	for i >= 1 {
 		i--
-		CursorInc(ctx.Buf)
+		CursorInc(ctx.Buf, cur)
 	}
 }
 

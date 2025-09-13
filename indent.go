@@ -10,7 +10,8 @@ func indent(ctx Context) {
 		return
 	}
 
-	line := CursorLine(ctx.Buf)
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
 
 	prevLine := line.Prev()
 	for prevLine != nil {

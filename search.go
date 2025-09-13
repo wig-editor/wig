@@ -10,9 +10,10 @@ import (
 func SearchNext(ctx Context, pattern string) {
 	defer CmdEnsureCursorVisible(ctx)
 
-	line := CursorLine(ctx.Buf)
-	lineNum := ctx.Buf.Cursor.Line
-	from := ctx.Buf.Cursor.Char + 1
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
+	lineNum := cur.Line
+	from := cur.Char + 1
 	haystack := string(line.Value.Range(from, EOL))
 
 	for line != nil {
@@ -32,9 +33,9 @@ func SearchNext(ctx Context, pattern string) {
 			return matches[i][0] < matches[j][0]
 		})
 
-		ctx.Buf.Cursor.Line = lineNum
-		ctx.Buf.Cursor.Char = matches[0][0] + from
-		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
+		cur.Line = lineNum
+		cur.Char = matches[0][0] + from
+		cur.PreserveCharPosition = cur.Char
 		break
 	}
 }
@@ -42,10 +43,11 @@ func SearchNext(ctx Context, pattern string) {
 func SearchPrev(ctx Context, pattern string) {
 	defer CmdEnsureCursorVisible(ctx)
 
-	line := CursorLine(ctx.Buf)
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
 
-	ln := ctx.Buf.Cursor.Line
-	haystack := string(line.Value.Range(0, ctx.Buf.Cursor.Char-1))
+	ln := cur.Line
+	haystack := string(line.Value.Range(0, cur.Char-1))
 
 	for line != nil {
 		matches := str.IndexAllIgnoreCase(haystack, pattern, -1)
@@ -63,9 +65,9 @@ func SearchPrev(ctx Context, pattern string) {
 			return matches[i][0] > matches[j][0]
 		})
 
-		ctx.Buf.Cursor.Line = ln
-		ctx.Buf.Cursor.Char = matches[0][0]
-		ctx.Buf.Cursor.PreserveCharPosition = ctx.Buf.Cursor.Char
+		cur.Line = ln
+		cur.Char = matches[0][0]
+		cur.PreserveCharPosition = cur.Char
 		break
 	}
 }
@@ -79,3 +81,4 @@ func CmdSearchNext(ctx Context) {
 func CmdSearchPrev(ctx Context) {
 	SearchPrev(ctx, LastSearchPattern)
 }
+

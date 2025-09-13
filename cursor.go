@@ -6,69 +6,70 @@ type Cursor struct {
 	Line                 int
 	Char                 int
 	PreserveCharPosition int
+	ScrollOffset         int
 }
 
-func restoreCharPosition(buf *Buffer) {
-	line := CursorLine(buf)
+func restoreCharPosition(buf *Buffer, cur *Cursor) {
+	line := CursorLine(buf, cur)
 	if line == nil {
-		buf.Cursor.Char = 0
+		cur.Char = 0
 		return
 	}
 
 	if len(line.Value) == 0 {
-		buf.Cursor.Char = 0
+		cur.Char = 0
 		return
 	}
 
-	if buf.Cursor.PreserveCharPosition >= len(line.Value) {
-		buf.Cursor.Char = len(line.Value) - 1
+	if cur.PreserveCharPosition >= len(line.Value) {
+		cur.Char = len(line.Value) - 1
 	} else {
-		buf.Cursor.Char = buf.Cursor.PreserveCharPosition
+		cur.Char = cur.PreserveCharPosition
 	}
 }
 
-func CursorInc(buf *Buffer) (moved bool) {
-	line := CursorLine(buf)
-	if buf.Cursor.Char < len(line.Value)-1 {
-		buf.Cursor.Char++
-		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+func CursorInc(buf *Buffer, cur *Cursor) (moved bool) {
+	line := CursorLine(buf, cur)
+	if cur.Char < len(line.Value)-1 {
+		cur.Char++
+		cur.PreserveCharPosition = cur.Char
 		return true
 	}
 
 	if line.Next() != nil {
-		buf.Cursor.Char = 0
-		buf.Cursor.Line++
-		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+		cur.Char = 0
+		cur.Line++
+		cur.PreserveCharPosition = cur.Char
 		return true
 	}
 
 	return false
 }
 
-func CursorDec(buf *Buffer) (moved bool) {
-	if buf.Cursor.Char > 0 {
-		buf.Cursor.Char--
-		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
+func CursorDec(buf *Buffer, cur *Cursor) (moved bool) {
+	if cur.Char > 0 {
+		cur.Char--
+		cur.PreserveCharPosition = cur.Char
 		return true
 	}
 
-	line := CursorLine(buf)
+	line := CursorLine(buf, cur)
 	if line.Prev() != nil {
 		chLen := max(len(line.Prev().Value)-1, 0)
-		buf.Cursor.Char = chLen
-		buf.Cursor.PreserveCharPosition = buf.Cursor.Char
-		buf.Cursor.Line--
+		cur.Char = chLen
+		cur.PreserveCharPosition = cur.Char
+		cur.Line--
 		return true
 	}
 
 	return false
 }
 
-func CursorLine(buf *Buffer) *Element[Line] {
+func CursorLine(buf *Buffer, cur *Cursor) *Element[Line] {
 	num := 0
 	currentLine := buf.Lines.First()
 	for currentLine != nil {
-		if buf.Cursor.Line == num {
+		if cur.Line == num {
 			return currentLine
 		}
 		currentLine = currentLine.Next()
@@ -105,6 +106,34 @@ func CursorNumByLine(buf *Buffer, lookie *Element[Line]) int {
 	return 0
 }
 
+func ContextCursorGet(ctx Context) *Cursor {
+	win := ctx.Editor.ActiveWindow()
+	return WindowCursorGet(win, ctx.Buf)
+}
+
+func WindowCursorGet(win *Window, buf *Buffer) *Cursor {
+	cur, ok := win.cursors[buf]
+	if ok {
+		return cur
+	}
+
+	cur = &Cursor{}
+	win.cursors[buf] = cur
+	return cur
+}
+
+func CursorGet(editor *Editor, buf *Buffer) *Cursor {
+	win := editor.ActiveWindow()
+	cur, ok := win.cursors[buf]
+	if ok {
+		return cur
+	}
+
+	cur = &Cursor{}
+	win.cursors[buf] = cur
+	return cur
+}
+
 // class of char under cursor
 type chClass int
 
@@ -114,14 +143,14 @@ const (
 	chWord
 )
 
-func CursorChClass(buf *Buffer) chClass {
-	line := CursorLine(buf)
+func CursorChClass(buf *Buffer, cur *Cursor) chClass {
+	line := CursorLine(buf, cur)
 
 	if len(line.Value) == 0 {
 		return chWhitespace
 	}
 
-	chLen := buf.Cursor.Char
+	chLen := cur.Char
 	if chLen > len(line.Value)-1 {
 		chLen = len(line.Value) - 1
 	}
@@ -129,15 +158,15 @@ func CursorChClass(buf *Buffer) chClass {
 	return getChClass(line.Value[chLen])
 }
 
-// Return char under the cursor.
-func CursorChar(buf *Buffer) rune {
-	line := CursorLine(buf)
+// Returns char under the cursor.
+func CursorChar(buf *Buffer, cur *Cursor) rune {
+	line := CursorLine(buf, cur)
 
 	if line.Value.IsEmpty() {
 		return -1
 	}
 
-	return line.Value[buf.Cursor.Char]
+	return line.Value[cur.Char]
 }
 
 func getChClass(r rune) chClass {

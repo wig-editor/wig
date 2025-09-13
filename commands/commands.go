@@ -74,7 +74,8 @@ func CmdBufferPicker(ctx wig.Context) {
 		if i == nil {
 			return
 		}
-		ctx.Editor.ActiveWindow().VisitBuffer(i.Value)
+		ctx.Buf = i.Value
+		ctx.Editor.ActiveWindow().VisitBuffer(ctx)
 	}
 
 	ui.PickerInit(
@@ -119,7 +120,8 @@ func CmdExecute(ctx wig.Context) {
 	if ctx.Buf.Driver == nil {
 		ctx.Buf.Driver = pipe.New(ctx.Editor)
 	}
-	ctx.Buf.Driver.Exec(ctx.Editor, ctx.Buf, wig.CursorLine(ctx.Buf))
+	cur := wig.ContextCursorGet(ctx)
+	ctx.Buf.Driver.Exec(ctx.Editor, ctx.Buf, wig.CursorLine(ctx.Buf, cur))
 }
 
 func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
@@ -159,9 +161,9 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 		// create new file
 		if i == nil {
 			fp := path.Join(rootDir, p.GetInput())
-			ctx.Editor.ActiveWindow().VisitBuffer(
-				ctx.Editor.OpenFile(fp),
-			)
+			buf := ctx.Editor.OpenFile(fp)
+			ctx.Buf = buf
+			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
 			ctx.Editor.PopUi()
 			return
 		}
@@ -177,7 +179,8 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 		}
 
 		buf := ctx.Editor.OpenFile(rootDir + "/" + i.Value)
-		ctx.Editor.ActiveWindow().VisitBuffer(buf)
+		ctx.Buf = buf
+		ctx.Editor.ActiveWindow().VisitBuffer(ctx)
 		ctx.Editor.PopUi()
 	}
 
@@ -214,7 +217,8 @@ func CmdSearchWordUnderCursor(ctx wig.Context) {
 		wig.SearchNext(ctx, pat)
 	}()
 
-	if wig.CursorChClass(ctx.Buf) == 0 {
+	cur := wig.ContextCursorGet(ctx)
+	if wig.CursorChClass(ctx.Buf, cur) == 0 {
 		wig.CmdBackwardWord(ctx)
 	}
 
@@ -224,9 +228,9 @@ func CmdSearchWordUnderCursor(ctx wig.Context) {
 		return
 	}
 
-	start, end := wig.TextObjectWord(ctx.Buf, true)
+	start, end := wig.TextObjectWord(ctx, true)
 	if end+1 > start {
-		line := wig.CursorLine(ctx.Buf)
+		line := wig.CursorLine(ctx.Buf, cur)
 		pat = string(line.Value.Range(start, end+1))
 	}
 }
@@ -262,7 +266,7 @@ func CmdSearchLine(ctx wig.Context) {
 		if i == nil {
 			return
 		}
-		ctx.Editor.ActiveWindow().VisitBuffer(ctx.Buf, wig.Cursor{
+		ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{
 			Line: i.Value,
 			Char: 0,
 		})
@@ -278,7 +282,8 @@ func CmdSearchLine(ctx wig.Context) {
 }
 
 func CmdGotoDefinition(ctx wig.Context) {
-	filePath, cursor := ctx.Editor.Lsp.Definition(ctx.Buf, ctx.Buf.Cursor)
+	cur := wig.ContextCursorGet(ctx)
+	filePath, cursor := ctx.Editor.Lsp.Definition(ctx.Buf, *cur)
 	if filePath == "" {
 		return
 	}
@@ -287,7 +292,8 @@ func CmdGotoDefinition(ctx wig.Context) {
 	if nbuf == nil {
 		return
 	}
-	ctx.Editor.ActiveWindow().VisitBuffer(nbuf, cursor)
+	ctx.Buf = nbuf
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx, cursor)
 	wig.CmdCursorCenter(ctx.Editor.NewContext())
 }
 
@@ -316,27 +322,30 @@ func CmdViewDefinitionOtherWindow(ctx wig.Context) {
 }
 
 func CmdLspShowSignature(ctx wig.Context) {
-	sign := ctx.Editor.Lsp.Signature(ctx.Buf, ctx.Buf.Cursor)
+	cur := wig.ContextCursorGet(ctx)
+	sign := ctx.Editor.Lsp.Signature(ctx.Buf, *cur)
 	if sign != "" {
 		ctx.Editor.EchoMessage(sign)
 	}
 }
 
 func CmdLspHover(ctx wig.Context) {
-	sign := ctx.Editor.Lsp.Hover(ctx.Buf, ctx.Buf.Cursor)
+	cur := wig.ContextCursorGet(ctx)
+	sign := ctx.Editor.Lsp.Hover(ctx.Buf, *cur)
 	if sign != "" {
 		ctx.Editor.EchoMessage(sign)
 	}
 }
 
 func CmdLspShowDiagnostics(ctx wig.Context) {
-	diagnostics := ctx.Editor.Lsp.Diagnostics(ctx.Buf, ctx.Buf.Cursor.Line)
+	cur := wig.ContextCursorGet(ctx)
+	diagnostics := ctx.Editor.Lsp.Diagnostics(ctx.Buf, cur.Line)
 	if len(diagnostics) == 0 {
 		return
 	}
 
 	for _, info := range diagnostics {
-		if ctx.Buf.Cursor.Char >= int(info.Range.Start.Character) && ctx.Buf.Cursor.Char < int(info.Range.End.Character) {
+		if cur.Char >= int(info.Range.Start.Character) && cur.Char < int(info.Range.End.Character) {
 			ctx.Editor.EchoMessage(info.Message)
 			return
 		}

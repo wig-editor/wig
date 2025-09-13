@@ -45,8 +45,8 @@ func CmdFindProjectFilePicker(ctx wig.Context) {
 				return
 			}
 			path := rootDir + "/" + i.Value
-			buf := ctx.Editor.OpenFile(path)
-			ctx.Editor.ActiveWindow().VisitBuffer(buf)
+			ctx.Buf = ctx.Editor.OpenFile(path)
+			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
 		},
 		items,
 	)
@@ -130,8 +130,9 @@ func rgDoSearch(ctx wig.Context, pat string) {
 	action := func(p *ui.UiPicker[RgJson], i *ui.PickerItem[RgJson]) {
 		defer ctx.Editor.PopUi()
 		buf := ctx.Editor.OpenFile(rootDir + "/" + i.Value.Data.Path.Text)
+		ctx.Buf = buf
 		ctx.Editor.ActiveWindow().VisitBuffer(
-			buf,
+			ctx,
 			wig.Cursor{
 				Line: i.Value.Data.LineNumber - 1,
 				Char: i.Value.Data.Submatches[0].Start,
@@ -160,13 +161,14 @@ func CmdSearchProject(ctx wig.Context) {
 
 func CmdProjectSearchWordUnderCursor(ctx wig.Context) {
 	pat := ""
+	cur := wig.ContextCursorGet(ctx)
 
 	if ctx.Buf.Selection != nil {
 		pat = wig.SelectionToString(ctx.Buf, ctx.Buf.Selection)
 	} else {
-		start, end := wig.TextObjectWord(ctx.Buf, true)
+		start, end := wig.TextObjectWord(ctx, true)
 		if end+1 > start {
-			line := wig.CursorLine(ctx.Buf)
+			line := wig.CursorLine(ctx.Buf, cur)
 			pat = string(line.Value.Range(start, end+1))
 		}
 	}

@@ -82,18 +82,18 @@ func SelectionNormalize(sel *Selection) Selection {
 	return s
 }
 
-func SelectionStart(buf *Buffer) {
+func SelectionStart(buf *Buffer, cur *Cursor) {
 	buf.Selection = &Selection{
-		Start: buf.Cursor,
-		End:   buf.Cursor,
+		Start: *cur,
+		End:   *cur,
 	}
 }
 
-func SelectionStop(buf *Buffer) {
+func SelectionStop(buf *Buffer, cur *Cursor) {
 	if buf.Selection == nil {
 		return
 	}
-	buf.Selection.End = buf.Cursor
+	buf.Selection.End = *cur
 }
 
 func WithSelection(fn func(Context)) func(Context) {
@@ -106,7 +106,8 @@ func WithSelection(fn func(Context)) func(Context) {
 			CmdNormalMode(ctx)
 			return
 		}
-		buf.Selection.End = buf.Cursor
+		cur := ContextCursorGet(ctx)
+		buf.Selection.End = *cur
 
 		if buf.Mode() == MODE_VISUAL_LINE {
 			if buf.Selection.Start.Line > buf.Selection.End.Line {
@@ -132,6 +133,7 @@ func SelectionDelete(ctx Context) {
 	sel := SelectionNormalize(ctx.Buf.Selection)
 	sel.End.Char++
 	TextDelete(ctx.Buf, &sel)
-	ctx.Buf.Cursor = sel.Start
+	cur := ContextCursorGet(ctx)
+	*cur = sel.Start
 }
 

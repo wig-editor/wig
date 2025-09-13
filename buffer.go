@@ -39,17 +39,15 @@ type Driver interface {
 }
 
 type Buffer struct {
-	mode         Mode
-	FilePath     string
-	ScrollOffset int
-	Lines        List[Line]
-	Cursor       Cursor
-	Selection    *Selection
-	Driver       Driver
-	IndentCh     []rune
-	Tx           *Transaction
-	UndoRedo     *UndoRedo
-	Highlighter  *Highlighter
+	mode        Mode
+	FilePath    string
+	Lines       List[Line]
+	Selection   *Selection
+	Driver      Driver
+	IndentCh    []rune
+	Tx          *Transaction
+	UndoRedo    *UndoRedo
+	Highlighter *Highlighter
 
 	rootDir string
 }
@@ -59,7 +57,6 @@ func NewBuffer() *Buffer {
 	lines.PushBack(Line{})
 	b := &Buffer{
 		Lines:     lines,
-		Cursor:    Cursor{0, 0, 0},
 		IndentCh:  []rune{'\t'},
 		Selection: nil,
 		Driver:    nil,
@@ -80,10 +77,8 @@ func BufferReadFile(path string) (*Buffer, error) {
 
 	buf := NewBuffer()
 	buf.FilePath = path
-	buf.Cursor = Cursor{0, 0, 0}
 	buf.Selection = nil
 	buf.ResetLines()
-	buf.ScrollOffset = 0
 
 	newLine := "\n"
 	sc := bufio.NewScanner(file)
@@ -191,7 +186,7 @@ func (b *Buffer) Save() error {
 }
 
 func (b *Buffer) Append(s string) {
-	// TODO: rewrite. use TextInsert
+	// TODO: rewrite. use TextInsert as this messes up lsp and treesitter
 	for _, line := range strings.Split(s, "\n") {
 		b.Lines.PushBack([]rune(line + "\n"))
 	}

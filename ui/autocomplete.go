@@ -93,7 +93,8 @@ func (w *AutocompleteWidget) Keymap() *wig.KeyHandler {
 func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 	defer w.Close()
 
-	line := wig.CursorLine(ctx.Buf)
+	cur := wig.ContextCursorGet(ctx)
+	line := wig.CursorLine(ctx.Buf, cur)
 	item := w.items.Items[w.activeItem]
 	text := item.TextEdit.NewText
 	pos := item.TextEdit.Insert.Start.Character
@@ -110,19 +111,20 @@ func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 	})
 
 	if item.InsertTextFormat == 2 {
-		ctx.Buf.Cursor.Char = pos
+		cur.Char = pos
 		ctx.Editor.Snippets.Expand(ctx, wig.Snippet{Body: text})
 		return
 	}
 
 	chpos := len(text)
 	wig.TextInsert(ctx.Buf, line, int(pos), text)
-	ctx.Buf.Cursor.Char = item.TextEdit.Replace.Start.Character + chpos
+	cur.Char = item.TextEdit.Replace.Start.Character + chpos
 }
 
 func (w *AutocompleteWidget) Render(view wig.View) {
+	cur := wig.ContextCursorGet(w.ctx)
 	x := w.pos.Char + 2
-	y := w.pos.Line - w.ctx.Buf.ScrollOffset + 1
+	y := w.pos.Line - cur.ScrollOffset + 1
 
 	maxItems := min(10, len(w.items.Items))
 

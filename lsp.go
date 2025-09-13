@@ -182,14 +182,15 @@ func (l *LspManager) Signature(buf *Buffer, cursor Cursor) (sign string) {
 		return
 	}
 
+	cur := CursorGet(EditorInst, buf)
 	srReq := protocol.SignatureHelpParams{
 		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 			TextDocument: protocol.TextDocumentIdentifier{
 				URI: uri.URI(fmt.Sprintf("file://%s", buf.FilePath)),
 			},
 			Position: protocol.Position{
-				Line:      uint32(buf.Cursor.Line),
-				Character: uint32(buf.Cursor.Char),
+				Line:      uint32(cur.Line),
+				Character: uint32(cur.Char),
 			},
 		},
 	}
@@ -219,14 +220,15 @@ func (l *LspManager) Hover(buf *Buffer, cursor Cursor) (sign string) {
 		return
 	}
 
+	cur := CursorGet(EditorInst, buf)
 	srReq := protocol.HoverParams{
 		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 			TextDocument: protocol.TextDocumentIdentifier{
 				URI: uri.URI(fmt.Sprintf("file://%s", buf.FilePath)),
 			},
 			Position: protocol.Position{
-				Line:      uint32(buf.Cursor.Line),
-				Character: uint32(buf.Cursor.Char),
+				Line:      uint32(cur.Line),
+				Character: uint32(cur.Char),
 			},
 		},
 	}
@@ -253,9 +255,11 @@ func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cu
 	if !ok {
 		return
 	}
+
+	currentCur := CursorGet(EditorInst, buf)
 	pos := protocol.Position{
-		Line:      uint32(buf.Cursor.Line),
-		Character: uint32(buf.Cursor.Char),
+		Line:      uint32(currentCur.Line),
+		Character: uint32(currentCur.Char),
 	}
 
 	definitionReq := protocol.DefinitionParams{
@@ -352,14 +356,15 @@ func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 		return
 	}
 
+	cur := CursorGet(EditorInst, buf)
 	req := protocol.CompletionParams{
 		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 			TextDocument: protocol.TextDocumentIdentifier{
 				URI: uri.URI(fmt.Sprintf("file://%s", buf.FilePath)),
 			},
 			Position: protocol.Position{
-				Line:      uint32(buf.Cursor.Line),
-				Character: uint32(buf.Cursor.Char),
+				Line:      uint32(cur.Line),
+				Character: uint32(cur.Char),
 			},
 		},
 		Context: &protocol.CompletionContext{

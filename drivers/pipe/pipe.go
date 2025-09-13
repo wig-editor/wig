@@ -33,8 +33,9 @@ func New(e *wig.Editor) *pipeDrv {
 
 func (p *pipeDrv) parseHeader(buf *wig.Buffer) header {
 	result := make(map[string]string, 10)
+	cur := wig.CursorGet(p.e, buf)
 
-	currentLine := wig.CursorLine(buf)
+	currentLine := wig.CursorLine(buf, cur)
 	for currentLine != nil {
 		if len(currentLine.Value) > 0 && currentLine.Value[0] == '#' {
 			line := strings.TrimSpace(currentLine.Value.String())
@@ -188,3 +189,4 @@ func isTrue(val string) bool {
 
 	return false
 }
+

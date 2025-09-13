@@ -30,6 +30,7 @@ func Tabstopped(ctx Context) bool {
 }
 
 func TabstopNext(ctx Context) {
+	cur := ContextCursorGet(ctx)
 	val, ok := tabstops[ctx.Buf]
 	if !ok {
 		return
@@ -38,17 +39,17 @@ func TabstopNext(ctx Context) {
 	fmt.Println(n)
 	for i := 0; i < int(n); i++ {
 		if val[0].Distance > 0 {
-			CursorInc(ctx.Buf)
+			CursorInc(ctx.Buf, cur)
 		} else {
-			CursorDec(ctx.Buf)
+			CursorDec(ctx.Buf, cur)
 		}
 	}
 
 	if val[0].Length > 0 {
-		selEnd := ctx.Buf.Cursor
+		selEnd := *cur
 		selEnd.Char += val[0].Length - 1
 		ctx.Buf.Selection = &Selection{
-			Start: ctx.Buf.Cursor,
+			Start: *cur,
 			End:   selEnd,
 		}
 	}
@@ -120,7 +121,8 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 	}
 	mode = mode[1:] // file extension with no .
 
-	line := CursorLine(ctx.Buf)
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
 	lookup := mode + strings.TrimSpace(line.Value.String())
 
 	for k, v := range s.snippets {
@@ -137,20 +139,21 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 }
 
 func (s *SnippetsManager) Expand(ctx Context, v Snippet) {
-	line := CursorLine(ctx.Buf)
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
 	body, pos := SnippetParseLocations(v.Body)
 	TextInsert(ctx.Buf, line, len(line.Value)-1, body)
 
 	if len(pos) > 0 {
 		for i := 0; i < int(pos[0].Char); i++ {
-			CursorInc(ctx.Buf)
+			CursorInc(ctx.Buf, cur)
 		}
 
 		if pos[0].Length > 0 {
-			selEnd := ctx.Buf.Cursor
+			selEnd := *cur
 			selEnd.Char += pos[0].Length - 1
 			ctx.Buf.Selection = &Selection{
-				Start: ctx.Buf.Cursor,
+				Start: *cur,
 				End:   selEnd,
 			}
 		}

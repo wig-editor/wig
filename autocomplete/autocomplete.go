@@ -13,12 +13,13 @@ func Register(e *wig.Editor) wig.AutocompleteFn {
 		}
 
 		// Lsp completion
+		cur := wig.ContextCursorGet(ctx)
 		items := ctx.Editor.Lsp.Completion(ctx.Buf)
 		ui.AutocompleteInit(
 			ctx,
 			wig.Position{
-				Line: ctx.Buf.Cursor.Line,
-				Char: ctx.Buf.Cursor.Char,
+				Line: cur.Line,
+				Char: cur.Char,
 			},
 			items,
 		)

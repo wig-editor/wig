@@ -14,21 +14,23 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	if buf == nil {
 		return
 	}
+	cur := wig.WindowCursorGet(win, buf)
 
 	termWidth, termHeight := view.Size()
 	termWidth -= 2
 	termHeight -= 1
 
 	currentLine := buf.Lines.First()
-	offset := buf.ScrollOffset
+	offset := cur.ScrollOffset
+
 	lineNum := 0
 	y := 0
 
 	isActiveWin := win == e.ActiveWindow()
 
 	skip := 0
-	if buf.Cursor.Char > termWidth {
-		skip = buf.Cursor.Char - termWidth
+	if cur.Char > termWidth {
+		skip = cur.Char - termWidth
 	}
 
 	var tsNodeCursor *wig.TreeSitterNodeCursor
@@ -69,7 +71,7 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				// Colors and styles
 
 				// highlight current line
-				if lineNum == buf.Cursor.Line && isActiveWin {
+				if lineNum == cur.Line && isActiveWin {
 					textStyle = wig.ApplyBg("ui.cursorline", textStyle)
 					bg := strings.Repeat(" ", termWidth)
 					view.SetContent(x, y, bg, textStyle)
@@ -110,7 +112,7 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 
 				// render cursor
 				if isActiveWin {
-					if lineNum == buf.Cursor.Line && i == buf.Cursor.Char {
+					if lineNum == cur.Line && i == cur.Char {
 						baseCursor, found := wig.FindColor("ui.selection")
 						if !found {
 							panic("theme ui.selection not defined")
@@ -136,7 +138,7 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 			}
 
 			// render cursor after the end of the line in insert mode
-			if lineNum == buf.Cursor.Line && buf.Cursor.Char >= len(currentLine.Value) && isActiveWin {
+			if lineNum == cur.Line && cur.Char >= len(currentLine.Value) && isActiveWin {
 				view.SetContent(x, y, " ", wig.Color("ui.cursor"))
 			}
 
