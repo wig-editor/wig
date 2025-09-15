@@ -130,7 +130,7 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 			CmdCursorFirstNonBlank(ctx)
 			CmdDeleteEndOfLine(ctx)
 			CmdCursorFirstNonBlank(ctx)
-			s.Expand(ctx, v)
+			s.Expand(ctx, v, cur.Char)
 			return true
 		}
 	}
@@ -138,11 +138,11 @@ func (s *SnippetsManager) Complete(ctx Context) bool {
 	return false
 }
 
-func (s *SnippetsManager) Expand(ctx Context, v Snippet) {
+func (s *SnippetsManager) Expand(ctx Context, v Snippet, cursorChar int) {
 	cur := ContextCursorGet(ctx)
 	line := CursorLine(ctx.Buf, cur)
 	body, pos := SnippetParseLocations(v.Body)
-	TextInsert(ctx.Buf, line, len(line.Value)-1, body)
+	TextInsert(ctx.Buf, line, cursorChar, body)
 
 	if len(pos) > 0 {
 		for i := 0; i < int(pos[0].Char); i++ {
@@ -159,8 +159,10 @@ func (s *SnippetsManager) Expand(ctx Context, v Snippet) {
 		}
 		TabstopActivate(ctx, pos[1:])
 	} else {
-		CmdGotoLineEnd(ctx)
+		// CmdGotoLineEnd(ctx)
+		cur.Char += len(v.Body)
 	}
+
 	CmdEnterInsertMode(ctx)
 }
 

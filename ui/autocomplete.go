@@ -112,7 +112,7 @@ func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 
 	if item.InsertTextFormat == 2 {
 		cur.Char = pos
-		ctx.Editor.Snippets.Expand(ctx, wig.Snippet{Body: text})
+		ctx.Editor.Snippets.Expand(ctx, wig.Snippet{Body: text}, pos)
 		return
 	}
 
