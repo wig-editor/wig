@@ -171,7 +171,9 @@ func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
 		e.Windows[len(e.Windows)-1].ShowBuffer(b)
 		return
 	}
-	e.Windows = append(e.Windows, &Window{buf: b})
+	win := CreateWindow()
+	win.buf = b
+	e.Windows = append(e.Windows, win)
 }
 
 func (e *Editor) HandleInput(ev *tcell.EventKey) {

@@ -1,1 +1,22 @@
-sdf
+#
+# cmd: psql -h localhost -d testdb
+# interactive: 1
+# append: 1
+#
+
+help;
+\d
+select * from employee;
+
+# cmd: http --pretty=none --print=hmb
+# interactive: 0
+# append: 1
+
+GET google.com
+
+# cmd: http --pretty=none --print=hmb
+# interactive: 0
+# append: 1
+
+GET google.com
+
