@@ -99,6 +99,10 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 						if i >= int(info.Range.Start.Character) && i < int(info.Range.End.Character) {
 							textStyle = wig.MergeStyles(textStyle, "diagnostic.error")
 						}
+						// once character error
+						if info.Range.Start.Character == info.Range.End.Character && info.Range.End.Character == uint32(i) {
+							textStyle = wig.MergeStyles(textStyle, "diagnostic.error")
+						}
 					}
 				}
 
