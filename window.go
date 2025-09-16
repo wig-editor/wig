@@ -41,12 +41,21 @@ func (win *Window) Buffer() *Buffer {
 	return win.buf
 }
 
-func CreateWindow() *Window {
+// Specify parent window to inherit cursors
+func CreateWindow(parent *Window) *Window {
+	cursors := map[*Buffer]*Cursor{}
+	if parent != nil {
+		for k, v := range parent.cursors {
+			nc := *v
+			cursors[k] = &nc
+		}
+	}
+
 	return &Window{
 		Jumps: &Jumps{
 			List: List[Jump]{},
 		},
-		cursors: map[*Buffer]*Cursor{},
+		cursors: cursors,
 	}
 }
 

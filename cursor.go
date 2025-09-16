@@ -111,19 +111,12 @@ func ContextCursorGet(ctx Context) *Cursor {
 	return WindowCursorGet(win, ctx.Buf)
 }
 
-func WindowCursorGet(win *Window, buf *Buffer) *Cursor {
-	cur, ok := win.cursors[buf]
-	if ok {
-		return cur
-	}
-
-	cur = &Cursor{}
-	win.cursors[buf] = cur
-	return cur
-}
-
 func CursorGet(editor *Editor, buf *Buffer) *Cursor {
 	win := editor.ActiveWindow()
+	return WindowCursorGet(win, buf)
+}
+
+func WindowCursorGet(win *Window, buf *Buffer) *Cursor {
 	cur, ok := win.cursors[buf]
 	if ok {
 		return cur

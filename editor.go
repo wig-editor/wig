@@ -69,7 +69,7 @@ func NewEditor(
 	view View,
 	keys *KeyHandler,
 ) *Editor {
-	windows := []*Window{CreateWindow()}
+	windows := []*Window{CreateWindow(nil)}
 
 	EditorInst = &Editor{
 		View:         view,
@@ -171,7 +171,7 @@ func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
 		e.Windows[len(e.Windows)-1].ShowBuffer(b)
 		return
 	}
-	win := CreateWindow()
+	win := CreateWindow(nil)
 	win.buf = b
 	e.Windows = append(e.Windows, win)
 }

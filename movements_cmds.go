@@ -275,7 +275,7 @@ func CmdBackwardChar(ctx Context) func(Context) {
 
 func CmdWindowVSplit(ctx Context) {
 	cur := ContextCursorGet(ctx)
-	nwin := CreateWindow()
+	nwin := CreateWindow(ctx.Editor.ActiveWindow())
 	nwin.VisitBuffer(ctx, *cur)
 	ctx.Editor.Windows = append(ctx.Editor.Windows, nwin)
 }
