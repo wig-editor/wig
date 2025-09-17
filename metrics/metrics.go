@@ -11,9 +11,10 @@ func init() {
 func Track(name string, fn func()) {
 	start := time.Now()
 	fn()
-	stats[name] = time.Now().Sub(start)
+	stats[name] = time.Since(start)
 }
 
 func Get() map[string]time.Duration {
 	return stats
 }
+
