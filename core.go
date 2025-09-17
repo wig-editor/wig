@@ -418,12 +418,8 @@ func CmdKillBuffer(ctx Context) {
 		return
 	}
 
-	// remove from buffers list
-	// and move to the next buffer
 	for i, b := range buffers {
 		if b == ctx.Buf {
-
-			// cleanup all nodes
 			{
 				l := ctx.Buf.Lines.First()
 				for l != nil {
@@ -436,17 +432,24 @@ func CmdKillBuffer(ctx Context) {
 				ctx.Buf.Highlighter = nil
 				ctx.Buf.UndoRedo = nil
 				ctx.Buf.Tx = nil
-
 			}
 
 			buffers = slices.Delete(buffers, i, i+1)
+
 			if len(buffers) > 0 {
 				idx := i - 1
 				idx = max(idx, 0)
-				cur := ContextCursorGet(ctx)
 				ctx.Buf = buffers[idx]
+				cur := ContextCursorGet(ctx)
 				ctx.Editor.ActiveWindow().VisitBuffer(ctx, *cur)
 			}
+
+			ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
+				if win.buf == b {
+					return true
+				}
+				return false
+			})
 		}
 	}
 
