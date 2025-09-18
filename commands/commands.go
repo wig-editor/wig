@@ -297,26 +297,21 @@ func CmdGotoDefinition(ctx wig.Context) {
 	wig.CmdCursorCenter(ctx.Editor.NewContext())
 }
 
-// TODO: fix when per-window cursors
 func CmdGotoDefinitionOtherWindow(ctx wig.Context) {
-	if len(ctx.Editor.Windows) == 1 {
-		wig.CmdWindowVSplit(ctx)
-	}
-
+	CmdViewDefinitionOtherWindow(ctx)
 	wig.CmdWindowNext(ctx)
-	ctx.Editor.ActiveWindow().ShowBuffer(ctx.Buf)
-	CmdGotoDefinition(ctx)
 }
 
 func CmdViewDefinitionOtherWindow(ctx wig.Context) {
 	curWin := ctx.Editor.ActiveWindow()
+	cur := wig.ContextCursorGet(ctx)
 
 	if len(ctx.Editor.Windows) == 1 {
 		wig.CmdWindowVSplit(ctx)
 	}
 
 	wig.CmdWindowNext(ctx)
-	ctx.Editor.ActiveWindow().ShowBuffer(ctx.Buf)
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx, *cur)
 	CmdGotoDefinition(ctx)
 	ctx.Editor.SetActiveWindow(curWin)
 }

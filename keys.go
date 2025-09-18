@@ -136,14 +136,6 @@ func (k *KeyHandler) GetFallback() KeyFallbackFn {
 	return k.fallback
 }
 
-func (k *KeyHandler) StartMacroRecording(reg string) {
-	k.Macros.Start(reg)
-}
-
-func (k *KeyHandler) StopMacroRecording() {
-	k.Macros.Stop()
-}
-
 func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {
 	m := []string{}
 
