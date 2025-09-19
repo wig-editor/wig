@@ -197,7 +197,7 @@ func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 			break
 		}
 
-		// Apply predicates filteringsdkfsldfjslkdfj
+		// Apply predicate
 		m = qc.FilterPredicates(m, h.sourceCode)
 		for _, c := range m.Captures {
 			startPoint := c.Node.StartPoint()
