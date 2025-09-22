@@ -32,7 +32,9 @@ func TreeSitterHighlighterGo(e *Editor) {
 		for event := range e.Events.Subscribe() {
 			switch e := event.Msg.(type) {
 			case EventTextChange:
-				e.Buf.Highlighter.TextChanged(e)
+				if e.Buf.Highlighter != nil {
+					e.Buf.Highlighter.TextChanged(e)
+				}
 			}
 			event.Wg.Done()
 		}
