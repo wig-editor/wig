@@ -4,10 +4,19 @@ import (
 	"strings"
 
 	str "github.com/boyter/go-string"
+	"github.com/gdamore/tcell/v2"
 	"github.com/mattn/go-runewidth"
 
 	"github.com/firstrow/wig"
 )
+
+func nodeToColor(node *wig.Element[wig.HighlighterNode]) tcell.Style {
+	if node == nil {
+		return wig.Color("default")
+	}
+
+	return wig.Color(node.Value.NodeName)
+}
 
 func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	buf := win.Buffer()
@@ -33,14 +42,10 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 		skip = cur.Char - termWidth
 	}
 
-	var tsNodeCursor *wig.TreeSitterNodeCursor
+	startLine := uint32(offset)
+	var tsNodeCursor *wig.HighlighterCursor
 	if buf.Highlighter != nil {
-		startLine := uint32(0)
-		if offset > 0 {
-			startLine = uint32(offset)
-		}
-		buf.Highlighter.Highlights(uint32(startLine), startLine+uint32(termHeight))
-		tsNodeCursor = wig.NewColorNodeCursor(buf.Highlighter.RootNode())
+		tsNodeCursor = buf.Highlighter.ForRange(uint32(startLine), startLine+uint32(termHeight))
 	}
 
 	for currentLine != nil {
@@ -64,7 +69,7 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				if tsNodeCursor != nil {
 					colorNode, ok := tsNodeCursor.Seek(uint32(lineNum), uint32(i))
 					if ok {
-						textStyle = wig.NodeToColor(colorNode)
+						textStyle = nodeToColor(colorNode)
 					}
 				}
 

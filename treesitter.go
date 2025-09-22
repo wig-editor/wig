@@ -8,67 +8,52 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/pkg/errors"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/golang"
 )
 
-// TODO: rewrite treesitter to use channel and scheduled parsing
+// TODO: rewrite treesitter to use channel and scheduled parsing. some day.
 var tslock sync.Mutex
 
-type TreeSitterRangeNode struct {
-	NodeName  string
-	StartLine uint32
-	StartChar uint32
-	EndLine   uint32
-	EndChar   uint32
-}
+var _ Highlighter = &TreeSitterHighlighter{}
 
-type Highlighter struct {
+type TreeSitterHighlighter struct {
 	e          *Editor
 	buf        *Buffer
-	nodes      List[TreeSitterRangeNode]
 	parser     *sitter.Parser
 	q          *sitter.Query
 	tree       *sitter.Tree
 	sourceCode []byte
 }
 
-// TODO: this must exit on editor close
-// use context cancel()
-func HighlighterGo(e *Editor) {
+func TreeSitterHighlighterGo(e *Editor) {
 	go func() {
 		for event := range e.Events.Subscribe() {
 			switch e := event.Msg.(type) {
 			case EventTextChange:
-				HighlighterEditTree(e)
+				e.Buf.Highlighter.TextChanged(e)
 			}
 			event.Wg.Done()
 		}
 	}()
 }
 
-func HighlighterEditTree(event EventTextChange) {
+func (h *TreeSitterHighlighter) TextChanged(event EventTextChange) {
 	if event.Buf == nil {
-		return
-	}
-
-	h := event.Buf.Highlighter
-	if h == nil {
 		return
 	}
 
 	tslock.Lock()
 	defer tslock.Unlock()
 
-	ll := HighlighterAdaptEditInput(event)
-	event.Buf.Highlighter.tree.Edit(ll)
+	ll := h.editEditInput(event)
+	h.tree.Edit(ll)
 
-	h.nodes = List[TreeSitterRangeNode]{}
-	event.Buf.Highlighter.sourceCode = []byte(event.Buf.String())
-	tree, err := h.parser.ParseCtx(context.Background(), h.tree, event.Buf.Highlighter.sourceCode)
+	h.sourceCode = []byte(event.Buf.String())
+	tree, err := h.parser.ParseCtx(context.Background(), h.tree, h.sourceCode)
 	if err != nil {
+		// TODO: do not panic. log error.
 		panic(err.Error())
 	}
 
@@ -76,7 +61,55 @@ func HighlighterEditTree(event EventTextChange) {
 	h.tree = tree
 }
 
-func HighlighterAdaptEditInput(event EventTextChange) (r sitter.EditInput) {
+func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighlighter {
+	if !strings.HasSuffix(buf.FilePath, ".go") {
+		return nil
+	}
+
+	h := &TreeSitterHighlighter{
+		e:   e,
+		buf: buf,
+	}
+	h.parser = sitter.NewParser()
+	h.parser.SetLanguage(golang.GetLanguage())
+
+	var err error
+
+	hgFile := e.RuntimeDir("queries", "go", "highlights.scm")
+	highlightQ, err := os.ReadFile(hgFile)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	h.q, err = sitter.NewQuery(highlightQ, golang.GetLanguage())
+	if err != nil {
+		h.e.LogError(errors.Wrap(err, "tree sitter query error"))
+		return nil
+	}
+
+	h.Build()
+	return h
+}
+
+func (h *TreeSitterHighlighter) editEditInput(event EventTextChange) (r sitter.EditInput) {
+
+	pointToByte := func(buf *Buffer, line, char int) int {
+		size := 0
+		lineNum := 0
+		currentLine := buf.Lines.First()
+		for currentLine != nil {
+			if lineNum == line {
+				v := currentLine.Value.Range(0, char)
+				return size + utf8.RuneCountInString(string(v))
+			}
+			size += currentLine.Value.Bytes()
+			currentLine = currentLine.Next()
+			lineNum++
+		}
+		return size
+	}
+
 	// deletion
 	if len(event.Text) == 0 {
 		return sitter.EditInput{
@@ -100,61 +133,12 @@ func HighlighterAdaptEditInput(event EventTextChange) (r sitter.EditInput) {
 	}
 }
 
-func pointToByte(buf *Buffer, line, char int) int {
-	size := 0
-	lineNum := 0
-	currentLine := buf.Lines.First()
-	for currentLine != nil {
-		if lineNum == line {
-			v := currentLine.Value.Range(0, char)
-			return size + utf8.RuneCountInString(string(v))
-		}
-		size += currentLine.Value.Bytes()
-		currentLine = currentLine.Next()
-		lineNum++
-	}
-	return size
-}
-
-func HighlighterInitBuffer(e *Editor, buf *Buffer) {
-	if !strings.HasSuffix(buf.FilePath, ".go") {
-		return
-	}
-
-	h := &Highlighter{
-		e:     e,
-		buf:   buf,
-		nodes: List[TreeSitterRangeNode]{},
-	}
-	h.parser = sitter.NewParser()
-	h.parser.SetLanguage(golang.GetLanguage())
-
-	var err error
-
-	hgFile := e.RuntimeDir("queries", "go", "highlights.scm")
-	highlightQ, err := os.ReadFile(hgFile)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	h.q, err = sitter.NewQuery(highlightQ, golang.GetLanguage())
-	if err != nil {
-		h.e.LogError(errors.Wrap(err, "tree sitter query error"))
-		return
-	}
-
-	h.Build()
-	buf.Highlighter = h
-}
-
-func (h *Highlighter) Build() {
+func (h *TreeSitterHighlighter) Build() {
 	tslock.Lock()
 	defer tslock.Unlock()
 	if h == nil {
 		return
 	}
-
-	h.nodes = List[TreeSitterRangeNode]{}
 
 	if h.tree != nil {
 		h.tree.Close()
@@ -169,17 +153,9 @@ func (h *Highlighter) Build() {
 	h.tree = tree
 }
 
-func (h *Highlighter) RootNode() *Element[TreeSitterRangeNode] {
-	return h.nodes.First()
-}
-
-// Get syntax highlights for document range
-// TODO: this must return array of nodes
-func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
+func (h *TreeSitterHighlighter) ForRange(lineStart, lineEnd uint32) *HighlighterCursor {
 	tslock.Lock()
 	defer tslock.Unlock()
-
-	h.nodes = List[TreeSitterRangeNode]{}
 
 	qc := sitter.NewQueryCursor()
 	qc.SetPointRange(
@@ -189,20 +165,18 @@ func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 	qc.Exec(h.q, h.tree.RootNode())
 	defer qc.Close()
 
-	i := 0
-
+	nodes := List[HighlighterNode]{}
 	for {
 		m, ok := qc.NextMatch()
 		if !ok {
 			break
 		}
 
-		// Apply predicate
 		m = qc.FilterPredicates(m, h.sourceCode)
 		for _, c := range m.Captures {
 			startPoint := c.Node.StartPoint()
 			endPoint := c.Node.EndPoint()
-			h.nodes.PushBack(TreeSitterRangeNode{
+			nodes.PushBack(HighlighterNode{
 				NodeName:  h.q.CaptureNameForId(c.Index),
 				StartLine: startPoint.Row,
 				StartChar: startPoint.Column,
@@ -210,62 +184,10 @@ func (h *Highlighter) Highlights(lineStart, lineEnd uint32) {
 				EndChar:   endPoint.Column,
 			})
 		}
-		i++
-	}
-}
-
-func NodeToColor(node *Element[TreeSitterRangeNode]) tcell.Style {
-	if node == nil {
-		return Color("default")
 	}
 
-	return Color(node.Value.NodeName)
-}
-
-type TreeSitterNodeCursor struct {
-	cursor *Element[TreeSitterRangeNode]
-}
-
-func NewColorNodeCursor(rootNode *Element[TreeSitterRangeNode]) *TreeSitterNodeCursor {
-	if rootNode == nil {
-		return nil
+	return &HighlighterCursor{
+		cursor: nodes.First(),
 	}
-	return &TreeSitterNodeCursor{
-		cursor: rootNode,
-	}
-}
-
-func (c *TreeSitterNodeCursor) Seek(line, ch uint32) (node *Element[TreeSitterRangeNode], found bool) {
-	inRange := func(node *Element[TreeSitterRangeNode], line, ch uint32) bool {
-		if node == nil {
-			return false
-		}
-		if line >= node.Value.StartLine && line <= node.Value.EndLine {
-			if ch >= node.Value.StartChar && ch < node.Value.EndChar {
-				return true
-			}
-		}
-		return false
-	}
-
-	if inRange(c.cursor, line, ch) {
-		return c.cursor, true
-	}
-
-	nextNode := c.cursor.Next()
-	for nextNode != nil {
-		if nextNode.Value.StartLine > line {
-			break
-		}
-
-		if inRange(nextNode, line, ch) {
-			c.cursor = nextNode
-			return c.cursor, true
-		}
-
-		nextNode = nextNode.Next()
-	}
-
-	return nil, false
 }
 

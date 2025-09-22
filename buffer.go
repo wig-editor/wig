@@ -47,7 +47,7 @@ type Buffer struct {
 	IndentCh    []rune
 	Tx          *Transaction
 	UndoRedo    *UndoRedo
-	Highlighter *Highlighter
+	Highlighter Highlighter
 
 	rootDir string
 }

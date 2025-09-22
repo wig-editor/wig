@@ -389,4 +389,3 @@ func CmdBufferCycle(ctx Context) {
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
 }
-

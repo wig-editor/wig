@@ -87,7 +87,7 @@ func NewEditor(
 		Snippets:     NewSnippetsManager(),
 	}
 	EditorInst.Lsp = NewLspManager(EditorInst)
-	HighlighterGo(EditorInst)
+	TreeSitterHighlighterGo(EditorInst)
 
 	return EditorInst
 }
@@ -105,7 +105,10 @@ func (e *Editor) OpenFile(path string) *Buffer {
 	e.Buffers = append(e.Buffers, buf)
 	e.Lsp.DidOpen(buf)
 
-	HighlighterInitBuffer(e, buf)
+	hl := TreeSitterHighlighterInitBuffer(e, buf)
+	if hl != nil {
+		buf.Highlighter = hl
+	}
 
 	return buf
 }
