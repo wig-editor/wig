@@ -95,7 +95,6 @@ func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighligh
 }
 
 func (h *TreeSitterHighlighter) editEditInput(event EventTextChange) (r sitter.EditInput) {
-
 	pointToByte := func(buf *Buffer, line, char int) int {
 		size := 0
 		lineNum := 0

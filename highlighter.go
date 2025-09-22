@@ -27,6 +27,10 @@ func HighlighterGet(b *Buffer) Highlighter {
 }
 
 func (c *HighlighterCursor) Seek(line, ch uint32) (node *Element[HighlighterNode], found bool) {
+	if c.cursor == nil {
+		return
+	}
+
 	inRange := func(node *Element[HighlighterNode], line, ch uint32) bool {
 		if node == nil {
 			return false
