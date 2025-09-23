@@ -340,7 +340,7 @@ func CmdLspShowDiagnostics(ctx wig.Context) {
 	}
 
 	for _, info := range diagnostics {
-		if cur.Char >= int(info.Range.Start.Character) && cur.Char < int(info.Range.End.Character) {
+		if cur.Char >= int(info.Range.Start.Character) && cur.Char <= int(info.Range.End.Character) {
 			ctx.Editor.EchoMessage(info.Message)
 			return
 		}

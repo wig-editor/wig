@@ -86,6 +86,7 @@ func NewEditor(
 		Events:       NewEventsManager(),
 		Snippets:     NewSnippetsManager(),
 	}
+
 	EditorInst.Lsp = NewLspManager(EditorInst)
 	TreeSitterHighlighterGo(EditorInst)
 
