@@ -223,6 +223,7 @@ func CmdDeleteWord(ctx Context) {
 		Start: *cur,
 		End:   Cursor{Line: cur.Line, Char: end},
 	}
+	yankSave(ctx)
 	SelectionDelete(ctx)
 }
 
