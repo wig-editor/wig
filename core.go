@@ -465,7 +465,6 @@ func CmdKillBuffer(ctx Context) {
 
 func CmdNewBuffer(ctx Context) {
 	buf := NewBuffer()
-	buf.Lines = List[Line]{}
 	buf.Lines.PushBack([]rune("\n"))
 	buf.FilePath = "[No Name]"
 	ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)

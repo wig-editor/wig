@@ -56,11 +56,12 @@ func NewBuffer() *Buffer {
 	lines := List[Line]{}
 	lines.PushBack(Line{})
 	b := &Buffer{
-		Lines:     lines,
-		IndentCh:  []rune{'\t'},
-		Selection: nil,
-		Driver:    nil,
-		Tx:        nil,
+		Lines:       lines,
+		IndentCh:    []rune{'\t'},
+		Selection:   nil,
+		Driver:      nil,
+		Tx:          nil,
+		Highlighter: nil,
 	}
 
 	b.UndoRedo = NewUndoRedo(b)

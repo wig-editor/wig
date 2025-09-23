@@ -242,7 +242,9 @@ func CmdFormatBufferAndSave(ctx wig.Context) {
 
 	ctx.Editor.Lsp.DidClose(ctx.Buf)
 	ctx.Editor.Lsp.DidOpen(ctx.Buf)
-	ctx.Buf.Highlighter.Build()
+	if ctx.Buf.Highlighter != nil {
+		ctx.Buf.Highlighter.Build()
+	}
 }
 
 func CmdSearchLine(ctx wig.Context) {
