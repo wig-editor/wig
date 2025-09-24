@@ -82,6 +82,9 @@ func TextDelete(buf *Buffer, selection *Selection) {
 
 	if lineStart != lineEnd {
 		for lineStart.Next() != lineEnd {
+			if lineStart.Next() == nil {
+				break
+			}
 			buf.Lines.Remove(lineStart.Next())
 		}
 		buf.Lines.Remove(lineEnd)
