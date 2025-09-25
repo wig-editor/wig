@@ -103,6 +103,7 @@ func (e *Editor) OpenFile(path string) *Buffer {
 		e.LogError(err)
 		return nil
 	}
+
 	e.Buffers = append(e.Buffers, buf)
 	e.Lsp.DidOpen(buf)
 

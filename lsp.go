@@ -16,21 +16,29 @@ import (
 	"go.lsp.dev/uri"
 )
 
-type LspServerConfig struct {
-	Cmd []string
-}
-
 type lspConn struct {
 	rpcConn jsonrpc2.Conn
 }
 
-var lspConfigs = map[string]LspServerConfig{
-	".go": {
-		Cmd: []string{"gopls"},
-	},
+var lspConfigs = map[string]LanguageServerConfig{}
+
+func init() {
+	lcfg := LoadLanguagesConfig()
+	for _, v := range lcfg.Languages {
+		exts, _ := v.GetFileTypes()
+		servers := v.GetLanguageServers()
+		if len(servers) == 0 {
+			continue
+		}
+		c := lcfg.LanguageServers[servers[0]]
+		for _, ext := range exts {
+			ekey := "." + ext
+			lspConfigs[ekey] = c
+		}
+	}
 }
 
-func LspConfigByFileName(file string) (conf LspServerConfig, found bool) {
+func LspConfigByFileName(file string) (conf LanguageServerConfig, found bool) {
 	fp := filepath.Ext(file)
 	conf, found = lspConfigs[fp]
 	return
@@ -138,7 +146,7 @@ func (l *LspManager) DidChange(event EventTextChange) {
 		},
 	}
 
-	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDidChange, req, nil)
+	err := client.rpcConn.Notify(context.Background(), protocol.MethodTextDocumentDidChange, req)
 	if err != nil {
 		l.e.LogError(err)
 	}
@@ -163,7 +171,7 @@ func (l *LspManager) DidClose(buf *Buffer) {
 		},
 	}
 
-	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDidClose, req, nil)
+	err := client.rpcConn.Notify(context.Background(), protocol.MethodTextDocumentDidClose, req)
 	if err != nil {
 		l.e.LogError(err)
 	}
@@ -273,7 +281,13 @@ func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cu
 	var definitionResp []protocol.Location
 	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDefinition, definitionReq, &definitionResp)
 	if err != nil {
-		l.e.EchoMessage(err.Error())
+		var definitionResp2 protocol.Location
+		_, err2 := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDefinition, definitionReq, &definitionResp2)
+		if err2 != nil {
+			l.e.EchoMessage(err2.Error())
+		} else {
+			definitionResp = append(definitionResp, definitionResp2)
+		}
 	}
 
 	if len(definitionResp) == 0 {
@@ -369,8 +383,8 @@ func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 		},
 		Context: &protocol.CompletionContext{
 			TriggerCharacter: ".",
-			TriggerKind:      protocol.CompletionTriggerKindTriggerCharacter,
-			// TriggerKind: protocol.CompletionTriggerKindInvoked,
+			// TriggerKind:      protocol.CompletionTriggerKindTriggerCharacter,
+			TriggerKind: protocol.CompletionTriggerKindInvoked,
 		},
 	}
 
@@ -412,8 +426,8 @@ func (pw *pipeWrapper) Close() error {
 	return nil
 }
 
-func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer) (conn *lspConn, err error) {
-	cmd := exec.Command(conf.Cmd[0], conf.Cmd[1:]...)
+func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Buffer) (conn *lspConn, err error) {
+	cmd := exec.Command(conf.Command, conf.Args...)
 
 	pin, _ := cmd.StdinPipe()
 	pout, _ := cmd.StdoutPipe()
@@ -441,42 +455,43 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer)
 
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
 		// TODO: reply with real gopls config
+		fmt.Println("got LSP hanlder req", req.Method(), string(req.Params()))
 		if req.Method() == "workspace/configuration" {
-			resp := []any{
-				map[string]any{
-					"analysisProgressReporting": true,
-					"buildFlags":                []any{},
-					"codelenses": map[string]any{
-						"gc_details":         false,
-						"generate":           true,
-						"regenerate_cgo":     true,
-						"tidy":               true,
-						"upgrade_dependency": true,
-						"test":               true,
-						"vendor":             true,
-					},
-					"completeFunctionCalls": true,
-					"completionBudget":      "100ms",
-					"diagnosticsDelay":      "1s",
-					"directoryFilters":      []any{},
-					"gofumpt":               false,
-					"hoverKind":             "SynopsisDocumentation",
-					"importShortcut":        "Both",
-					"linkTarget":            "pkg.go.dev",
-					"linksInHover":          true,
-					"local":                 "",
-					"matcher":               "Fuzzy",
-					"standaloneTags": []any{
-						"ignore",
-					},
-					"symbolMatcher":   "FastFuzzy",
-					"symbolScope":     "all",
-					"symbolStyle":     "Dynamic",
-					"usePlaceholders": true,
-					"verboseOutput":   true,
-				},
-			}
-			return reply(ctx, resp, nil)
+			// resp := []any{
+			// map[string]any{
+			// "analysisProgressReporting": true,
+			// "buildFlags":                []any{},
+			// "codelenses": map[string]any{
+			// "gc_details":         false,
+			// "generate":           true,
+			// "regenerate_cgo":     true,
+			// "tidy":               true,
+			// "upgrade_dependency": true,
+			// "test":               true,
+			// "vendor":             true,
+			// },
+			// "completeFunctionCalls": true,
+			// "completionBudget":      "100ms",
+			// "diagnosticsDelay":      "1s",
+			// "directoryFilters":      []any{},
+			// "gofumpt":               false,
+			// "hoverKind":             "SynopsisDocumentation",
+			// "importShortcut":        "Both",
+			// "linkTarget":            "pkg.go.dev",
+			// "linksInHover":          true,
+			// "local":                 "",
+			// "matcher":               "Fuzzy",
+			// "standaloneTags": []any{
+			// "ignore",
+			// },
+			// "symbolMatcher":   "FastFuzzy",
+			// "symbolScope":     "all",
+			// "symbolStyle":     "Dynamic",
+			// "usePlaceholders": true,
+			// "verboseOutput":   true,
+			// },
+			// }
+			// return reply(ctx, resp, nil)
 		}
 
 		if req.Method() == "textDocument/publishDiagnostics" {
@@ -514,7 +529,8 @@ func (l *LspManager) startAndInitializeServer(conf LspServerConfig, buf *Buffer)
 		l.e.LogError(err)
 	}
 
-	_, err = c.Call(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{}, nil)
+	fmt.Println("waiting....")
+	err = c.Notify(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{})
 	if err != nil {
 		l.e.LogError(err)
 	}
@@ -533,7 +549,7 @@ func (l *lspConn) didOpen(buf *Buffer) {
 			Text:       buf.String(),
 		},
 	}
-	_, err := l.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen, nil)
+	err := l.rpcConn.Notify(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen)
 	if err != nil {
 		panic(err.Error())
 	}

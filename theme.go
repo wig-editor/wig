@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type Theme struct {

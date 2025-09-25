@@ -7,7 +7,7 @@ var lspServerInitJson = `{
     "name": "wig",
     "version": "001"
   },
-  "rootUri": "",
+  "rootUri": null,
   "capabilities": {
     "general": {
       "positionEncodings": [
@@ -255,5 +255,4 @@ var lspServerInitJson = `{
   "initializationOptions": null,
   "workDoneToken": "1"
 }`
-
 

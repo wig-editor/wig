@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 	"unicode/utf8"
 
@@ -64,9 +63,9 @@ func (h *TreeSitterHighlighter) TextChanged(event EventTextChange) {
 }
 
 func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighlighter {
-	if !strings.HasSuffix(buf.FilePath, ".go") {
-		return nil
-	}
+	// if !strings.HasSuffix(buf.FilePath, ".go") {
+	// return nil
+	// }
 
 	h := &TreeSitterHighlighter{
 		e:   e,
@@ -84,6 +83,7 @@ func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighligh
 		return nil
 	}
 
+	// h.q, err = sitter.NewQuery(highlightQ, golang.GetLanguage())
 	h.q, err = sitter.NewQuery(highlightQ, golang.GetLanguage())
 	if err != nil {
 		h.e.LogError(errors.Wrap(err, "tree sitter query error"))

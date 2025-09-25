@@ -10,6 +10,7 @@ require (
 	github.com/junegunn/fzf v0.57.0
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/pelletier/go-toml v1.9.5
+	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/pkg/errors v0.8.1
 	github.com/smacker/go-tree-sitter v0.0.0-20240827094217-dd81d9e9be82
 	github.com/stretchr/testify v1.10.0
