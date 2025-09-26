@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"unicode/utf8"
+	"unsafe"
 
-	"github.com/pkg/errors"
-	sitter "github.com/smacker/go-tree-sitter"
-	"github.com/smacker/go-tree-sitter/golang"
+	odin "github.com/firstrow/tree-sitter-odin/bindings/go"
+	sitter "github.com/tree-sitter/go-tree-sitter"
+	golang "github.com/tree-sitter/tree-sitter-go/bindings/go"
 )
 
 // TODO: rewrite treesitter to use channel and scheduled parsing. some day.
@@ -49,52 +51,104 @@ func (h *TreeSitterHighlighter) TextChanged(event EventTextChange) {
 	defer tslock.Unlock()
 
 	ll := h.editEditInput(event)
-	h.tree.Edit(ll)
+	h.tree.Edit(&ll)
 
 	h.sourceCode = []byte(event.Buf.String())
-	tree, err := h.parser.ParseCtx(context.Background(), h.tree, h.sourceCode)
-	if err != nil {
-		// TODO: do not panic. log error.
-		panic(err.Error())
-	}
-
+	tree := h.parser.ParseCtx(context.Background(), h.sourceCode, h.tree)
 	h.tree.Close()
 	h.tree = tree
 }
 
 func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighlighter {
-	// if !strings.HasSuffix(buf.FilePath, ".go") {
-	// return nil
-	// }
+	var treeSitterLang unsafe.Pointer
+	qpath := ""
+
+	if strings.HasSuffix(buf.FilePath, ".go") {
+		treeSitterLang = golang.Language()
+		qpath = "go"
+	}
+	if strings.HasSuffix(buf.FilePath, ".odin") {
+		treeSitterLang = odin.Language()
+		qpath = "odin"
+	}
 
 	h := &TreeSitterHighlighter{
 		e:   e,
 		buf: buf,
 	}
 	h.parser = sitter.NewParser()
-	h.parser.SetLanguage(golang.GetLanguage())
-
+	h.parser.SetLanguage(sitter.NewLanguage(treeSitterLang))
 	var err error
 
-	hgFile := e.RuntimeDir("queries", "go", "highlights.scm")
+	hgFile := e.RuntimeDir("queries", qpath, "highlights.scm")
+
 	highlightQ, err := os.ReadFile(hgFile)
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 
-	// h.q, err = sitter.NewQuery(highlightQ, golang.GetLanguage())
-	h.q, err = sitter.NewQuery(highlightQ, golang.GetLanguage())
-	if err != nil {
-		h.e.LogError(errors.Wrap(err, "tree sitter query error"))
-		return nil
-	}
+	// TODO: check that weird error. geeeeeee.
+	h.q, _ = sitter.NewQuery(sitter.NewLanguage(treeSitterLang), string(highlightQ))
 
 	h.Build()
 	return h
 }
 
-func (h *TreeSitterHighlighter) editEditInput(event EventTextChange) (r sitter.EditInput) {
+func (h *TreeSitterHighlighter) Build() {
+	tslock.Lock()
+	defer tslock.Unlock()
+
+	if h == nil {
+		return
+	}
+
+	if h.tree != nil {
+		h.tree.Close()
+	}
+
+	h.sourceCode = []byte(h.buf.String())
+	tree := h.parser.Parse(h.sourceCode, nil)
+	h.tree = tree
+}
+
+func (h *TreeSitterHighlighter) ForRange(lineStart, lineEnd uint32) *HighlighterCursor {
+	tslock.Lock()
+	defer tslock.Unlock()
+
+	qc := sitter.NewQueryCursor()
+	qc.SetPointRange(
+		sitter.Point{Row: uint(lineStart), Column: 0},
+		sitter.Point{Row: uint(lineEnd), Column: 0},
+	)
+	defer qc.Close()
+
+	matches := qc.Matches(h.q, h.tree.RootNode(), h.sourceCode)
+
+	nodes := List[HighlighterNode]{}
+
+	for match := matches.Next(); match != nil; match = matches.Next() {
+		for _, capture := range match.Captures {
+			row := capture.Node.StartPosition().Row
+			col := capture.Node.StartPosition().Column
+			erow := capture.Node.EndPosition().Row
+			ecol := capture.Node.EndPosition().Column
+			nodes.PushBack(HighlighterNode{
+				NodeName:  h.q.CaptureNames()[capture.Index],
+				StartLine: uint32(row),
+				StartChar: uint32(col),
+				EndLine:   uint32(erow),
+				EndChar:   uint32(ecol),
+			})
+		}
+	}
+
+	return &HighlighterCursor{
+		cursor: nodes.First(),
+	}
+}
+
+func (h *TreeSitterHighlighter) editEditInput(event EventTextChange) (r sitter.InputEdit) {
 	pointToByte := func(buf *Buffer, line, char int) int {
 		size := 0
 		lineNum := 0
@@ -113,82 +167,24 @@ func (h *TreeSitterHighlighter) editEditInput(event EventTextChange) (r sitter.E
 
 	// deletion
 	if len(event.Text) == 0 {
-		return sitter.EditInput{
-			StartPoint:  sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
-			OldEndPoint: sitter.Point{Row: uint32(event.End.Line), Column: uint32(event.End.Char)},
-			NewEndPoint: sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
-			StartIndex:  uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
-			OldEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + len(event.OldText)),
-			NewEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
+		return sitter.InputEdit{
+			StartPosition:  sitter.Point{Row: uint(event.Start.Line), Column: uint(event.Start.Char)},
+			OldEndPosition: sitter.Point{Row: uint(event.End.Line), Column: uint(event.End.Char)},
+			NewEndPosition: sitter.Point{Row: uint(event.Start.Line), Column: uint(event.Start.Char)},
+			StartByte:      uint(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
+			OldEndByte:     uint(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + len(event.OldText)),
+			NewEndByte:     uint(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
 		}
 	}
 
 	// insertion
-	return sitter.EditInput{
-		StartPoint:  sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
-		OldEndPoint: sitter.Point{Row: uint32(event.Start.Line), Column: uint32(event.Start.Char)},
-		NewEndPoint: sitter.Point{Row: uint32(event.NewEnd.Line), Column: uint32(event.NewEnd.Char)},
-		StartIndex:  uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
-		OldEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
-		NewEndIndex: uint32(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + utf8.RuneCountInString(event.Text)),
-	}
-}
-
-func (h *TreeSitterHighlighter) Build() {
-	tslock.Lock()
-	defer tslock.Unlock()
-	if h == nil {
-		return
-	}
-
-	if h.tree != nil {
-		h.tree.Close()
-	}
-
-	h.sourceCode = []byte(h.buf.String())
-	tree, err := h.parser.ParseCtx(context.Background(), nil, h.sourceCode)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	h.tree = tree
-}
-
-func (h *TreeSitterHighlighter) ForRange(lineStart, lineEnd uint32) *HighlighterCursor {
-	tslock.Lock()
-	defer tslock.Unlock()
-
-	qc := sitter.NewQueryCursor()
-	qc.SetPointRange(
-		sitter.Point{Row: lineStart, Column: 0},
-		sitter.Point{Row: lineEnd, Column: 0},
-	)
-	qc.Exec(h.q, h.tree.RootNode())
-	defer qc.Close()
-
-	nodes := List[HighlighterNode]{}
-	for {
-		m, ok := qc.NextMatch()
-		if !ok {
-			break
-		}
-
-		m = qc.FilterPredicates(m, h.sourceCode)
-		for _, c := range m.Captures {
-			startPoint := c.Node.StartPoint()
-			endPoint := c.Node.EndPoint()
-			nodes.PushBack(HighlighterNode{
-				NodeName:  h.q.CaptureNameForId(c.Index),
-				StartLine: startPoint.Row,
-				StartChar: startPoint.Column,
-				EndLine:   endPoint.Row,
-				EndChar:   endPoint.Column,
-			})
-		}
-	}
-
-	return &HighlighterCursor{
-		cursor: nodes.First(),
+	return sitter.InputEdit{
+		StartPosition:  sitter.Point{Row: uint(event.Start.Line), Column: uint(event.Start.Char)},
+		OldEndPosition: sitter.Point{Row: uint(event.Start.Line), Column: uint(event.Start.Char)},
+		NewEndPosition: sitter.Point{Row: uint(event.NewEnd.Line), Column: uint(event.NewEnd.Char)},
+		StartByte:      uint(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
+		OldEndByte:     uint(pointToByte(event.Buf, event.Start.Line, event.Start.Char)),
+		NewEndByte:     uint(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + utf8.RuneCountInString(event.Text)),
 	}
 }
 

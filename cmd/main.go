@@ -61,11 +61,9 @@ func main() {
 				metrics.Track("handler", func() {
 					editor.HandleInput(ev)
 				})
-
 				metrics.Track("render", func() {
 					renderer.Render()
 				})
-
 				// renderer.RenderMetrics(metrics.Get())
 			case *tcell.EventError:
 				fmt.Println("error:", ev)

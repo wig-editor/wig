@@ -108,7 +108,7 @@ func (r *Renderer) RenderMetrics(info map[string]time.Duration) {
 		r.SetContent(50, y, fmt.Sprintf("%s: %v", k, v), tcell.StyleDefault)
 		y++
 	}
-	r.screen.Show()
+	// r.screen.Show()
 }
 
 type mview struct {
