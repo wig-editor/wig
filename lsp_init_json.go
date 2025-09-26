@@ -173,7 +173,6 @@ var lspServerInitJson = `{
         "completionItem": {
           "snippetSupport": true,
           "documentationFormat": [
-            "markdown",
             "plaintext"
           ],
           "resolveAdditionalTextEditsSupport": true,

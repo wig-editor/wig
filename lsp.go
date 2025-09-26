@@ -455,43 +455,44 @@ func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Bu
 
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
 		// TODO: reply with real gopls config
-		fmt.Println("got LSP hanlder req", req.Method(), string(req.Params()))
+		// fmt.Println("got LSP hanlder req", req.Method(), string(req.Params()))
 		if req.Method() == "workspace/configuration" {
-			// resp := []any{
-			// map[string]any{
-			// "analysisProgressReporting": true,
-			// "buildFlags":                []any{},
-			// "codelenses": map[string]any{
-			// "gc_details":         false,
-			// "generate":           true,
-			// "regenerate_cgo":     true,
-			// "tidy":               true,
-			// "upgrade_dependency": true,
-			// "test":               true,
-			// "vendor":             true,
-			// },
-			// "completeFunctionCalls": true,
-			// "completionBudget":      "100ms",
-			// "diagnosticsDelay":      "1s",
-			// "directoryFilters":      []any{},
-			// "gofumpt":               false,
-			// "hoverKind":             "SynopsisDocumentation",
-			// "importShortcut":        "Both",
-			// "linkTarget":            "pkg.go.dev",
-			// "linksInHover":          true,
-			// "local":                 "",
-			// "matcher":               "Fuzzy",
-			// "standaloneTags": []any{
-			// "ignore",
-			// },
-			// "symbolMatcher":   "FastFuzzy",
-			// "symbolScope":     "all",
-			// "symbolStyle":     "Dynamic",
-			// "usePlaceholders": true,
-			// "verboseOutput":   true,
-			// },
-			// }
-			// return reply(ctx, resp, nil)
+			resp := []any{
+				map[string]any{
+					"analysisProgressReporting": true,
+					"buildFlags":                []any{},
+					"codelenses": map[string]any{
+						"gc_details":         false,
+						"generate":           true,
+						"regenerate_cgo":     true,
+						"tidy":               true,
+						"upgrade_dependency": true,
+						"test":               true,
+						"vendor":             true,
+					},
+					"completeFunctionCalls": true,
+					"completionBudget":      "100ms",
+					"diagnosticsDelay":      "1s",
+					"directoryFilters":      []any{},
+					"gofumpt":               false,
+					"hoverKind":             "SynopsisDocumentation",
+					"importShortcut":        "Both",
+					"linkTarget":            "pkg.go.dev",
+					"linksInHover":          true,
+					"local":                 "",
+					"matcher":               "Fuzzy",
+					"standaloneTags": []any{
+						"ignore",
+					},
+					"symbolMatcher":   "FastFuzzy",
+					"symbolScope":     "all",
+					"symbolStyle":     "Dynamic",
+					"usePlaceholders": true,
+					"verboseOutput":   true,
+				},
+			}
+
+			return reply(ctx, resp, nil)
 		}
 
 		if req.Method() == "textDocument/publishDiagnostics" {
@@ -521,7 +522,11 @@ func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Bu
 	r := &protocol.InitializeParams{}
 	json.Unmarshal([]byte(lspServerInitJson), r)
 	fileRoot, _ := l.e.Projects.FindRoot(buf)
-	r.RootURI = protocol.DocumentURI(fmt.Sprintf("file://%s", fileRoot))
+	// r.RootURI = protocol.DocumentURI(fmt.Sprintf("file://%s", fileRoot))
+	r.WorkspaceFolders = append(r.WorkspaceFolders, protocol.WorkspaceFolder{
+		Name: "",
+		URI:  fmt.Sprintf("file://%s", fileRoot),
+	})
 
 	var result protocol.InitializeResult
 	_, err = c.Call(context.Background(), protocol.MethodInitialize, r, &result)
@@ -529,7 +534,6 @@ func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Bu
 		l.e.LogError(err)
 	}
 
-	fmt.Println("waiting....")
 	err = c.Notify(context.Background(), protocol.MethodInitialized, protocol.InitializedParams{})
 	if err != nil {
 		l.e.LogError(err)

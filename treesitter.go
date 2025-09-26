@@ -63,13 +63,16 @@ func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighligh
 	var treeSitterLang unsafe.Pointer
 	qpath := ""
 
-	if strings.HasSuffix(buf.FilePath, ".go") {
+	switch {
+	case strings.HasSuffix(buf.FilePath, ".go"):
 		treeSitterLang = golang.Language()
 		qpath = "go"
-	}
-	if strings.HasSuffix(buf.FilePath, ".odin") {
+
+	case strings.HasSuffix(buf.FilePath, ".odin"):
 		treeSitterLang = odin.Language()
 		qpath = "odin"
+	default:
+		return nil
 	}
 
 	h := &TreeSitterHighlighter{
