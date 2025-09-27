@@ -2,7 +2,6 @@ package wig
 
 import (
 	"encoding/json"
-	"fmt"
 	"math"
 	"os"
 	"path"
@@ -36,7 +35,7 @@ func TabstopNext(ctx Context) {
 		return
 	}
 	n := math.Abs(float64(val[0].Distance))
-	fmt.Println(n)
+
 	for i := 0; i < int(n); i++ {
 		if val[0].Distance > 0 {
 			CursorInc(ctx.Buf, cur)
@@ -96,14 +95,14 @@ func (s *SnippetsManager) load(ctx Context) {
 	file := ctx.Editor.RuntimeDir(path.Join("snippets", mode+".json"))
 	data, err := os.ReadFile(file)
 	if err != nil {
-		fmt.Println("error reading snippet file:", err)
+		EditorInst.LogError(err, true)
 		return
 	}
 
 	snips := map[string]Snippet{}
 	err = json.Unmarshal(data, &snips)
 	if err != nil {
-		fmt.Println("error parsing json snippet data:", err)
+		EditorInst.LogError(err, true)
 		return
 	}
 

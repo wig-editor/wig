@@ -2,7 +2,6 @@ package wig
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -87,7 +86,7 @@ func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighligh
 
 	highlightQ, err := os.ReadFile(hgFile)
 	if err != nil {
-		fmt.Println(err)
+		EditorInst.LogError(err, true)
 		return nil
 	}
 

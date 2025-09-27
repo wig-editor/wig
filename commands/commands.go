@@ -18,7 +18,7 @@ func CmdThemeSelect(ctx wig.Context) {
 
 	files, err := os.ReadDir(currentDir)
 	if err != nil {
-		fmt.Printf("Error reading directory: %v\n", err)
+		ctx.Editor.LogError(err, true)
 		return
 	}
 
