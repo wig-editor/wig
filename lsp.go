@@ -304,59 +304,6 @@ func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cu
 	}
 }
 
-type CompletionItems struct {
-	IsIncomplete bool `json:"isIncomplete"`
-	Items        []struct {
-		Label         string `json:"label"`
-		Kind          int    `json:"kind"`
-		Detail        string `json:"detail"`
-		Documentation struct {
-			Kind  string `json:"kind"`
-			Value string `json:"value"`
-		} `json:"documentation"`
-		Preselect        bool   `json:"preselect,omitempty"`
-		SortText         string `json:"sortText"`
-		FilterText       string `json:"filterText,omitempty"`
-		InsertTextFormat int    `json:"insertTextFormat"`
-		TextEdit         struct {
-			NewText string `json:"newText"`
-			Insert  struct {
-				Start struct {
-					Line      int `json:"line"`
-					Character int `json:"character"`
-				} `json:"start"`
-				End struct {
-					Line      int `json:"line"`
-					Character int `json:"character"`
-				} `json:"end"`
-			} `json:"insert"`
-			Replace struct {
-				Start struct {
-					Line      int `json:"line"`
-					Character int `json:"character"`
-				} `json:"start"`
-				End struct {
-					Line      int `json:"line"`
-					Character int `json:"character"`
-				} `json:"end"`
-			} `json:"replace"`
-		} `json:"textEdit"`
-		AdditionalTextEdits []struct {
-			Range struct {
-				Start struct {
-					Line      int `json:"line"`
-					Character int `json:"character"`
-				} `json:"start"`
-				End struct {
-					Line      int `json:"line"`
-					Character int `json:"character"`
-				} `json:"end"`
-			} `json:"range"`
-			NewText string `json:"newText"`
-		} `json:"additionalTextEdits,omitempty"`
-	} `json:"items"`
-}
-
 func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 	root, _ := l.e.Projects.FindRoot(buf)
 
@@ -454,42 +401,45 @@ func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Bu
 	c := jsonrpc2.NewConn(s)
 
 	handler := func(ctx context.Context, reply jsonrpc2.Replier, req jsonrpc2.Request) error {
-		// TODO: reply with real gopls config
 		// fmt.Println("got LSP hanlder req", req.Method(), string(req.Params()))
 		if req.Method() == "workspace/configuration" {
-			resp := []any{
-				map[string]any{
-					"analysisProgressReporting": true,
-					"buildFlags":                []any{},
-					"codelenses": map[string]any{
-						"gc_details":         false,
-						"generate":           true,
-						"regenerate_cgo":     true,
-						"tidy":               true,
-						"upgrade_dependency": true,
-						"test":               true,
-						"vendor":             true,
+			// TODO: move out to language config
+			var resp []any
+			if conf.Command == "gopls" {
+				resp = []any{
+					map[string]any{
+						"analysisProgressReporting": true,
+						"buildFlags":                []any{},
+						"codelenses": map[string]any{
+							"gc_details":         false,
+							"generate":           true,
+							"regenerate_cgo":     true,
+							"tidy":               true,
+							"upgrade_dependency": true,
+							"test":               true,
+							"vendor":             true,
+						},
+						"completeFunctionCalls": true,
+						"completionBudget":      "100ms",
+						"diagnosticsDelay":      "1s",
+						"directoryFilters":      []any{},
+						"gofumpt":               false,
+						"hoverKind":             "SynopsisDocumentation",
+						"importShortcut":        "Both",
+						"linkTarget":            "pkg.go.dev",
+						"linksInHover":          true,
+						"local":                 "",
+						"matcher":               "Fuzzy",
+						"standaloneTags": []any{
+							"ignore",
+						},
+						"symbolMatcher":   "FastFuzzy",
+						"symbolScope":     "all",
+						"symbolStyle":     "Dynamic",
+						"usePlaceholders": true,
+						"verboseOutput":   true,
 					},
-					"completeFunctionCalls": true,
-					"completionBudget":      "100ms",
-					"diagnosticsDelay":      "1s",
-					"directoryFilters":      []any{},
-					"gofumpt":               false,
-					"hoverKind":             "SynopsisDocumentation",
-					"importShortcut":        "Both",
-					"linkTarget":            "pkg.go.dev",
-					"linksInHover":          true,
-					"local":                 "",
-					"matcher":               "Fuzzy",
-					"standaloneTags": []any{
-						"ignore",
-					},
-					"symbolMatcher":   "FastFuzzy",
-					"symbolScope":     "all",
-					"symbolStyle":     "Dynamic",
-					"usePlaceholders": true,
-					"verboseOutput":   true,
-				},
+				}
 			}
 
 			return reply(ctx, resp, nil)
@@ -524,7 +474,7 @@ func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Bu
 	fileRoot, _ := l.e.Projects.FindRoot(buf)
 	// r.RootURI = protocol.DocumentURI(fmt.Sprintf("file://%s", fileRoot))
 	r.WorkspaceFolders = append(r.WorkspaceFolders, protocol.WorkspaceFolder{
-		Name: "",
+		Name: fileRoot,
 		URI:  fmt.Sprintf("file://%s", fileRoot),
 	})
 

@@ -1,5 +1,61 @@
 package wig
 
+type CompletionTextEdit struct {
+	NewText string `json:"newText"`
+	Insert  struct {
+		Start struct {
+			Line      int `json:"line"`
+			Character int `json:"character"`
+		} `json:"start"`
+		End struct {
+			Line      int `json:"line"`
+			Character int `json:"character"`
+		} `json:"end"`
+	} `json:"insert"`
+	Replace struct {
+		Start struct {
+			Line      int `json:"line"`
+			Character int `json:"character"`
+		} `json:"start"`
+		End struct {
+			Line      int `json:"line"`
+			Character int `json:"character"`
+		} `json:"end"`
+	} `json:"replace"`
+}
+
+type CompletionItems struct {
+	IsIncomplete bool `json:"isIncomplete"`
+	Items        []struct {
+		Label         string `json:"label"`
+		InsertText    string `json:"insertText"`
+		Kind          int    `json:"kind"`
+		Detail        string `json:"detail"`
+		Documentation struct {
+			Kind  string `json:"kind"`
+			Value string `json:"value"`
+		} `json:"documentation"`
+		Preselect           bool                `json:"preselect,omitempty"`
+		SortText            string              `json:"sortText"`
+		FilterText          string              `json:"filterText,omitempty"`
+		InsertTextFormat    int                 `json:"insertTextFormat"`
+		TextEdit            *CompletionTextEdit `json:"textEdit,omitempty"`
+		AdditionalTextEdits []struct {
+			Range struct {
+				Start struct {
+					Line      int `json:"line"`
+					Character int `json:"character"`
+				} `json:"start"`
+				End struct {
+					Line      int `json:"line"`
+					Character int `json:"character"`
+				} `json:"end"`
+			} `json:"range"`
+			NewText string `json:"newText"`
+		} `json:"additionalTextEdits,omitempty"`
+	} `json:"items"`
+}
+
 var lspServerInitJson = `{
   "processId": null,
   "rootPath": "",

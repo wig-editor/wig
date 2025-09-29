@@ -96,9 +96,21 @@ func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 	cur := wig.ContextCursorGet(ctx)
 	line := wig.CursorLine(ctx.Buf, cur)
 	item := w.items.Items[w.activeItem]
+
+	if item.TextEdit == nil {
+		label := item.Label
+		if label == "" {
+			label = item.InsertText
+		}
+		wig.CmdBackwardWord(ctx)
+		wig.CmdDeleteEndOfLine(ctx)
+		wig.TextInsert(ctx.Buf, line, cur.Char+1, label)
+		wig.CmdGotoLineEnd(ctx)
+		return
+	}
+
 	text := item.TextEdit.NewText
 	pos := item.TextEdit.Insert.Start.Character
-
 	wig.TextDelete(ctx.Buf, &wig.Selection{
 		Start: wig.Cursor{
 			Line: item.TextEdit.Replace.Start.Line,
