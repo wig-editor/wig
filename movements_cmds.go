@@ -113,7 +113,7 @@ func CmdGotoLine0(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	defer CmdEnsureCursorVisible(ctx)
 	cur.Line = min(
-		int(ctx.Count),
+		int(ctx.Count)-1,
 		ctx.Buf.Lines.Len-1,
 	)
 
@@ -389,3 +389,4 @@ func CmdBufferCycle(ctx Context) {
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
 }
+
