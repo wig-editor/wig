@@ -110,13 +110,10 @@ func CmdCursorFirstNonBlank(ctx Context) {
 }
 
 func CmdGotoLine0(ctx Context) {
+	count := max(ctx.Count, 1)
 	cur := ContextCursorGet(ctx)
 	defer CmdEnsureCursorVisible(ctx)
-	cur.Line = min(
-		int(ctx.Count)-1,
-		ctx.Buf.Lines.Len-1,
-	)
-
+	cur.Line = min(int(count)-1, ctx.Buf.Lines.Len-1)
 	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf, cur)
 }
 
