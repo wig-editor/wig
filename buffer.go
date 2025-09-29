@@ -54,7 +54,7 @@ type Buffer struct {
 
 func NewBuffer() *Buffer {
 	lines := List[Line]{}
-	lines.PushBack(Line{})
+	lines.PushBack([]rune("\n"))
 	b := &Buffer{
 		Lines:       lines,
 		IndentCh:    []rune{'\t'},
@@ -63,9 +63,7 @@ func NewBuffer() *Buffer {
 		Tx:          nil,
 		Highlighter: nil,
 	}
-
 	b.UndoRedo = NewUndoRedo(b)
-
 	return b
 }
 
