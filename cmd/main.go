@@ -14,14 +14,6 @@ import (
 )
 
 func main() {
-	defer func() {
-		err := recover()
-		if err != nil {
-			fmt.Println("ssdfsdfdf")
-			// panic(">>>>>>>>>>>>>>>>>>>>>>>")
-		}
-	}()
-
 	tscreen, err := tcell.NewScreen()
 	if err != nil {
 		panic(err)
