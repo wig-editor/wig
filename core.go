@@ -33,6 +33,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	s.Init(strings.NewReader(text))
 	s.Whitespace ^= 1<<'\t' | 1<<'\n' | 1<<' '
 	s.Mode = smode
+	s.Error = func(s *scanner.Scanner, msg string) {}
 
 	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
 		switch tok {
