@@ -9,6 +9,12 @@ type Cursor struct {
 	ScrollOffset         int
 }
 
+type Location struct {
+	FilePath string
+	Line     int
+	Char     int
+}
+
 func restoreCharPosition(buf *Buffer, cur *Cursor) {
 	line := CursorLine(buf, cur)
 	if line == nil {

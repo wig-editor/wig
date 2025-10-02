@@ -98,10 +98,13 @@ func (e *Editor) OpenFile(path string) *Buffer {
 		return fbuf
 	}
 
+	var buf *Buffer
 	buf, err := BufferReadFile(path)
 	if err != nil {
 		e.LogError(err)
-		return nil
+		// create empty buffer
+		buf = NewBuffer()
+		buf.FilePath = path
 	}
 
 	e.Buffers = append(e.Buffers, buf)

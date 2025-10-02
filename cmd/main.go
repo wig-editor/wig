@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	_ "net/http/pprof"
 	"os"
 
 	"github.com/gdamore/tcell/v2"
@@ -16,8 +14,12 @@ import (
 )
 
 func main() {
-	go func() {
-		http.ListenAndServe("localhost:6060", nil)
+	defer func() {
+		err := recover()
+		if err != nil {
+			fmt.Println("ssdfsdfdf")
+			// panic(">>>>>>>>>>>>>>>>>>>>>>>")
+		}
 	}()
 
 	tscreen, err := tcell.NewScreen()
@@ -39,12 +41,13 @@ func main() {
 	editor.AutocompleteTrigger = autocomplete.Register(editor)
 
 	args := os.Args
+	wig.CmdNewBuffer(editor.NewContext())
 	if len(args) > 1 {
 		ctx := wig.Context{Editor: editor}
 		ctx.Buf = editor.OpenFile(args[1])
-		editor.ActiveWindow().VisitBuffer(ctx)
-	} else {
-		wig.CmdNewBuffer(editor.NewContext())
+		if ctx.Buf != nil {
+			editor.ActiveWindow().VisitBuffer(ctx)
+		}
 	}
 
 	renderer := render.New(editor, tscreen)

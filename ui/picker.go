@@ -16,10 +16,11 @@ import (
 )
 
 type PickerItem[T any] struct {
-	Name   string
-	Value  T
-	Active bool
-	Score  int
+	Name     string
+	Value    T
+	Active   bool
+	Score    int
+	Location wig.Location
 }
 
 type PickerAction[T any] func(p *UiPicker[T], i *PickerItem[T])
