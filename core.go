@@ -449,12 +449,14 @@ func CmdKillBuffer(ctx Context) {
 				ctx.Editor.ActiveWindow().VisitBuffer(ctx, *cur)
 			}
 
-			ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
-				if win.buf == b {
-					return true
-				}
-				return false
-			})
+			if len(ctx.Editor.Windows) > 1 {
+				ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
+					if win.buf == b {
+						return true
+					}
+					return false
+				})
+			}
 		}
 	}
 
