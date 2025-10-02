@@ -15,12 +15,26 @@ import (
 	"github.com/junegunn/fzf/src/util"
 )
 
+type Location struct {
+	FilePath string
+	Line uint
+	Char uint
+}
+
 type PickerItem[T any] struct {
+<<<<<<< HEAD
 	Name     string
 	Value    T
 	Active   bool
 	Score    int
 	Location wig.Location
+=======
+	Name   string
+	Value  T
+	Active bool
+	Location Location
+	Score  int
+>>>>>>> f3ade62 (removed  junk file)
 }
 
 type PickerAction[T any] func(p *UiPicker[T], i *PickerItem[T])
