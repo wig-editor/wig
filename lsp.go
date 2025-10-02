@@ -505,7 +505,7 @@ func (l *lspConn) didOpen(buf *Buffer) {
 	}
 	err := l.rpcConn.Notify(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen)
 	if err != nil {
-		panic(err.Error())
+		EditorInst.LogError(err)
 	}
 }
 

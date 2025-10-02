@@ -95,14 +95,14 @@ func (s *SnippetsManager) load(ctx Context) {
 	file := ctx.Editor.RuntimeDir(path.Join("snippets", mode+".json"))
 	data, err := os.ReadFile(file)
 	if err != nil {
-		EditorInst.LogError(err, true)
+		EditorInst.LogError(err, false)
 		return
 	}
 
 	snips := map[string]Snippet{}
 	err = json.Unmarshal(data, &snips)
 	if err != nil {
-		EditorInst.LogError(err, true)
+		EditorInst.LogError(err, false)
 		return
 	}
 
