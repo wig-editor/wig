@@ -206,9 +206,11 @@ func (e *Editor) LogError(err error, echo ...bool) {
 	}
 }
 
-func (e *Editor) LogMessage(msg string) {
-	buf := e.BufferFindByFilePath("[Messages]", true)
-	buf.Append(msg)
+func (e *Editor) LogMessage(msg ...string) {
+	for _, m := range msg {
+		buf := e.BufferFindByFilePath("[Messages]", true)
+		buf.Append(m)
+	}
 }
 
 func (e *Editor) RuntimeDir(elems ...string) string {

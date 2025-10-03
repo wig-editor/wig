@@ -2,6 +2,7 @@
 package wig
 
 import (
+	"slices"
 	"strings"
 	"unicode"
 )
@@ -314,6 +315,20 @@ func CmdWindowClose(ctx Context) {
 			ctx.Editor.activeWindow = ctx.Editor.Windows[0]
 		}
 	}
+}
+
+func CmdWindowCloseOther(ctx Context) {
+	if len(ctx.Editor.Windows) == 1 {
+		return
+	}
+
+	curWin := ctx.Editor.ActiveWindow()
+	ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
+		if curWin == win {
+			return false
+		}
+		return true
+	})
 }
 
 func CmdWindowCloseAndKillBuffer(ctx Context) {

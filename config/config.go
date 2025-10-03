@@ -11,6 +11,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 		wig.MODE_NORMAL: wig.KeyMap{
 			// personal config
 			"F2": commands.CmdFormatBufferAndSave,
+			"F5": commands.CmdMakeBuild,
 
 			"ctrl+e": wig.CmdScrollDown,
 			"ctrl+y": wig.CmdScrollUp,
@@ -88,6 +89,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"v":      wig.CmdWindowVSplit,
 				"w":      wig.CmdWindowNext,
 				"q":      wig.CmdWindowClose,
+				"o":      wig.CmdWindowCloseOther,
 				"c":      wig.CmdWindowCloseAndKillBuffer,
 				"ctrl+w": wig.CmdWindowNext,
 				"t":      wig.CmdWindowToggleLayout,

@@ -329,13 +329,20 @@ func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 			},
 		},
 		Context: &protocol.CompletionContext{
-			TriggerCharacter: ".",
+			// TriggerCharacter: ".",
 			// TriggerKind:      protocol.CompletionTriggerKindTriggerCharacter,
 			TriggerKind: protocol.CompletionTriggerKindInvoked,
 		},
 	}
 
-	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentCompletion, req, &res)
+	ctx, cancel := context.WithCancel(context.TODO())
+	timer := time.NewTimer(1 * time.Second)
+	go func() {
+		<-timer.C
+		cancel()
+	}()
+
+	_, err := client.rpcConn.Call(ctx, protocol.MethodTextDocumentCompletion, req, &res)
 	if err != nil {
 		l.e.LogError(err)
 	}
@@ -472,7 +479,7 @@ func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Bu
 	r := &protocol.InitializeParams{}
 	json.Unmarshal([]byte(lspServerInitJson), r)
 	fileRoot, _ := l.e.Projects.FindRoot(buf)
-	// r.RootURI = protocol.DocumentURI(fmt.Sprintf("file://%s", fileRoot))
+	r.RootURI = protocol.DocumentURI(fmt.Sprintf("file://%s", fileRoot))
 	r.WorkspaceFolders = append(r.WorkspaceFolders, protocol.WorkspaceFolder{
 		Name: fileRoot,
 		URI:  fmt.Sprintf("file://%s", fileRoot),

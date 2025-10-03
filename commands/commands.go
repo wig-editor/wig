@@ -247,6 +247,20 @@ func CmdFormatBufferAndSave(ctx wig.Context) {
 	}
 }
 
+func CmdMakeBuild(ctx wig.Context) {
+	CmdFormatBufferAndSave(ctx)
+	cmd := exec.Command("make", "build")
+	stdout, err := cmd.CombinedOutput()
+	if err != nil {
+		ctx.Editor.LogMessage(err.Error())
+		ctx.Editor.LogMessage(string(stdout))
+		mbuf := ctx.Editor.BufferFindByFilePath("[Messages]", true)
+		ctx.Editor.EnsureBufferIsVisible(mbuf)
+		return
+	}
+	ctx.Editor.LogMessage("[build ok]", string(stdout))
+}
+
 func CmdSearchLine(ctx wig.Context) {
 	items := make([]ui.PickerItem[int], 0, 256)
 
