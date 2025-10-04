@@ -21,11 +21,6 @@ type HighlighterCursor struct {
 	cursor *Element[HighlighterNode]
 }
 
-func HighlighterGet(b *Buffer) Highlighter {
-	// TODO: implement
-	return nil
-}
-
 func (c *HighlighterCursor) Seek(line, ch uint32) (node *Element[HighlighterNode], found bool) {
 	if c.cursor == nil {
 		return
@@ -36,6 +31,9 @@ func (c *HighlighterCursor) Seek(line, ch uint32) (node *Element[HighlighterNode
 			return false
 		}
 		if line >= node.Value.StartLine && line <= node.Value.EndLine {
+			if node.Value.EndLine > line {
+				return true
+			}
 			if ch >= node.Value.StartChar && ch < node.Value.EndChar {
 				return true
 			}
@@ -48,6 +46,7 @@ func (c *HighlighterCursor) Seek(line, ch uint32) (node *Element[HighlighterNode
 	}
 
 	nextNode := c.cursor.Next()
+
 	for nextNode != nil {
 		if nextNode.Value.StartLine > line {
 			break

@@ -258,7 +258,7 @@ func CmdMakeBuild(ctx wig.Context) {
 		ctx.Editor.EnsureBufferIsVisible(mbuf)
 		return
 	}
-	ctx.Editor.LogMessage("[build ok]", string(stdout))
+	ctx.Editor.EchoMessage("[build ok]")
 }
 
 func CmdSearchLine(ctx wig.Context) {
