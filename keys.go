@@ -40,6 +40,8 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	var keySet KeyMap
 	key := k.normalizeKeyName(ev)
 
+	EditorInst.Events.Broadcast(EventKeyPressed{Key: key})
+
 	k.Macros.Push(ev)
 
 	ctx := editor.NewContext()

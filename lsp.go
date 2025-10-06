@@ -50,6 +50,8 @@ type LspManager struct {
 	conns       map[string]*lspConn
 	ignore      map[string]bool
 	diagnostics map[string]map[uint32][]protocol.Diagnostic
+	ctxCancel   context.CancelFunc
+	timeout     time.Duration
 }
 
 func NewLspManager(e *Editor) *LspManager {
@@ -58,6 +60,7 @@ func NewLspManager(e *Editor) *LspManager {
 		conns:       map[string]*lspConn{},
 		ignore:      map[string]bool{},
 		diagnostics: map[string]map[uint32][]protocol.Diagnostic{},
+		timeout:     500 * time.Millisecond,
 	}
 
 	go func() {
@@ -65,6 +68,10 @@ func NewLspManager(e *Editor) *LspManager {
 			switch e := event.Msg.(type) {
 			case EventTextChange:
 				r.DidChange(e)
+			case EventKeyPressed:
+				if r.ctxCancel != nil {
+					r.ctxCancel()
+				}
 			}
 			event.Wg.Done()
 		}
@@ -203,7 +210,12 @@ func (l *LspManager) Signature(buf *Buffer, cursor Cursor) (sign string) {
 		},
 	}
 	var sigHelpResp protocol.SignatureHelp
-	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentSignatureHelp, srReq, &sigHelpResp)
+
+	ctx, cancel := context.WithTimeout(context.TODO(), l.timeout)
+	l.ctxCancel = cancel
+	defer cancel()
+
+	_, err := client.rpcConn.Call(ctx, protocol.MethodTextDocumentSignatureHelp, srReq, &sigHelpResp)
 	if err != nil {
 		l.e.LogError(err)
 	}
@@ -240,8 +252,13 @@ func (l *LspManager) Hover(buf *Buffer, cursor Cursor) (sign string) {
 			},
 		},
 	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), l.timeout)
+	l.ctxCancel = cancel
+	defer cancel()
+
 	var hover protocol.Hover
-	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentHover, srReq, &hover)
+	_, err := client.rpcConn.Call(ctx, protocol.MethodTextDocumentHover, srReq, &hover)
 	if err != nil {
 		l.e.LogError(err)
 	}
@@ -278,11 +295,21 @@ func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cu
 			Position: pos,
 		},
 	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), l.timeout)
+	l.ctxCancel = cancel
+	defer cancel()
+
 	var definitionResp []protocol.Location
-	_, err := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDefinition, definitionReq, &definitionResp)
+	_, err := client.rpcConn.Call(ctx, protocol.MethodTextDocumentDefinition, definitionReq, &definitionResp)
+
 	if err != nil {
+		ctx, cancel := context.WithTimeout(context.TODO(), l.timeout)
+		l.ctxCancel = cancel
+		defer cancel()
+
 		var definitionResp2 protocol.Location
-		_, err2 := client.rpcConn.Call(context.Background(), protocol.MethodTextDocumentDefinition, definitionReq, &definitionResp2)
+		_, err2 := client.rpcConn.Call(ctx, protocol.MethodTextDocumentDefinition, definitionReq, &definitionResp2)
 		if err2 != nil {
 			l.e.EchoMessage(err2.Error())
 		} else {
@@ -335,13 +362,9 @@ func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 		},
 	}
 
-	ctx, cancel := context.WithCancel(context.TODO())
-	timer := time.NewTimer(1 * time.Second)
-	go func() {
-		<-timer.C
-		cancel()
-	}()
-
+	ctx, cancel := context.WithTimeout(context.TODO(), l.timeout)
+	l.ctxCancel = cancel
+	defer cancel()
 	_, err := client.rpcConn.Call(ctx, protocol.MethodTextDocumentCompletion, req, &res)
 	if err != nil {
 		l.e.LogError(err)

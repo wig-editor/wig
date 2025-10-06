@@ -37,6 +37,10 @@ type EventsManager struct {
 	removeListener chan (<-chan Event)
 }
 
+type EventKeyPressed struct {
+	Key string
+}
+
 func NewEventsManager() *EventsManager {
 	e := &EventsManager{
 		source:         make(chan any, 32),
