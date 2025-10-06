@@ -39,6 +39,32 @@ func CmdYankEol(ctx Context) {
 	yankSave(ctx)
 }
 
+func CmdYankBeforeChar(ctx Context) func(Context) {
+	return func(ctx Context) {
+		startCur := *ContextCursorGet(ctx)
+		cur := ContextCursorGet(ctx)
+		SelectionStart(ctx.Buf, cur)
+		CmdForwardBeforeChar(ctx)(ctx)
+		SelectionStop(ctx.Buf, cur)
+		yankSave(ctx)
+		ctx.Buf.Selection = nil
+		*cur = startCur
+	}
+}
+
+func CmdYankToChar(_ Context) func(Context) {
+	return func(ctx Context) {
+		startCur := *ContextCursorGet(ctx)
+		cur := ContextCursorGet(ctx)
+		SelectionStart(ctx.Buf, cur)
+		CmdForwardToChar(ctx)(ctx)
+		SelectionStop(ctx.Buf, cur)
+		yankSave(ctx)
+		ctx.Buf.Selection = nil
+		*cur = startCur
+	}
+}
+
 func CmdYankPut(ctx Context) {
 	if ctx.Editor.Yanks.Len == 0 {
 		return
@@ -119,4 +145,15 @@ func yankPut(ctx Context) {
 		CursorInc(ctx.Buf, cur)
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
 

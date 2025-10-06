@@ -73,6 +73,8 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"y": wig.KeyMap{
 				"y": wig.CmdYank,
 				"$": wig.CmdYankEol,
+				"t": wig.CmdYankBeforeChar,
+				"f": wig.CmdYankToChar,
 			},
 			"g": wig.KeyMap{
 				"g": wig.CmdGotoLine0,
