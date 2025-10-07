@@ -63,8 +63,6 @@ func main() {
 			case *tcell.EventError:
 				fmt.Println("error:", ev)
 				return
-			case *tcell.EventPaste:
-				panic(1)
 			}
 		}
 	}()

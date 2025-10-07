@@ -9,13 +9,17 @@ import (
 func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 	cur := ContextCursorGet(ctx)
 	line := CursorLine(ctx.Buf, cur)
+	ch := ev.Rune()
+
+	if ev.Key() == tcell.KeyCtrlJ {
+		ev = tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone)
+	}
 
 	{
 		if ctx.Buf.Mode() != MODE_INSERT {
 			return
 		}
 		if ev.Modifiers()&tcell.ModCtrl != 0 {
-
 			return
 		}
 		if ev.Modifiers()&tcell.ModAlt != 0 {
@@ -26,7 +30,6 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		}
 	}
 
-	ch := ev.Rune()
 	if ev.Key() == tcell.KeyEnter {
 		ch = '\n'
 	}

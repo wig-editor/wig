@@ -57,6 +57,10 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 		}
 	}
 
+	if mode == MODE_INSERT && ev.Key() == tcell.KeyCtrlJ {
+		k.fallback(ctx, ev)
+		return
+	}
 	cmdExec := func(cmd func(ctx Context), ctx Context) {
 		cmd(ctx)
 		k.resetState()
