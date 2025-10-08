@@ -1,7 +1,6 @@
 package wig
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 	"text/scanner"
@@ -406,15 +405,10 @@ func CmdSelectionDelete(ctx Context) {
 
 func CmdSaveFile(ctx Context) {
 	err := ctx.Buf.Save()
-	var msg string
-	if err == nil {
-		msg = fmt.Sprintf("Saved file %s. Lines: %d.", ctx.Buf.FilePath, ctx.Buf.Lines.Len)
-	} else {
-		msg = err.Error()
+	if err != nil {
+		ctx.Editor.LogMessage(err.Error())
+		ctx.Editor.EchoMessage(err.Error())
 	}
-
-	ctx.Editor.LogMessage(msg)
-	ctx.Editor.EchoMessage(msg)
 }
 
 func CmdKillBuffer(ctx Context) {
