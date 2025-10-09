@@ -19,6 +19,7 @@ require (
 	github.com/tree-sitter/go-tree-sitter v0.25.0
 	github.com/tree-sitter/tree-sitter-c v0.23.4
 	github.com/tree-sitter/tree-sitter-go v0.23.4
+	github.com/tree-sitter/tree-sitter-python v0.23.6
 	go.lsp.dev/jsonrpc2 v0.10.0
 	go.lsp.dev/protocol v0.12.1-0.20240429031601-dd685d4561a3
 	go.lsp.dev/uri v0.3.0

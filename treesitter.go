@@ -12,6 +12,7 @@ import (
 	sitter "github.com/tree-sitter/go-tree-sitter"
 	clang "github.com/tree-sitter/tree-sitter-c/bindings/go"
 	golang "github.com/tree-sitter/tree-sitter-go/bindings/go"
+	python "github.com/tree-sitter/tree-sitter-python/bindings/go"
 )
 
 // TODO: rewrite treesitter to use channel and scheduled parsing. some day.
@@ -74,6 +75,9 @@ func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighligh
 	case strings.HasSuffix(buf.FilePath, ".c"):
 		treeSitterLang = clang.Language()
 		qpath = "c"
+	case strings.HasSuffix(buf.FilePath, ".py"):
+		treeSitterLang = python.Language()
+		qpath = "python"
 	default:
 		return nil
 	}
