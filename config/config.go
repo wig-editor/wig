@@ -137,6 +137,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"x":      wig.CmdSelectionDelete,
 			"d":      wig.CmdSelectionDelete,
 			"y":      wig.CmdYank,
+			"p":      wig.CmdYankPut,
 			"c":      wig.CmdSelectionChange,
 			"Esc":    wig.CmdNormalMode,
 			"*":      commands.CmdSearchWordUnderCursor,
@@ -156,6 +157,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"x":      wig.CmdSelectionDelete,
 			"d":      wig.CmdSelectionDelete,
 			"y":      wig.CmdYank,
+			"p":      wig.CmdYankPut,
 			"g": wig.KeyMap{
 				"g": wig.WithSelection(wig.CmdGotoLine0),
 				"c": wig.CmdToggleComment,

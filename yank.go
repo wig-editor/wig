@@ -66,8 +66,26 @@ func CmdYankToChar(_ Context) func(Context) {
 }
 
 func CmdYankPut(ctx Context) {
+	cur := ContextCursorGet(ctx)
 	if ctx.Editor.Yanks.Len == 0 {
 		return
+	}
+
+	if ctx.Buf.Selection != nil {
+		if ctx.Buf.TxStart() {
+			defer yankSave(ctx, SelectionToString(ctx.Buf, ctx.Buf.Selection))
+			if ctx.Buf.Mode() == MODE_VISUAL {
+				SelectionDelete(ctx)
+			}
+			if ctx.Buf.Mode() == MODE_VISUAL_LINE {
+				SelectionDelete(ctx)
+				CmdCursorLineUp(ctx)
+				line := CursorLine(ctx.Buf, cur)
+				CmdAppendLine(ctx)
+				TextInsert(ctx.Buf, line, len(line.Value)-1, "\n")
+			}
+			ctx.Buf.TxEnd()
+		}
 	}
 
 	v := ctx.Editor.Yanks.Last()
@@ -110,19 +128,25 @@ func CmdYankPutBefore(ctx Context) {
 	}
 }
 
-func yankSave(ctx Context) {
+func yankSave(ctx Context, text ...string) {
 	cur := ContextCursorGet(ctx)
 	var y yank
 	line := CursorLine(ctx.Buf, cur)
-	if ctx.Buf.Selection == nil {
-		y = yank{val: string(line.Value)}
-	} else {
-		st := SelectionToString(ctx.Buf, ctx.Buf.Selection)
-		if len(st) == 0 {
-			return
+
+	if len(text) == 0 {
+		if ctx.Buf.Selection == nil {
+			y = yank{val: string(line.Value)}
+		} else {
+			st := SelectionToString(ctx.Buf, ctx.Buf.Selection)
+			if len(st) == 0 {
+				return
+			}
+			y = yank{val: st}
 		}
-		y = yank{val: st}
+	} else {
+		y = yank{val: text[0]}
 	}
+
 	y.isLine = (ctx.Buf.Mode() == MODE_VISUAL_LINE) || ctx.Buf.Selection == nil
 
 	if ctx.Editor.Yanks.Len == 0 {
@@ -145,15 +169,4 @@ func yankPut(ctx Context) {
 		CursorInc(ctx.Buf, cur)
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
 
