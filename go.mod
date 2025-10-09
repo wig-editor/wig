@@ -17,11 +17,11 @@ require (
 	github.com/smacker/go-tree-sitter v0.0.0-20240827094217-dd81d9e9be82
 	github.com/stretchr/testify v1.10.0
 	github.com/tree-sitter/go-tree-sitter v0.25.0
+	github.com/tree-sitter/tree-sitter-c v0.23.4
 	github.com/tree-sitter/tree-sitter-go v0.23.4
 	go.lsp.dev/jsonrpc2 v0.10.0
 	go.lsp.dev/protocol v0.12.1-0.20240429031601-dd685d4561a3
 	go.lsp.dev/uri v0.3.0
-
 )
 
 require (

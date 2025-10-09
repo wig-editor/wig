@@ -10,6 +10,7 @@ import (
 
 	odin "github.com/firstrow/tree-sitter-odin/bindings/go"
 	sitter "github.com/tree-sitter/go-tree-sitter"
+	clang "github.com/tree-sitter/tree-sitter-c/bindings/go"
 	golang "github.com/tree-sitter/tree-sitter-go/bindings/go"
 )
 
@@ -70,6 +71,9 @@ func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighligh
 	case strings.HasSuffix(buf.FilePath, ".odin"):
 		treeSitterLang = odin.Language()
 		qpath = "odin"
+	case strings.HasSuffix(buf.FilePath, ".c"):
+		treeSitterLang = clang.Language()
+		qpath = "c"
 	default:
 		return nil
 	}
