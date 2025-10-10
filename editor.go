@@ -201,7 +201,7 @@ func (e *Editor) HandleInput(ev *tcell.EventKey) {
 func (e *Editor) LogError(err error, echo ...bool) {
 	buf := e.BufferFindByFilePath("[Messages]", true)
 	buf.Append("error: " + err.Error())
-	if len(echo) > 0 {
+	if len(echo) > 0 && echo[0] == true {
 		e.EchoMessage(err.Error())
 	}
 }

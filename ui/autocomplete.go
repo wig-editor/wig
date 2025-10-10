@@ -106,6 +106,7 @@ func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 		wig.CmdDeleteEndOfLine(ctx)
 		wig.TextInsert(ctx.Buf, line, cur.Char+1, label)
 		wig.CmdGotoLineEnd(ctx)
+		wig.CmdEnterInsertMode(ctx)
 		return
 	}
 
