@@ -17,16 +17,16 @@ import (
 
 type Location struct {
 	FilePath string
-	Line uint
-	Char uint
+	Line     uint
+	Char     uint
 }
 
 type PickerItem[T any] struct {
-	Name   string
-	Value  T
-	Active bool
+	Name     string
+	Value    T
+	Active   bool
 	Location Location
-	Score  int
+	Score    int
 }
 
 type PickerAction[T any] func(p *UiPicker[T], i *PickerItem[T])
@@ -145,7 +145,7 @@ func (u *UiPicker[T]) insertCh(ctx wig.Context, ev *tcell.EventKey) {
 	if ev.Modifiers()&tcell.ModMeta != 0 {
 		return
 	}
-
+	
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 		if len(u.chBuf) > 0 {
 			u.chBuf = u.chBuf[:len(u.chBuf)-1]
@@ -154,8 +154,13 @@ func (u *UiPicker[T]) insertCh(ctx wig.Context, ev *tcell.EventKey) {
 		}
 		return
 	}
+	
 	if ev.Key() == tcell.KeyEnter {
 		ctx.Editor.PopUi()
+		return
+	}
+
+	if ev.Key() != tcell.KeyRune {
 		return
 	}
 
