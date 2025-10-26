@@ -382,19 +382,24 @@ func CmdBufferCycle(ctx Context) {
 	if last == nil {
 		return
 	}
-	prev := last.Prev()
 
-	if last == nil || prev == nil {
-		return
+	getPrev := func() string {
+		for item := last.Prev(); last != nil; item = item.Next() {
+			if item.Value.FilePath != last.Value.FilePath {
+				return item.Value.FilePath
+			}
+		}
+		return ""
 	}
 
-	if last.Value.FilePath == prev.Value.FilePath {
+	prev := getPrev()
+	if prev == "" {
 		return
 	}
 
 	var b *Buffer
 	if last.Value.FilePath == ctx.Editor.ActiveWindow().Buffer().FilePath {
-		b = ctx.Editor.BufferFindByFilePath(prev.Value.FilePath, false)
+		b = ctx.Editor.BufferFindByFilePath(prev, false)
 	} else {
 		b = ctx.Editor.BufferFindByFilePath(last.Value.FilePath, false)
 	}

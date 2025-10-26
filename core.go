@@ -416,6 +416,7 @@ func CmdKillBuffer(ctx Context) {
 	if len(buffers) == 0 {
 		return
 	}
+	CmdBufferCycle(ctx)
 
 	for i, b := range buffers {
 		if b == ctx.Buf {
