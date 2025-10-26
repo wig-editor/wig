@@ -75,6 +75,9 @@ func TreeSitterHighlighterInitBuffer(e *Editor, buf *Buffer) *TreeSitterHighligh
 	case strings.HasSuffix(buf.FilePath, ".c"):
 		treeSitterLang = clang.Language()
 		qpath = "c"
+	case strings.HasSuffix(buf.FilePath, ".h"):
+		treeSitterLang = clang.Language()
+		qpath = "c"
 	case strings.HasSuffix(buf.FilePath, ".py"):
 		treeSitterLang = python.Language()
 		qpath = "python"

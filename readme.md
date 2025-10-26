@@ -1,11 +1,13 @@
-# Wig 
+# Wig (written in go)
 
 Hi! Welcome to my text editor page.
 wig is a modal, Vim-like text editor written in Go. I use it as my daily driver, btw.
 
 [<img src="preview.png">](https://asciinema.org/a/GOLMKg40rnXNlkjNUt3Mt8q2k)
 
-**Note:** wig currently supports only `.go` files. Do not edit files that are not backed up. wig is still in an early stage of development and may damage your files.
+**Note:** wig currently supports go, c, odin and python. 
+Do not edit files that are not backed up. 
+Wig is still in an early stage of development and may damage your files. But if you are using git that should not be a problem ;)
 
 ### Features
 - LSP autocomplete, goto definition, hover info
