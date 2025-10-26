@@ -6,9 +6,7 @@ import (
 )
 
 func indent(ctx Context) {
-	if !strings.HasSuffix(ctx.Buf.FilePath, ".go") {
-		return
-	}
+	indentChars := []string{"{", ":"}
 
 	cur := ContextCursorGet(ctx)
 	line := CursorLine(ctx.Buf, cur)
@@ -29,8 +27,11 @@ func indent(ctx Context) {
 		}
 
 		trimmed := strings.TrimSpace(string(prevLine.Value))
-		if strings.HasSuffix(trimmed, "{") {
-			idx += 1
+		for _, ch := range indentChars {
+			if strings.HasSuffix(trimmed, ch) {
+				idx += 1
+				break
+			}
 		}
 
 		ch := strings.Repeat("\t", idx)

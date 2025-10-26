@@ -94,6 +94,7 @@ insertChar:
 	if ev.Key() == tcell.KeyEnter {
 		CmdCursorLineDown(ctx)
 		CmdCursorBeginningOfTheLine(ctx)
+		indent(ctx)
 		return
 	}
 
