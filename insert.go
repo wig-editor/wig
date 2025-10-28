@@ -22,6 +22,7 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 		if ev.Modifiers()&tcell.ModCtrl != 0 {
 			return
 		}
+
 		if ev.Modifiers()&tcell.ModAlt != 0 {
 			return
 		}

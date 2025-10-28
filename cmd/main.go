@@ -24,6 +24,8 @@ func main() {
 		panic(err)
 	}
 	tscreen.Sync()
+	tscreen.EnablePaste()
+
 	w, h := tscreen.Size()
 
 	editor := wig.NewEditor(

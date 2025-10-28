@@ -80,6 +80,9 @@ func (u *uiCommandLine) execute(cmd string) {
 		wig.CmdExit(ctx)
 	case "w":
 		wig.CmdSaveFile(ctx)
+	case "wq":
+		wig.CmdSaveFile(ctx)
+		wig.CmdExit(ctx)
 	case "bd":
 		wig.CmdKillBuffer(ctx)
 	}

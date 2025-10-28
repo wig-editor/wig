@@ -384,7 +384,7 @@ func CmdBufferCycle(ctx Context) {
 	}
 
 	getPrev := func() string {
-		for item := last.Prev(); last != nil; item = item.Next() {
+		for item := last.Prev(); item != nil; item = item.Next() {
 			if item.Value.FilePath != last.Value.FilePath {
 				return item.Value.FilePath
 			}

@@ -7,6 +7,7 @@ import (
 
 func indent(ctx Context) {
 	indentChars := []string{"{", ":"}
+	// outdentChars := []string{"}"}
 
 	cur := ContextCursorGet(ctx)
 	line := CursorLine(ctx.Buf, cur)
