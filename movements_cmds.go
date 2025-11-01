@@ -2,6 +2,7 @@
 package wig
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 	"unicode"
@@ -384,7 +385,7 @@ func CmdBufferCycle(ctx Context) {
 	}
 
 	getPrev := func() string {
-		for item := last.Prev(); item != nil; item = item.Next() {
+		for item := last; item != nil; item = item.Prev() {
 			if item.Value.FilePath != last.Value.FilePath {
 				return item.Value.FilePath
 			}
@@ -393,6 +394,7 @@ func CmdBufferCycle(ctx Context) {
 	}
 
 	prev := getPrev()
+	fmt.Println(prev)
 	if prev == "" {
 		return
 	}

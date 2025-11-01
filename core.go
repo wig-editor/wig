@@ -412,56 +412,49 @@ func CmdSaveFile(ctx Context) {
 }
 
 func CmdKillBuffer(ctx Context) {
-	buffers := ctx.Editor.Buffers
-	if len(buffers) == 0 {
+	if len(ctx.Editor.Buffers) == 0 {
 		return
 	}
+
+	buf := ctx.Buf
+	ctx.Editor.Lsp.DidClose(buf)
+
 	CmdBufferCycle(ctx)
 
-	for i, b := range buffers {
-		if b == ctx.Buf {
-			{
-				l := ctx.Buf.Lines.First()
-				for l != nil {
-					next := l.Next()
-					l.Value = nil
-					ctx.Buf.Lines.Remove(l)
-					l = next
-				}
-				ctx.Buf.Selection = nil
-				ctx.Buf.Highlighter = nil
-				ctx.Buf.UndoRedo = nil
-				ctx.Buf.Tx = nil
-			}
-
-			buffers = slices.Delete(buffers, i, i+1)
-
-			if len(buffers) > 0 {
-				idx := i - 1
-				idx = max(idx, 0)
-				ctx.Buf = buffers[idx]
-				cur := ContextCursorGet(ctx)
-				ctx.Editor.ActiveWindow().VisitBuffer(ctx, *cur)
-			}
-
-			if len(ctx.Editor.Windows) > 1 {
-				ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
-					if win.buf == b {
-						return true
-					}
-					return false
-				})
-			}
+	ctx.Editor.Buffers = slices.DeleteFunc(ctx.Editor.Buffers, func(b *Buffer) bool {
+		if ctx.Buf != b {
+			return false
 		}
-	}
 
-	ctx.Editor.Buffers = buffers
+		{
+			l := buf.Lines.First()
+			for l != nil {
+				next := l.Next()
+				l.Value = nil
+				buf.Lines.Remove(l)
+				l = next
+			}
+			buf.Selection = nil
+			buf.Highlighter = nil
+			buf.UndoRedo = nil
+			buf.Tx = nil
+		}
 
-	if len(buffers) == 0 {
+		if len(ctx.Editor.Windows) > 1 {
+			ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
+				if win.buf == b {
+					return true
+				}
+				return false
+			})
+		}
+
+		return true
+	})
+
+	if len(ctx.Editor.Buffers) == 0 {
 		CmdNewBuffer(ctx)
 	}
-
-	ctx.Editor.Lsp.DidClose(ctx.Buf)
 }
 
 func CmdNewBuffer(ctx Context) {
