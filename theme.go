@@ -29,7 +29,7 @@ var styles map[string]tcell.Style
 var currentTheme Theme
 
 func init() {
-	ApplyTheme("rose_pine")
+	ApplyTheme("naysayer")
 }
 
 func ApplyTheme(name string) {

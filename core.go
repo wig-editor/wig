@@ -604,3 +604,7 @@ func CmdAutocompleteTrigger(ctx Context) {
 	ctx.Editor.AutocompleteTrigger(ctx)
 }
 
+func CmdPaste(ctx Context) {
+	panic(1)
+}
+

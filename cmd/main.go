@@ -45,16 +45,34 @@ func main() {
 	}
 
 	renderer := render.New(editor, tscreen)
+	var pasteStarted bool
+	var pastedText string
 
 	go func() {
 		for {
 			switch ev := tscreen.PollEvent().(type) {
+			case *tcell.EventClipboard:
+				panic("get clip")
+			case *tcell.EventPaste:
+				if ev.Start() {
+					pasteStarted = true
+				}
+				if ev.End() {
+					pasteStarted = false
+					fmt.Println(pastedText)
+					pastedText = ""
+				}
 			case *tcell.EventResize:
 				tscreen.Sync()
 				w, h := tscreen.Size()
 				editor.View.Resize(0, 0, w, h)
 				renderer.Render()
 			case *tcell.EventKey:
+				if pasteStarted == true {
+					pastedText = fmt.Sprintf("%s%s", pastedText, string(ev.Rune()))
+					continue
+				}
+
 				metrics.Track("handler", func() {
 					editor.HandleInput(ev)
 				})

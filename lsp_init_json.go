@@ -1,5 +1,7 @@
 package wig
 
+import "encoding/json"
+
 type CompletionTextEdit struct {
 	NewText string `json:"newText"`
 	Insert  struct {
@@ -27,14 +29,11 @@ type CompletionTextEdit struct {
 type CompletionItems struct {
 	IsIncomplete bool `json:"isIncomplete"`
 	Items        []struct {
-		Label         string `json:"label"`
-		InsertText    string `json:"insertText"`
-		Kind          int    `json:"kind"`
-		Detail        string `json:"detail"`
-		Documentation struct {
-			Kind  string `json:"kind"`
-			Value string `json:"value"`
-		} `json:"documentation"`
+		Label               string              `json:"label"`
+		InsertText          string              `json:"insertText"`
+		Kind                int                 `json:"kind"`
+		Detail              string              `json:"detail"`
+		Documentation       Documentation       `json:"documentation"`
 		Preselect           bool                `json:"preselect,omitempty"`
 		SortText            string              `json:"sortText"`
 		FilterText          string              `json:"filterText,omitempty"`
@@ -54,6 +53,31 @@ type CompletionItems struct {
 			NewText string `json:"newText"`
 		} `json:"additionalTextEdits,omitempty"`
 	} `json:"items"`
+}
+
+type Documentation struct {
+	Kind  string `json:"kind"`
+	Value string `json:"value"`
+}
+
+func (d *Documentation) UnmarshalJSON(data []byte) error {
+	// Try to parse as a simple string
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		d.Kind = "markdown"
+		d.Value = s
+		return nil
+	}
+
+	// Otherwise, try parsing as a structured object
+	type Alias Documentation
+	var tmp Alias
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+
+	*d = Documentation(tmp)
+	return nil
 }
 
 var lspServerInitJson = `{

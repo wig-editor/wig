@@ -120,6 +120,21 @@ func (l *LspManager) DidOpen(buf *Buffer) {
 	client.didOpen(buf)
 }
 
+func (l *lspConn) didOpen(buf *Buffer) {
+	didOpen := protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI:        protocol.DocumentURI(fmt.Sprintf("file://%s", buf.FilePath)),
+			LanguageID: protocol.GoLanguage,
+			Version:    0,
+			Text:       buf.String(),
+		},
+	}
+	err := l.rpcConn.Notify(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen)
+	if err != nil {
+		EditorInst.LogError(err)
+	}
+}
+
 func (l *LspManager) DidChange(event EventTextChange) {
 	root, _ := l.e.Projects.FindRoot(event.Buf)
 
@@ -367,8 +382,15 @@ func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 	defer cancel()
 	_, err := client.rpcConn.Call(ctx, protocol.MethodTextDocumentCompletion, req, &res)
 	if err != nil {
-		l.e.LogError(err)
+		l.e.LogMessage("lsp completion error:", err.Error())
 	}
+
+	res2 := map[string]any{}
+	_, err = client.rpcConn.Call(ctx, protocol.MethodTextDocumentCompletion, req, &res2)
+	if err != nil {
+		l.e.LogMessage("lsp completion error:", err.Error())
+	}
+	fmt.Println(res2)
 
 	return
 }
@@ -522,20 +544,5 @@ func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Bu
 	return &lspConn{
 		rpcConn: c,
 	}, nil
-}
-
-func (l *lspConn) didOpen(buf *Buffer) {
-	didOpen := protocol.DidOpenTextDocumentParams{
-		TextDocument: protocol.TextDocumentItem{
-			URI:        protocol.DocumentURI(fmt.Sprintf("file://%s", buf.FilePath)),
-			LanguageID: protocol.GoLanguage,
-			Version:    0,
-			Text:       buf.String(),
-		},
-	}
-	err := l.rpcConn.Notify(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen)
-	if err != nil {
-		EditorInst.LogError(err)
-	}
 }
 

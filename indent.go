@@ -31,7 +31,6 @@ func indent(ctx Context) {
 		for _, ch := range indentChars {
 			if strings.HasSuffix(trimmed, ch) {
 				idx += 1
-				break
 			}
 		}
 
