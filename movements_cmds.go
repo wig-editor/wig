@@ -394,7 +394,6 @@ func CmdBufferCycle(ctx Context) {
 	}
 
 	prev := getPrev()
-	fmt.Println(prev)
 	if prev == "" {
 		return
 	}
