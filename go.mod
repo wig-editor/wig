@@ -1,8 +1,6 @@
 module github.com/firstrow/wig
 
-go 1.23
-
-toolchain go1.24.5
+go 1.25
 
 require (
 	github.com/boyter/go-string v1.0.5
