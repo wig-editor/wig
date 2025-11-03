@@ -25,15 +25,33 @@ type KeyHandler struct {
 	Macros *MacrosManager
 }
 
-func NewKeyHandler(mkeymap ModeKeyMap) *KeyHandler {
+func DefaultKeyHandler(mergeKeys ModeKeyMap) *KeyHandler {
+	m := ModeKeyMap{
+		MODE_NORMAL:      KeyMap{},
+		MODE_INSERT:      KeyMap{},
+		MODE_VISUAL:      KeyMap{},
+		MODE_VISUAL_LINE: KeyMap{},
+	}
+	k := NewKeyHandler(m)
+	for mode, keys := range EditorInst.Keys.keymap {
+		k.Map(mode, keys)
+	}
+	for mode, keys := range mergeKeys {
+		k.Map(mode, keys)
+	}
+	return k
+}
+
+func NewKeyHandler(mkeys ModeKeyMap) *KeyHandler {
 	k := &KeyHandler{
-		keymap:          mkeymap,
-		fallback:        HandleInsertKey, // Default handler for "insert" mode.
+		keymap:          mkeys,
+		fallback:        HandleInsertKey,
 		waitingForInput: nil,
 		times:           []string{},
 	}
 	k.Macros = NewMacrosManager(k)
 	return k
+
 }
 
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
@@ -116,7 +134,7 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 }
 
 // Map/merge keymap by selected mode
-func (k *KeyHandler) Map(editor *Editor, mode Mode, newMappings KeyMap) {
+func (k *KeyHandler) Map(mode Mode, newMappings KeyMap) {
 	mergeKeyMaps(k.keymap[mode], newMappings)
 }
 

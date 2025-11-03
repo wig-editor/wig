@@ -9,7 +9,7 @@ import (
 
 func Init(ctx wig.Context) {
 	buf := wig.NewBuffer()
-	buf.FilePath = "[collect]"
+	buf.FilePath = "[rgcollect]"
 	ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)
 	wig.EditorInst.ActiveWindow().ShowBuffer(buf)
 
@@ -18,10 +18,12 @@ func Init(ctx wig.Context) {
 	buf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
 		wig.MODE_INSERT: wig.KeyMap{
 			"Enter": func(ctx wig.Context) {
+				fmt.Println("1111111111")
 			},
 		},
 		wig.MODE_NORMAL: wig.KeyMap{
 			"Enter": func(ctx wig.Context) {
+				fmt.Println("2222222222222")
 			},
 		},
 	})

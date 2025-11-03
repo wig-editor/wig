@@ -157,7 +157,7 @@ func (h *TreeSitterHighlighter) ForRange(lineStart, lineEnd uint32) *Highlighter
 	}
 
 	return &HighlighterCursor{
-		cursor: nodes.First(),
+		Cursor: nodes.First(),
 	}
 }
 

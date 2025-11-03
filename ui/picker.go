@@ -106,7 +106,7 @@ func (u *UiPicker[T]) OnChange(callback func()) {
 func (u *UiPicker[T]) OnKey(key string, f func(wig.Context)) {
 	newMap := wig.KeyMap{}
 	newMap[key] = f
-	u.keymap.Map(u.e, wig.MODE_INSERT, newMap)
+	u.keymap.Map(wig.MODE_INSERT, newMap)
 }
 
 func (u *UiPicker[T]) OnSelect(callback func(*PickerItem[T])) {
@@ -145,7 +145,7 @@ func (u *UiPicker[T]) insertCh(ctx wig.Context, ev *tcell.EventKey) {
 	if ev.Modifiers()&tcell.ModMeta != 0 {
 		return
 	}
-	
+
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 		if len(u.chBuf) > 0 {
 			u.chBuf = u.chBuf[:len(u.chBuf)-1]
@@ -154,7 +154,7 @@ func (u *UiPicker[T]) insertCh(ctx wig.Context, ev *tcell.EventKey) {
 		}
 		return
 	}
-	
+
 	if ev.Key() == tcell.KeyEnter {
 		ctx.Editor.PopUi()
 		return

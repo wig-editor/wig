@@ -48,6 +48,7 @@ type Buffer struct {
 	Tx          *Transaction
 	UndoRedo    *UndoRedo
 	Highlighter Highlighter
+	KeyHandler  *KeyHandler
 
 	rootDir string
 }

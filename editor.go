@@ -185,17 +185,23 @@ func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
 }
 
 func (e *Editor) HandleInput(ev *tcell.EventKey) {
+	var k *KeyHandler
 	mode := e.ActiveBuffer().Mode()
-	h := e.Keys.HandleKey
 	e.Message = ""
+
+	if e.ActiveWindow().Buffer().KeyHandler != nil {
+		k = e.ActiveWindow().Buffer().KeyHandler
+	} else {
+		k = e.Keys
+	}
 
 	if len(e.UiComponents) > 0 {
 		comp := e.UiComponents[len(e.UiComponents)-1]
-		h = comp.Keymap().HandleKey
+		k = comp.Keymap()
 		mode = comp.Mode()
 	}
 
-	h(e, ev, mode)
+	k.HandleKey(e, ev, mode)
 }
 
 func (e *Editor) LogError(err error, echo ...bool) {

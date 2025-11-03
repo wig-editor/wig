@@ -18,11 +18,11 @@ type HighlighterNode struct {
 }
 
 type HighlighterCursor struct {
-	cursor *Element[HighlighterNode]
+	Cursor *Element[HighlighterNode]
 }
 
 func (c *HighlighterCursor) Seek(line, ch uint32) (node *Element[HighlighterNode], found bool) {
-	if c.cursor == nil {
+	if c.Cursor == nil {
 		return
 	}
 
@@ -41,11 +41,11 @@ func (c *HighlighterCursor) Seek(line, ch uint32) (node *Element[HighlighterNode
 		return false
 	}
 
-	if inRange(c.cursor, line, ch) {
-		return c.cursor, true
+	if inRange(c.Cursor, line, ch) {
+		return c.Cursor, true
 	}
 
-	nextNode := c.cursor.Next()
+	nextNode := c.Cursor.Next()
 
 	for nextNode != nil {
 		if nextNode.Value.StartLine > line {
@@ -53,8 +53,8 @@ func (c *HighlighterCursor) Seek(line, ch uint32) (node *Element[HighlighterNode
 		}
 
 		if inRange(nextNode, line, ch) {
-			c.cursor = nextNode
-			return c.cursor, true
+			c.Cursor = nextNode
+			return c.Cursor, true
 		}
 
 		nextNode = nextNode.Next()
