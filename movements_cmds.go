@@ -2,7 +2,6 @@
 package wig
 
 import (
-	"fmt"
 	"slices"
 	"strings"
 	"unicode"
