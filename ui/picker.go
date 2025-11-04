@@ -9,23 +9,18 @@ import (
 	"unicode"
 
 	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/rgcollect"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/junegunn/fzf/src/algo"
 	"github.com/junegunn/fzf/src/util"
 )
 
-type Location struct {
-	FilePath string
-	Line     uint
-	Char     uint
-}
-
 type PickerItem[T any] struct {
 	Name     string
 	Value    T
 	Active   bool
-	Location Location
+	Location wig.Location
 	Score    int
 }
 
@@ -84,6 +79,10 @@ func PickerInit[T any](e *wig.Editor, action PickerAction[T], items []PickerItem
 			"Enter": func(ctx wig.Context) {
 				picker.action(picker, picker.activeItemT)
 			},
+			"ctrl+r": func(ctx wig.Context) {
+				rgcollect.Init(ctx)
+				ctx.Editor.PopUi()
+			},
 		},
 	})
 	picker.keymap.Fallback(picker.insertCh)
@@ -118,7 +117,7 @@ func (u *UiPicker[T]) CallAction() {
 }
 
 func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {
-	for i, _ := range items {
+	for i := range items {
 		name := strings.TrimRightFunc(items[i].Name, unicode.IsSpace)
 		items[i].Name = strings.ReplaceAll(name, "\t", "    ")
 	}

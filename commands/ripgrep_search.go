@@ -26,7 +26,7 @@ func CmdFindProjectFilePicker(ctx wig.Context) {
 
 	items := []ui.PickerItem[string]{}
 
-	for _, row := range strings.Split(string(stdout), "\n") {
+	for row := range strings.SplitSeq(string(stdout), "\n") {
 		row = strings.TrimSpace(row)
 		if len(row) == 0 {
 			continue
@@ -50,6 +50,7 @@ func CmdFindProjectFilePicker(ctx wig.Context) {
 		},
 		items,
 	)
+
 	picker.OnKey("ctrl+o", func(ctx wig.Context) {
 		wig.CmdWindowVSplit(ctx)
 		wig.CmdWindowNext(ctx)

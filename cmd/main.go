@@ -11,7 +11,6 @@ import (
 	"github.com/firstrow/wig/config"
 	"github.com/firstrow/wig/metrics"
 	"github.com/firstrow/wig/render"
-	"github.com/firstrow/wig/rgcollect"
 )
 
 func main() {
@@ -101,8 +100,6 @@ func main() {
 			tscreen.Sync()
 		}
 	}()
-
-	rgcollect.Init(wig.EditorInst.NewContext())
 
 	<-editor.ExitCh
 	tscreen.Clear()

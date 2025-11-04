@@ -187,7 +187,7 @@ func (b *Buffer) Save() error {
 
 func (b *Buffer) Append(s string) {
 	// TODO: rewrite. use TextInsert as this messes up lsp and treesitter
-	for _, line := range strings.Split(s, "\n") {
+	for line := range strings.SplitSeq(s, "\n") {
 		b.Lines.PushBack([]rune(line + "\n"))
 	}
 }

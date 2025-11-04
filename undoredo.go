@@ -63,6 +63,9 @@ func NewUndoRedo(buf *Buffer) *UndoRedo {
 }
 
 func (u *UndoRedo) checkPosition() bool {
+	if u.History == nil {
+		return false
+	}
 	if u.Position > len(u.History) || u.Position < 0 {
 		return false
 	}

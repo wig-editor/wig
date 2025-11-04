@@ -10,6 +10,7 @@ type Cursor struct {
 }
 
 type Location struct {
+	Text     string
 	FilePath string
 	Line     int
 	Char     int

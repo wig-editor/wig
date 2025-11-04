@@ -78,11 +78,16 @@ func CmdBufferPicker(ctx wig.Context) {
 		ctx.Editor.ActiveWindow().VisitBuffer(ctx)
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
 		items,
 	)
+	picker.OnKey("ctrl+o", func(ctx wig.Context) {
+		wig.CmdWindowVSplit(ctx)
+		wig.CmdWindowNext(ctx)
+		picker.CallAction()
+	})
 }
 
 func CmdCommandPalettePicker(ctx wig.Context) {
@@ -140,7 +145,7 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 
 		items := []ui.PickerItem[string]{}
 
-		for _, row := range strings.Split(string(stdout), "\n") {
+		for row := range strings.SplitSeq(string(stdout), "\n") {
 			row = strings.TrimSpace(row)
 			if len(row) == 0 {
 				continue

@@ -28,7 +28,7 @@ func Init(ctx wig.Context) {
 		},
 	})
 
-	cmd := exec.Command("ls", "-la")
+	cmd := exec.Command("rg", "-n", "KeyHandler")
 	output, err := cmd.Output()
 	if err != nil {
 		fmt.Println(err)
@@ -48,10 +48,10 @@ func (h *TestHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCu
 	nodes := wig.List[wig.HighlighterNode]{}
 	nodes.PushBack(wig.HighlighterNode{
 		NodeName:  "constant",
-		StartLine: 0,
+		StartLine: 1,
 		StartChar: 2,
-		EndLine:   0,
-		EndChar:   4,
+		EndLine:   1,
+		EndChar:   7,
 	})
 	return &wig.HighlighterCursor{
 		Cursor: nodes.First(),
