@@ -385,13 +385,6 @@ func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 		l.e.LogMessage("lsp completion error:", err.Error())
 	}
 
-	res2 := map[string]any{}
-	_, err = client.rpcConn.Call(ctx, protocol.MethodTextDocumentCompletion, req, &res2)
-	if err != nil {
-		l.e.LogMessage("lsp completion error:", err.Error())
-	}
-	fmt.Println(res2)
-
 	return
 }
 
