@@ -7,10 +7,10 @@ import (
 	"github.com/firstrow/wig"
 )
 
-func Init(ctx wig.Context, items []wig.Location) {
+func Init(ctx wig.Context, title string, items []wig.Location) {
 	buf := wig.NewBuffer()
 	buf.ResetLines()
-	buf.FilePath = "[rgcollect]"
+	buf.FilePath = "[rgcollect "+title+"]"
 	ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)
 	wig.EditorInst.ActiveWindow().ShowBuffer(buf)
 
@@ -30,7 +30,7 @@ func Init(ctx wig.Context, items []wig.Location) {
 	})
 
 	for _, item := range items {
-		v := fmt.Sprintf("%s:(%d:%d) %s", item.FilePath, item.Line, item.Char, strings.TrimSpace(item.Text))
+		v := fmt.Sprintf("%s:%d:%d %s", item.FilePath, item.Line, item.Char, strings.TrimSpace(item.Text))
 		buf.Append(v)
 	}
 }
@@ -50,7 +50,7 @@ func (h *TestHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCu
 		StartLine: 0,
 		StartChar: 2,
 		EndLine:   0,
-		EndChar:   2,
+		EndChar:   20,
 	})
 	return &wig.HighlighterCursor{
 		Cursor: nodes.First(),

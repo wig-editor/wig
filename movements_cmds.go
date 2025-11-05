@@ -118,6 +118,10 @@ func CmdGotoLine0(ctx Context) {
 	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf, cur)
 }
 
+func CmdGotoFile(ctx Context) {
+	//
+}
+
 func CmdGotoLineEndOfFile(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	defer CmdEnsureCursorVisible(ctx)

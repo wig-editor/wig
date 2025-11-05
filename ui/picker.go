@@ -86,7 +86,7 @@ func PickerInit[T any](e *wig.Editor, action PickerAction[T], items []PickerItem
 						locations = append(locations, item.Location)
 					}
 				}
-				rgcollect.Init(ctx, locations)
+				rgcollect.Init(ctx, string(picker.chBuf), locations)
 				ctx.Editor.PopUi()
 			},
 		},
