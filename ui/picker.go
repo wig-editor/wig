@@ -80,7 +80,13 @@ func PickerInit[T any](e *wig.Editor, action PickerAction[T], items []PickerItem
 				picker.action(picker, picker.activeItemT)
 			},
 			"ctrl+r": func(ctx wig.Context) {
-				rgcollect.Init(ctx)
+				locations := make([]wig.Location, 0, len(items))
+				for _, item := range picker.items {
+					if item.Location.FilePath != "" {
+						locations = append(locations, item.Location)
+					}
+				}
+				rgcollect.Init(ctx, locations)
 				ctx.Editor.PopUi()
 			},
 		},

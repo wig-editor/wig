@@ -105,7 +105,7 @@ func rgDoSearch(ctx wig.Context, pat string) {
 
 		items := []ui.PickerItem[RgJson]{}
 
-		for _, row := range strings.Split(string(stdout), "\n") {
+		for row := range strings.SplitSeq(string(stdout), "\n") {
 			row = strings.TrimSpace(row)
 			if len(row) == 0 {
 				continue
@@ -122,6 +122,12 @@ func rgDoSearch(ctx wig.Context, pat string) {
 			items = append(items, ui.PickerItem[RgJson]{
 				Name:  fname,
 				Value: match,
+				Location: wig.Location{
+					Text:     match.Data.Lines.Text,
+					FilePath: trim(match.Data.Path.Text),
+					Line:     match.Data.LineNumber - 1,
+					Char:     match.Data.Submatches[0].Start,
+				},
 			})
 		}
 

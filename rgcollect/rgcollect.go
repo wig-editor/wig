@@ -2,13 +2,14 @@ package rgcollect
 
 import (
 	"fmt"
-	"os/exec"
+	"strings"
 
 	"github.com/firstrow/wig"
 )
 
-func Init(ctx wig.Context) {
+func Init(ctx wig.Context, items []wig.Location) {
 	buf := wig.NewBuffer()
+	buf.ResetLines()
 	buf.FilePath = "[rgcollect]"
 	ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)
 	wig.EditorInst.ActiveWindow().ShowBuffer(buf)
@@ -28,12 +29,10 @@ func Init(ctx wig.Context) {
 		},
 	})
 
-	cmd := exec.Command("rg", "-n", "KeyHandler")
-	output, err := cmd.Output()
-	if err != nil {
-		fmt.Println(err)
+	for _, item := range items {
+		v := fmt.Sprintf("%s:(%d:%d) %s", item.FilePath, item.Line, item.Char, strings.TrimSpace(item.Text))
+		buf.Append(v)
 	}
-	wig.TextInsert(buf, buf.Lines.First(), 0, string(output))
 }
 
 type TestHighlighter struct{}
@@ -48,10 +47,10 @@ func (h *TestHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCu
 	nodes := wig.List[wig.HighlighterNode]{}
 	nodes.PushBack(wig.HighlighterNode{
 		NodeName:  "constant",
-		StartLine: 1,
+		StartLine: 0,
 		StartChar: 2,
-		EndLine:   1,
-		EndChar:   7,
+		EndLine:   0,
+		EndChar:   2,
 	})
 	return &wig.HighlighterCursor{
 		Cursor: nodes.First(),
