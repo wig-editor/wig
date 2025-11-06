@@ -140,11 +140,11 @@ func CmdGotoFile(ctx Context) {
 //	"app/server.go:101:8"
 //
 // If line or column are missing, the returned values for line and ch will be -1.
-func ParseFileLocation(text string, cursorCharacterPosition int) (filename string, line, ch int) {
+func ParseFileLocation(text string, cursor int) (filename string, line, ch int) {
 	line = -1
 	ch = -1
 
-	if cursorCharacterPosition >= len(text) {
+	if cursor >= len(text) {
 		return "", line, ch
 	}
 	if len(text) == 0 {
@@ -164,7 +164,7 @@ func ParseFileLocation(text string, cursorCharacterPosition int) (filename strin
 		return false
 	}
 
-	cur := int(cursorCharacterPosition)
+	cur := int(cursor)
 
 	// Expand left to find start of token
 	start := cur
