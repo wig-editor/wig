@@ -28,6 +28,8 @@ func (win *Window) VisitBuffer(ctx Context, cursor ...Cursor) {
 
 	win.Jumps.Push(ctx.Buf, cur)
 	win.buf = ctx.Buf
+
+	CmdCursorCenter(ctx)
 }
 
 // Show buffer. No history.
