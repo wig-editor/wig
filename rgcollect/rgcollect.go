@@ -10,21 +10,20 @@ import (
 func Init(ctx wig.Context, title string, items []wig.Location) {
 	buf := wig.NewBuffer()
 	buf.ResetLines()
-	buf.FilePath = "[rgcollect "+title+"]"
+	buf.FilePath = "[rgcollect " + title + "]"
 	ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)
-	wig.EditorInst.ActiveWindow().ShowBuffer(buf)
+	ctx.Buf = buf
+	wig.EditorInst.ActiveWindow().VisitBuffer(ctx)
 
 	buf.Highlighter = &TestHighlighter{}
 
 	buf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
 		wig.MODE_INSERT: wig.KeyMap{
 			"Enter": func(ctx wig.Context) {
-				fmt.Println("1111111111")
 			},
 		},
 		wig.MODE_NORMAL: wig.KeyMap{
 			"Enter": func(ctx wig.Context) {
-				fmt.Println("2222222222222")
 			},
 		},
 	})
@@ -44,16 +43,17 @@ func (h *TestHighlighter) TextChanged(wig.EventTextChange) {
 }
 
 func (h *TestHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCursor {
-	nodes := wig.List[wig.HighlighterNode]{}
-	nodes.PushBack(wig.HighlighterNode{
-		NodeName:  "constant",
-		StartLine: 0,
-		StartChar: 2,
-		EndLine:   0,
-		EndChar:   20,
-	})
-	return &wig.HighlighterCursor{
-		Cursor: nodes.First(),
-	}
+	return nil
+	// nodes := wig.List[wig.HighlighterNode]{}
+	// nodes.PushBack(wig.HighlighterNode{
+	// NodeName:  "constant",
+	// StartLine: 0,
+	// StartChar: 2,
+	// EndLine:   0,
+	// EndChar:   20,
+	// })
+	// return &wig.HighlighterCursor{
+	// Cursor: nodes.First(),
+	// }
 }
 

@@ -3,6 +3,7 @@ package wig
 
 import (
 	"slices"
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -119,7 +120,91 @@ func CmdGotoLine0(ctx Context) {
 }
 
 func CmdGotoFile(ctx Context) {
-	//
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
+	filename, lineNum, chNum := ParseFileLocation(string(line.Value.String()), cur.Char)
+	ctx.Buf = ctx.Editor.OpenFile(filename)
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx, Cursor{
+		Line: lineNum,
+		Char: chNum,
+	})
+}
+
+// ParseFileLocation scans a line of text and extracts a filename under the cursor,
+// optionally followed by :line or :line:column (both integers).
+//
+// Example valid forms:
+//
+//	"main.go"
+//	"src/foo/bar.go:42"
+//	"app/server.go:101:8"
+//
+// If line or column are missing, the returned values for line and ch will be -1.
+func ParseFileLocation(text string, cursorCharacterPosition int) (filename string, line, ch int) {
+	line = -1
+	ch = -1
+
+	if cursorCharacterPosition >= len(text) {
+		return "", line, ch
+	}
+	if len(text) == 0 {
+		return "", line, ch
+	}
+
+	// Which characters count as part of a filename token:
+	// Letters, digits, and common path/file markers.
+	isFileChar := func(r rune) bool {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			return true
+		}
+		switch r {
+		case '/', '.', '_', '-', ':':
+			return true
+		}
+		return false
+	}
+
+	cur := int(cursorCharacterPosition)
+
+	// Expand left to find start of token
+	start := cur
+	for start >= 0 && isFileChar(rune(text[start])) {
+		start--
+	}
+	start++
+
+	// Expand right to find end of token
+	end := cur
+	for end < len(text) && isFileChar(rune(text[end])) {
+		end++
+	}
+
+	if start >= end {
+		return "", line, ch // no token under cursor
+	}
+
+	token := text[start:end]
+	parts := strings.Split(token, ":")
+
+	filename = parts[0]
+	if filename == "" {
+		return "", line, ch
+	}
+
+	// Parse optional line
+	if len(parts) >= 2 {
+		if v, err := strconv.Atoi(parts[1]); err == nil {
+			line = v
+		}
+	}
+	// Parse optional column
+	if len(parts) >= 3 {
+		if v, err := strconv.Atoi(parts[2]); err == nil {
+			ch = v
+		}
+	}
+
+	return filename, line, ch
 }
 
 func CmdGotoLineEndOfFile(ctx Context) {

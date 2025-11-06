@@ -81,7 +81,7 @@ func PickerInit[T any](e *wig.Editor, action PickerAction[T], items []PickerItem
 			},
 			"ctrl+r": func(ctx wig.Context) {
 				locations := make([]wig.Location, 0, len(items))
-				for _, item := range picker.items {
+				for _, item := range picker.filtered {
 					if item.Location.FilePath != "" {
 						locations = append(locations, item.Location)
 					}

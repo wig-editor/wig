@@ -438,6 +438,7 @@ func CmdKillBuffer(ctx Context) {
 			buf.Highlighter = nil
 			buf.UndoRedo = nil
 			buf.Tx = nil
+			buf.KeyHandler = nil
 		}
 
 		if len(ctx.Editor.Windows) > 1 {
