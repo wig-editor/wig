@@ -130,6 +130,14 @@ func CmdGotoFile(ctx Context) {
 	})
 }
 
+func CmdGotoFileOtherWindow(ctx Context) {
+	if len(ctx.Editor.Windows) == 1 {
+		CmdWindowVSplit(ctx)
+	}
+	CmdWindowNext(ctx)
+	CmdGotoFile(ctx)
+}
+
 // ParseFileLocation scans a line of text and extracts a filename under the cursor,
 // optionally followed by :line or :line:column (both integers).
 //

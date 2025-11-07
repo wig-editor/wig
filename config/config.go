@@ -80,6 +80,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"g": wig.KeyMap{
 				"g": wig.CmdGotoLine0,
 				"f": wig.CmdGotoFile,
+				"F": wig.CmdGotoFileOtherWindow,
 				"d": commands.CmdGotoDefinition,
 				"O": commands.CmdGotoDefinitionOtherWindow,
 				"o": commands.CmdViewDefinitionOtherWindow,
