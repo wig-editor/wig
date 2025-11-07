@@ -8,15 +8,15 @@ import (
 )
 
 func Init(ctx wig.Context, title string, items []wig.Location) {
+	if len(ctx.Editor.Windows) == 1 {
+		wig.CmdWindowVSplit(ctx)
+	}
+	wig.CmdWindowNext(ctx)
+
 	buf := wig.NewBuffer()
 	buf.ResetLines()
 	buf.FilePath = "[rgcollect " + title + "]"
-	ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)
-	ctx.Buf = buf
-	wig.EditorInst.ActiveWindow().VisitBuffer(ctx)
-
 	buf.Highlighter = &TestHighlighter{}
-
 	buf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
 		wig.MODE_INSERT: wig.KeyMap{
 			"Enter": func(ctx wig.Context) {
@@ -28,10 +28,17 @@ func Init(ctx wig.Context, title string, items []wig.Location) {
 		},
 	})
 
+	ctx.Editor.Buffers = append(ctx.Editor.Buffers, buf)
+	ctx.Buf = buf
+	wig.EditorInst.ActiveWindow().VisitBuffer(ctx)
+
 	for _, item := range items {
 		v := fmt.Sprintf("%s:%d:%d %s", item.FilePath, item.Line, item.Char, strings.TrimSpace(item.Text))
 		buf.Append(v)
 	}
+
+	wig.CmdWindowNext(ctx)
+	visitLine(ctx, wig.CmdGotoLine0)
 }
 
 type TestHighlighter struct{}
