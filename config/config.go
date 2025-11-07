@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/firstrow/wig"
 	"github.com/firstrow/wig/commands"
+	"github.com/firstrow/wig/rgcollect"
 	"github.com/firstrow/wig/ui"
 )
 
@@ -118,6 +119,8 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"F": commands.CmdCurrentBufferDirFilePicker,
 				"s": wig.KeyMap{
 					"s": commands.CmdSearchLine,
+					"n": rgcollect.CmdVisitNextLine,
+					"p": rgcollect.CmdVisitPrevLine,
 				},
 				"t": commands.CmdThemeSelect,
 			},

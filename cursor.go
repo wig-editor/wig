@@ -114,7 +114,10 @@ func CursorNumByLine(buf *Buffer, lookie *Element[Line]) int {
 }
 
 func ContextCursorGet(ctx Context) *Cursor {
-	win := ctx.Editor.ActiveWindow()
+	win := ctx.Win
+	if win == nil {
+		win = ctx.Editor.ActiveWindow()
+	}
 	return WindowCursorGet(win, ctx.Buf)
 }
 

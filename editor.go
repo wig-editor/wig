@@ -30,6 +30,7 @@ type UiComponent interface {
 type Context struct {
 	Editor *Editor
 	Buf    *Buffer
+	Win    *Window
 	Count  uint32
 	Char   string
 }
@@ -122,6 +123,7 @@ func (e *Editor) NewContext() Context {
 	return Context{
 		Editor: e,
 		Buf:    e.ActiveBuffer(),
+		Win:    e.ActiveWindow(),
 		Count:  0,
 	}
 }

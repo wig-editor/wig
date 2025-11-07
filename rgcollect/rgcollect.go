@@ -57,3 +57,48 @@ func (h *TestHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCu
 	// }
 }
 
+// Commands
+func CmdVisitNextLine(ctx wig.Context) {
+	visitLine(ctx, wig.CmdCursorLineDown)
+}
+
+func CmdVisitPrevLine(ctx wig.Context) {
+	visitLine(ctx, wig.CmdCursorLineUp)
+}
+
+func visitLine(ctx wig.Context, upOrDown func(wig.Context)) {
+	var rgBuf *wig.Buffer
+	var rgWin *wig.Window
+	for _, win := range ctx.Editor.Windows {
+		if strings.HasPrefix(win.Buffer().FilePath, "[rgcollect") {
+			rgBuf = win.Buffer()
+			rgWin = win
+			break
+		}
+	}
+	if rgBuf == nil {
+		ctx.Editor.EchoMessage("rgcollect buffer not visible")
+		return
+	}
+
+	var line *wig.Element[wig.Line]
+	// this is what we need to do
+	// to perform action in scope of other window and buffer
+	{
+		bufCur := wig.WindowCursorGet(rgWin, rgBuf)
+		nctx := ctx.Editor.NewContext()
+		nctx.Buf = rgBuf
+		nctx.Win = rgWin
+		upOrDown(nctx)
+		line = wig.CursorLine(rgBuf, bufCur)
+	}
+
+	filename, lineNum, chNum := wig.ParseFileLocation(line.Value.String(), 0)
+
+	ctx.Buf = ctx.Editor.OpenFile(filename)
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{
+		Line: lineNum,
+		Char: chNum,
+	})
+}
+
