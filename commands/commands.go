@@ -339,6 +339,8 @@ func CmdViewDefinitionOtherWindow(ctx wig.Context) {
 	}
 
 	wig.CmdWindowNext(ctx)
+	ctx.Win = nil
+
 	ctx.Editor.ActiveWindow().VisitBuffer(ctx, *cur)
 	CmdGotoDefinition(ctx)
 	ctx.Editor.SetActiveWindow(curWin)

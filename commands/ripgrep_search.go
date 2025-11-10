@@ -128,7 +128,7 @@ func rgDoSearch(ctx wig.Context, pat string) {
 				Location: wig.Location{
 					Text:     match.Data.Lines.Text,
 					FilePath: trim(match.Data.Path.Text),
-					Line:     match.Data.LineNumber - 1,
+					Line:     match.Data.LineNumber,
 					Char:     match.Data.Submatches[0].Start,
 				},
 			})

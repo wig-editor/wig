@@ -19,11 +19,10 @@ func (win *Window) VisitBuffer(ctx Context, cursor ...Cursor) {
 	}
 
 	if len(cursor) > 0 {
-		newCur := ContextCursorGet(ctx)
+		newCur := &Cursor{}
 		newCur.Line = cursor[0].Line
 		newCur.Char = cursor[0].Char
-		newCur.ScrollOffset = cursor[0].ScrollOffset
-		cur = newCur
+		win.cursors[ctx.Buf] = newCur
 	}
 
 	win.Jumps.Push(ctx.Buf, cur)

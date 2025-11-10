@@ -109,7 +109,7 @@ func visitLine(ctx wig.Context, upOrDown func(wig.Context)) {
 	}
 
 	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{
-		Line: lineNum,
+		Line: lineNum - 1,
 		Char: chNum,
 	})
 }

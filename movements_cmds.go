@@ -123,23 +123,36 @@ func CmdGotoFile(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	line := CursorLine(ctx.Buf, cur)
 	filename, lineNum, chNum := ParseFileLocation(string(line.Value.String()), cur.Char)
-	var err error
-	ctx.Buf, err = ctx.Editor.OpenFile(filename)
+	buf, err := ctx.Editor.OpenFile(filename)
 	if err != nil {
 		return
 	}
+	ctx.Buf = buf
 	ctx.Editor.ActiveWindow().VisitBuffer(ctx, Cursor{
-		Line: lineNum,
+		Line: lineNum - 1,
 		Char: chNum,
 	})
 }
 
 func CmdGotoFileOtherWindow(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
+	filename, lineNum, chNum := ParseFileLocation(string(line.Value.String()), cur.Char)
+	buf, err := ctx.Editor.OpenFile(filename)
+	if err != nil {
+		return
+	}
+
 	if len(ctx.Editor.Windows) == 1 {
 		CmdWindowVSplit(ctx)
 	}
 	CmdWindowNext(ctx)
-	CmdGotoFile(ctx)
+	ctx.Win = nil
+	ctx.Buf = buf
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx, Cursor{
+		Line: lineNum - 1,
+		Char: chNum,
+	})
 }
 
 // ParseFileLocation scans a line of text and extracts a filename under the cursor,
