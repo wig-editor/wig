@@ -78,7 +78,7 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				// Colors and styles
 
 				// highlight current line
-				if lineNum == cur.Line && isActiveWin {
+				if lineNum == cur.Line {
 					textStyle = wig.ApplyBg("ui.cursorline", textStyle)
 					bg := strings.Repeat(" ", termWidth)
 					view.SetContent(x, y, bg, textStyle)
