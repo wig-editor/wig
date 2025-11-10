@@ -102,7 +102,12 @@ func visitLine(ctx wig.Context, upOrDown func(wig.Context)) {
 
 	filename, lineNum, chNum := wig.ParseFileLocation(line.Value.String(), 0)
 
-	ctx.Buf = ctx.Editor.OpenFile(filename)
+	var err error
+	ctx.Buf, err = ctx.Editor.OpenFile(filename)
+	if err != nil {
+		return
+	}
+
 	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{
 		Line: lineNum,
 		Char: chNum,

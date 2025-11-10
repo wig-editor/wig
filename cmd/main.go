@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -37,14 +38,17 @@ func main() {
 	args := os.Args
 	wig.CmdNewBuffer(editor.NewContext())
 	if len(args) > 1 {
-		ctx := wig.Context{Editor: editor}
-		ctx.Buf = editor.OpenFile(args[1])
-		if ctx.Buf != nil {
+		ctx := wig.EditorInst.NewContext()
+		fullPath, _ := filepath.Abs(args[1])
+		buf, _ := editor.OpenFile(fullPath)
+		if buf != nil {
+			ctx.Buf = buf
 			editor.ActiveWindow().VisitBuffer(ctx)
 		}
 	}
 
 	renderer := render.New(editor, tscreen)
+
 	var pasteStarted bool
 	var pastedText string
 
@@ -59,7 +63,7 @@ func main() {
 				}
 				if ev.End() {
 					pasteStarted = false
-					fmt.Println(pastedText)
+					fmt.Println("paste:", pastedText)
 					pastedText = ""
 				}
 			case *tcell.EventResize:

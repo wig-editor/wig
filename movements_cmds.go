@@ -123,7 +123,11 @@ func CmdGotoFile(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	line := CursorLine(ctx.Buf, cur)
 	filename, lineNum, chNum := ParseFileLocation(string(line.Value.String()), cur.Char)
-	ctx.Buf = ctx.Editor.OpenFile(filename)
+	var err error
+	ctx.Buf, err = ctx.Editor.OpenFile(filename)
+	if err != nil {
+		return
+	}
 	ctx.Editor.ActiveWindow().VisitBuffer(ctx, Cursor{
 		Line: lineNum,
 		Char: chNum,

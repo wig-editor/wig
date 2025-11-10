@@ -45,7 +45,10 @@ func CmdFindProjectFilePicker(ctx wig.Context) {
 				return
 			}
 			path := rootDir + "/" + i.Value
-			ctx.Buf = ctx.Editor.OpenFile(path)
+			ctx.Buf, err = ctx.Editor.OpenFile(path)
+			if err != nil {
+				return
+			}
 			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
 		},
 		items,
@@ -136,7 +139,10 @@ func rgDoSearch(ctx wig.Context, pat string) {
 
 	action := func(p *ui.UiPicker[RgJson], i *ui.PickerItem[RgJson]) {
 		defer ctx.Editor.PopUi()
-		buf := ctx.Editor.OpenFile(rootDir + "/" + i.Value.Data.Path.Text)
+		buf, err := ctx.Editor.OpenFile(rootDir + "/" + i.Value.Data.Path.Text)
+		if err != nil {
+			return
+		}
 		ctx.Buf = buf
 		ctx.Editor.ActiveWindow().VisitBuffer(
 			ctx,
@@ -145,7 +151,6 @@ func rgDoSearch(ctx wig.Context, pat string) {
 				Char: i.Value.Data.Submatches[0].Start,
 			},
 		)
-		ctx.Buf = buf
 		wig.CmdCursorCenter(ctx)
 	}
 

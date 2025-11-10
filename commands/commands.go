@@ -163,13 +163,17 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 	}
 
 	action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
+		defer ctx.Editor.PopUi()
+
 		// create new file
 		if i == nil {
 			fp := path.Join(rootDir, p.GetInput())
-			buf := ctx.Editor.OpenFile(fp)
+			buf, err := ctx.Editor.OpenFile(fp)
+			if err != nil {
+				buf = wig.EditorInst.BufferFindByFilePath(fp, true)
+			}
 			ctx.Buf = buf
 			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
-			ctx.Editor.PopUi()
 			return
 		}
 
@@ -183,10 +187,12 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 			return
 		}
 
-		buf := ctx.Editor.OpenFile(rootDir + "/" + i.Value)
+		buf, err := ctx.Editor.OpenFile(rootDir + "/" + i.Value)
+		if err != nil {
+			return
+		}
 		ctx.Buf = buf
 		ctx.Editor.ActiveWindow().VisitBuffer(ctx)
-		ctx.Editor.PopUi()
 	}
 
 	ui.PickerInit(
@@ -309,10 +315,11 @@ func CmdGotoDefinition(ctx wig.Context) {
 		return
 	}
 
-	nbuf := ctx.Editor.OpenFile(filePath)
-	if nbuf == nil {
+	nbuf, err := ctx.Editor.OpenFile(filePath)
+	if err != nil {
 		return
 	}
+
 	ctx.Buf = nbuf
 	ctx.Editor.ActiveWindow().VisitBuffer(ctx, cursor)
 	wig.CmdCursorCenter(ctx.Editor.NewContext())

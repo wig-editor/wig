@@ -94,18 +94,15 @@ func NewEditor(
 	return EditorInst
 }
 
-func (e *Editor) OpenFile(path string) *Buffer {
+func (e *Editor) OpenFile(path string) (*Buffer, error) {
 	if fbuf := e.BufferFindByFilePath(path, false); fbuf != nil {
-		return fbuf
+		return fbuf, nil
 	}
 
-	var buf *Buffer
 	buf, err := BufferReadFile(path)
 	if err != nil {
 		e.LogError(err)
-		// create empty buffer
-		buf = NewBuffer()
-		buf.FilePath = path
+		return nil, err
 	}
 
 	e.Buffers = append(e.Buffers, buf)
@@ -116,7 +113,7 @@ func (e *Editor) OpenFile(path string) *Buffer {
 		buf.Highlighter = hl
 	}
 
-	return buf
+	return buf, nil
 }
 
 func (e *Editor) NewContext() Context {
@@ -142,7 +139,6 @@ func (e *Editor) BufferFindByFilePath(fp string, create bool) *Buffer {
 
 	b := NewBuffer()
 	b.FilePath = fp
-	b.Lines = List[Line]{}
 	e.Buffers = append(e.Buffers, b)
 
 	return b
