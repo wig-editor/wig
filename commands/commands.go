@@ -163,8 +163,6 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 	}
 
 	action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
-		defer ctx.Editor.PopUi()
-
 		// create new file
 		if i == nil {
 			fp := path.Join(rootDir, p.GetInput())
@@ -174,6 +172,7 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 			}
 			ctx.Buf = buf
 			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+			ctx.Editor.PopUi()
 			return
 		}
 
@@ -193,6 +192,7 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 		}
 		ctx.Buf = buf
 		ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+		ctx.Editor.PopUi()
 	}
 
 	ui.PickerInit(
