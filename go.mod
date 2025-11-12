@@ -3,6 +3,7 @@ module github.com/firstrow/wig
 go 1.25
 
 require (
+	github.com/atotto/clipboard v0.1.4
 	github.com/boyter/go-string v1.0.5
 	github.com/firstrow/tree-sitter-odin v0.0.0-20250926124116-03901ae6525c
 	github.com/gdamore/tcell/v2 v2.8.1
@@ -45,4 +46,3 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-

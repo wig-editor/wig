@@ -124,6 +124,8 @@ func DefaultKeyMap() wig.ModeKeyMap {
 					"p": rgcollect.CmdVisitPrevLine,
 				},
 				"t": commands.CmdThemeSelect,
+				"y": commands.CmdClipboardCopy,
+				"p": commands.CmdClipboardPaste,
 			},
 		},
 		wig.MODE_VISUAL: wig.KeyMap{
@@ -150,6 +152,10 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"g": wig.WithSelection(wig.CmdGotoLine0),
 				"c": wig.CmdToggleComment,
 			},
+			"Space": wig.KeyMap{
+				"y": commands.CmdClipboardCopy,
+				"p": commands.CmdClipboardPaste,
+			},
 		},
 		wig.MODE_VISUAL_LINE: wig.KeyMap{
 			"ctrl+e": wig.CmdScrollDown,
@@ -166,6 +172,10 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"g": wig.KeyMap{
 				"g": wig.WithSelection(wig.CmdGotoLine0),
 				"c": wig.CmdToggleComment,
+			},
+			"Space": wig.KeyMap{
+				"y": commands.CmdClipboardCopy,
+				"p": commands.CmdClipboardPaste,
 			},
 		},
 		wig.MODE_INSERT: wig.KeyMap{
