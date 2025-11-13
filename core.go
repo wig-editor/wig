@@ -441,14 +441,15 @@ func CmdKillBuffer(ctx Context) {
 			buf.KeyHandler = nil
 		}
 
-		if len(ctx.Editor.Windows) > 1 {
-			ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
-				if win.buf == b {
-					return true
-				}
+		ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
+			if len(ctx.Editor.Windows) == 1 {
 				return false
-			})
-		}
+			}
+			if win.buf == b {
+				return true
+			}
+			return false
+		})
 
 		return true
 	})
