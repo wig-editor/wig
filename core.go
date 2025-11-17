@@ -24,7 +24,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	if pos < 0 {
 		pos = 0
 	}
-	size := utf8.RuneCountInString(text)
+	size := utf8.RuneCountInString(line.Value.String())
 	if pos >= size {
 		pos = size - 1
 	}

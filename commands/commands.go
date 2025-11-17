@@ -276,13 +276,17 @@ func CmdMakeTest(ctx wig.Context) {
 	cmd := exec.Command("make", "test")
 	stdout, err := cmd.CombinedOutput()
 	if err != nil {
-		ctx.Editor.LogMessage(err.Error())
-		ctx.Editor.LogMessage(string(stdout))
-		mbuf := ctx.Editor.BufferFindByFilePath("[Messages]", true)
+		mbuf := ctx.Editor.BufferFindByFilePath("[make test]", true)
+
+		mbuf.TxStart()
+		mbuf.ResetLines()
+		mbuf.Append(string(stdout))
+		mbuf.TxEnd()
+
 		ctx.Editor.EnsureBufferIsVisible(mbuf)
 		return
 	}
-	ctx.Editor.EchoMessage("[build ok]")
+	ctx.Editor.EchoMessage("[tests ok]")
 }
 
 func CmdSearchLine(ctx wig.Context) {

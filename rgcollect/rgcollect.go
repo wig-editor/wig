@@ -84,8 +84,21 @@ func visitLine(ctx wig.Context, upOrDown func(wig.Context)) {
 		}
 	}
 	if rgBuf == nil {
-		ctx.Editor.EchoMessage("rgcollect buffer not visible")
-		return
+		ctx.Editor.EchoMessage("rgcollect buffer not visible. using other window.")
+
+		if len(ctx.Editor.Windows) > 1 {
+			for _, win := range ctx.Editor.Windows {
+				if win == ctx.Editor.ActiveWindow() {
+					continue
+				}
+				rgWin = win
+				rgBuf = win.Buffer()
+			}
+		}
+
+		if rgBuf == nil {
+			return
+		}
 	}
 
 	var line *wig.Element[wig.Line]
