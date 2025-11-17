@@ -12,6 +12,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 		wig.MODE_NORMAL: wig.KeyMap{
 			// personal config
 			"F2": commands.CmdFormatBufferAndSave,
+			"F3": commands.CmdMakeTest,
 			"F5": commands.CmdMakeBuild,
 
 			"ctrl+e": wig.CmdScrollDown,

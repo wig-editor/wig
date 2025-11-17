@@ -5,6 +5,7 @@ import (
 	"strings"
 	"text/scanner"
 	"unicode"
+	"unicode/utf8"
 )
 
 const minVisibleLines = 5
@@ -23,7 +24,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	if pos < 0 {
 		pos = 0
 	}
-	size := len(line.Value)
+	size := utf8.RuneCountInString(text)
 	if pos >= size {
 		pos = size - 1
 	}
@@ -47,7 +48,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 			event.NewEnd.Char = 0
 		default:
 			line.Value = slices.Concat(line.Value[:pos], []rune(s.TokenText()), line.Value[pos:])
-			pos += len(s.TokenText())
+			pos += utf8.RuneCountInString(s.TokenText())
 			event.NewEnd.Char++
 		}
 	}
@@ -91,7 +92,7 @@ func TextDelete(buf *Buffer, selection *Selection) {
 	}
 
 	start := max(0, sel.Start.Char)
-	end := min(len(lineEnd.Value), sel.End.Char)
+	end := min(utf8.RuneCountInString(lineEnd.Value.String()), sel.End.Char)
 
 	lineStart.Value = slices.Concat(lineStart.Value[:start], lineEnd.Value[end:])
 
