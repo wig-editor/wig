@@ -42,8 +42,10 @@ func TestKeyHandler(t *testing.T) {
 		NewKeyHandler(keyMap()),
 	)
 
-	buf := editor.OpenFile(testutils.Filepath("buffer_test.txt"))
-	editor.ActiveWindow().VisitBuffer(buf)
+	ctx := editor.NewContext()
+	buf, _ := editor.OpenFile(testutils.Filepath("buffer_test.txt"))
+	ctx.Buf = buf
+	editor.ActiveWindow().VisitBuffer(ctx)
 
 	t.Run("f", func(t *testing.T) {
 		editor.HandleInput(key('f'))
@@ -76,8 +78,10 @@ func TestKeyHandlerMap(t *testing.T) {
 		nil,
 	)
 
-	buf := editor.OpenFile(testutils.Filepath("buffer_test.txt"))
-	editor.ActiveWindow().VisitBuffer(buf)
+	ctx := editor.NewContext()
+	buf, _ := editor.OpenFile(testutils.Filepath("buffer_test.txt"))
+	ctx.Buf = buf
+	editor.ActiveWindow().VisitBuffer(ctx)
 
 	commandlineCalled := false
 	testDeleteCalled := false
@@ -105,7 +109,7 @@ func TestKeyHandlerMap(t *testing.T) {
 	t.Run("f", func(t *testing.T) {
 		h := NewKeyHandler(testKeyMap())
 
-		h.Map(editor, MODE_NORMAL, KeyMap{
+		h.Map(MODE_NORMAL, KeyMap{
 			":": func(ctx Context) {
 				commandlineCalled = true
 			},
@@ -154,8 +158,10 @@ func TestKeyTimes(t *testing.T) {
 		h,
 	)
 
-	buf := editor.OpenFile(testutils.Filepath("buffer_test.txt"))
-	editor.ActiveWindow().VisitBuffer(buf)
+	ctx := editor.NewContext()
+	buf, _ := editor.OpenFile(testutils.Filepath("buffer_test.txt"))
+	ctx.Buf = buf
+	editor.ActiveWindow().VisitBuffer(ctx)
 
 	// test remap sinle key
 	t.Run("f", func(t *testing.T) {

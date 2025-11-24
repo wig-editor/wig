@@ -97,7 +97,7 @@ func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 	line := wig.CursorLine(ctx.Buf, cur)
 	item := w.items.Items[w.activeItem]
 
-	if item.TextEdit == nil {
+	if item.TextEdit == nil || (item.TextEdit.Insert.Start.Line == 0 && item.TextEdit.Insert.Start.Character == 0) {
 		label := item.Label
 		if label == "" {
 			label = item.InsertText

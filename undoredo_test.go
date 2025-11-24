@@ -11,9 +11,10 @@ import (
 
 func TestEdits(t *testing.T) {
 	e := NewEditor(testutils.Viewport, nil)
-	buf := e.OpenFile(testutils.Filepath("buffer_test.txt"))
-	buf.Cursor.Char = 0
-	buf.Cursor.Line = 0
+	buf, _ := e.OpenFile(testutils.Filepath("buffer_test.txt"))
+	cur := CursorGet(e, buf)
+	cur.Char = 0
+	cur.Line = 0
 	buf.Selection = nil
 
 	dupLines := List[Line]{}

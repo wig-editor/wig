@@ -5,16 +5,16 @@ import (
 	"testing"
 
 	"github.com/firstrow/wig/testutils"
-	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/stretchr/testify/require"
+	sitter "github.com/tree-sitter/go-tree-sitter"
 )
 
 // TODO: rewrite/fix treesitter concurrency tests
 
 func TestTreeSitterNodeCursor(t *testing.T) {
-	nodes := List[TreeSitterRangeNode]{}
+	nodes := List[HighlighterNode]{}
 
-	nodes.PushBack(TreeSitterRangeNode{
+	nodes.PushBack(HighlighterNode{
 		NodeName:  "test0",
 		StartLine: 0,
 		StartChar: 0,
@@ -22,7 +22,7 @@ func TestTreeSitterNodeCursor(t *testing.T) {
 		EndChar:   4,
 	})
 
-	nodes.PushBack(TreeSitterRangeNode{
+	nodes.PushBack(HighlighterNode{
 		NodeName:  "test1",
 		StartLine: 0,
 		StartChar: 6,
@@ -30,7 +30,7 @@ func TestTreeSitterNodeCursor(t *testing.T) {
 		EndChar:   10,
 	})
 
-	nodes.PushBack(TreeSitterRangeNode{
+	nodes.PushBack(HighlighterNode{
 		NodeName:  "test2",
 		StartLine: 1,
 		StartChar: 2,
@@ -38,7 +38,7 @@ func TestTreeSitterNodeCursor(t *testing.T) {
 		EndChar:   5,
 	})
 
-	cur := NewColorNodeCursor(nodes.First())
+	cur := HighlighterCursor{nodes.First()}
 
 	node, ok := cur.Seek(0, 0)
 	require.Equal(t, true, ok)
@@ -84,6 +84,7 @@ func add(a int, b int) {
 	buf.ResetLines()
 	buf.Append(source)
 	require.Equal(t, source+"\n", buf.String())
+	highlighter := buf.Highlighter.(*TreeSitterHighlighter)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -101,14 +102,14 @@ func add(a int, b int) {
 			OldText: "add",
 		}, event)
 
-		actual := HighlighterAdaptEditInput(event)
-		expected := sitter.EditInput{
-			StartPoint:  sitter.Point{Row: 4, Column: 5},
-			OldEndPoint: sitter.Point{Row: 4, Column: 8},
-			NewEndPoint: sitter.Point{Row: 4, Column: 5},
-			StartIndex:  uint32(34),
-			OldEndIndex: uint32(37),
-			NewEndIndex: uint32(34),
+		actual := highlighter.editEditInput(event)
+		expected := sitter.InputEdit{
+			StartPosition:  sitter.Point{Row: 4, Column: 5},
+			OldEndPosition: sitter.Point{Row: 4, Column: 8},
+			NewEndPosition: sitter.Point{Row: 4, Column: 5},
+			StartByte:      uint(34),
+			OldEndByte:     uint(37),
+			NewEndByte:     uint(34),
 		}
 		require.Equal(t, expected, actual)
 	}()
@@ -140,9 +141,11 @@ func add(a int, b int) {
 	buf := e.BufferFindByFilePath("testfile", true)
 	buf.ResetLines()
 	buf.Append(source)
-	buf.Cursor.Line = 4
-	buf.Cursor.Char = 0
+	cur := CursorGet(e, buf)
+	cur.Line = 4
+	cur.Char = 0
 	require.Equal(t, source+"\n", buf.String())
+	highlighter := buf.Highlighter.(*TreeSitterHighlighter)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -162,16 +165,16 @@ func add(a int, b int) {
 			OldText: "func add(a int, b int) {\n",
 		}, event)
 
-		expected := sitter.EditInput{
-			StartPoint:  sitter.Point{Row: 4, Column: 0},
-			OldEndPoint: sitter.Point{Row: 5, Column: 0},
-			NewEndPoint: sitter.Point{Row: 4, Column: 0},
-			StartIndex:  uint32(29),
-			OldEndIndex: uint32(54),
-			NewEndIndex: uint32(29),
+		expected := sitter.InputEdit{
+			StartPosition:  sitter.Point{Row: 4, Column: 0},
+			OldEndPosition: sitter.Point{Row: 5, Column: 0},
+			NewEndPosition: sitter.Point{Row: 4, Column: 0},
+			StartByte:      uint(29),
+			OldEndByte:     uint(54),
+			NewEndByte:     uint(29),
 		}
 
-		actual := HighlighterAdaptEditInput(event)
+		actual := highlighter.editEditInput(event)
 		require.Equal(t, expected, actual)
 	}()
 	wg.Wait()

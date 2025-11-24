@@ -27,7 +27,8 @@ func TestPipe(t *testing.T) {
 		buf.Append(l)
 	}
 
-	buf.Cursor.Line = 2
+	cur := wig.CursorGet(e, buf)
+	cur.Line = 2
 
 	p := New(e)
 	h := p.parseHeader(buf)
@@ -61,7 +62,8 @@ func Test_LongRunningProcess(t *testing.T) {
 		buf.Append(l)
 	}
 
-	buf.Cursor.Line = 4
+	cur := wig.CursorGet(e, buf)
+	cur.Line = 4
 	p := New(e)
 	h := p.parseHeader(buf)
 
@@ -98,7 +100,8 @@ hello world
 		buf.Append(l)
 	}
 
-	buf.Cursor.Line = 5
+	cur := wig.CursorGet(e, buf)
+	cur.Line = 5
 	p := New(e)
 
 	result := p.parseHeader(buf)
@@ -110,7 +113,7 @@ hello world
 	assert.Equal(t, expected, result)
 
 	// test "down-up" parsing
-	buf.Cursor.Line = 11
+	cur.Line = 11
 
 	result = p.parseHeader(buf)
 	expected = header{
@@ -121,3 +124,4 @@ hello world
 	assert.Equal(t, expected, result)
 	assert.Equal(t, expected, result)
 }
+

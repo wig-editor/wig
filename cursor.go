@@ -137,6 +137,10 @@ func WindowCursorGet(win *Window, buf *Buffer) *Cursor {
 	return cur
 }
 
+func WindowCursorSet(win *Window, buf *Buffer, cur *Cursor) {
+	win.cursors[buf] = cur
+}
+
 // class of char under cursor
 type chClass int
 

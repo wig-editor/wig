@@ -20,11 +20,13 @@ func indent(ctx Context) {
 		}
 
 		idx := 0
+		indentCh := "\t"
 		for i, c := range prevLine.Value {
 			if !unicode.IsSpace(c) {
 				idx = i
 				break
 			}
+			indentCh = string(c)
 		}
 
 		trimmed := strings.TrimSpace(string(prevLine.Value))
@@ -34,7 +36,7 @@ func indent(ctx Context) {
 			}
 		}
 
-		ch := strings.Repeat("\t", idx)
+		ch := strings.Repeat(indentCh, idx)
 		TextInsert(ctx.Buf, line, 0, ch)
 		CmdGotoLineEnd(ctx)
 
@@ -69,4 +71,3 @@ func IndentGetNumber(line []rune, indentUnit []rune) int {
 
 	return count
 }
-
