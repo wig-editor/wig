@@ -25,8 +25,9 @@ type Indent struct {
 }
 
 type LanguageServerConfig struct {
-	Command string   `toml:"command"`
-	Args    []string `toml:"args"`
+	Language Language
+	Command  string   `toml:"command"`
+	Args     []string `toml:"args"`
 }
 
 func (l Language) GetFileTypes() (exts []string, globs []string) {
@@ -34,7 +35,7 @@ func (l Language) GetFileTypes() (exts []string, globs []string) {
 		switch e := entry.(type) {
 		case string:
 			exts = append(exts, e)
-		case map[string]interface{}:
+		case map[string]any:
 			if g, ok := e["glob"].(string); ok {
 				globs = append(globs, g)
 			}

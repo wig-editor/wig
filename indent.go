@@ -2,12 +2,24 @@ package wig
 
 import (
 	"strings"
-	"unicode"
 )
 
+func indentInsert(ctx Context) {
+	lspFileConfig, found := LspConfigByFileName(ctx.Buf.FilePath)
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
+	indentCh := lspFileConfig.Language.Indent.Unit
+	if !found {
+		indentCh = "\t"
+	}
+	TextInsert(ctx.Buf, line, cur.Char, indentCh)
+	cur.Char++
+}
+
 func indent(ctx Context) {
+	lspFileConfig, _ := LspConfigByFileName(ctx.Buf.FilePath)
+
 	indentChars := []string{"{", ":"}
-	// outdentChars := []string{"}"}
 
 	cur := ContextCursorGet(ctx)
 	line := CursorLine(ctx.Buf, cur)
@@ -19,25 +31,15 @@ func indent(ctx Context) {
 			continue
 		}
 
-		idx := 0
-		indentCh := "\t"
-		for i, c := range prevLine.Value {
-			if !unicode.IsSpace(c) {
-				idx = i
-				break
-			}
-			indentCh = string(c)
-		}
-
+		indentCh := lspFileConfig.Language.Indent.Unit
 		trimmed := strings.TrimSpace(string(prevLine.Value))
 		for _, ch := range indentChars {
 			if strings.HasSuffix(trimmed, ch) {
-				idx += 1
+				indentCh += indentCh
 			}
 		}
 
-		ch := strings.Repeat(indentCh, idx)
-		TextInsert(ctx.Buf, line, 0, ch)
+		TextInsert(ctx.Buf, line, 0, indentCh)
 		CmdGotoLineEnd(ctx)
 
 		break
@@ -71,3 +73,4 @@ func IndentGetNumber(line []rune, indentUnit []rune) int {
 
 	return count
 }
+

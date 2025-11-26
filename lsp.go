@@ -33,6 +33,7 @@ func init() {
 		c := lcfg.LanguageServers[servers[0]]
 		for _, ext := range exts {
 			ekey := "." + ext
+			c.Language = v
 			lspConfigs[ekey] = c
 		}
 	}

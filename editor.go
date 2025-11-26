@@ -3,6 +3,7 @@ package wig
 import (
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -95,6 +96,10 @@ func NewEditor(
 }
 
 func (e *Editor) OpenFile(path string) (*Buffer, error) {
+	absPath, err := filepath.Abs(path)
+	if err == nil {
+		path = absPath
+	}
 	if fbuf := e.BufferFindByFilePath(path, false); fbuf != nil {
 		return fbuf, nil
 	}

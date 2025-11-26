@@ -49,12 +49,19 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 					return
 				}
 			}
+			goto insertChar
+			return
 		}
 	}
 
 insertChar:
 
 	if ch == 0 {
+		return
+	}
+
+	if ch == '\t' {
+		indentInsert(ctx)
 		return
 	}
 
