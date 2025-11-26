@@ -2,6 +2,7 @@ package wig
 
 import (
 	"strings"
+	"unicode"
 )
 
 func indentInsert(ctx Context) {
@@ -31,15 +32,23 @@ func indent(ctx Context) {
 			continue
 		}
 
+		prefix := ""
+		for i, k := range prevLine.Value.String() {
+			if !unicode.IsSpace(k) {
+				prefix = prevLine.Value.String()[:i]
+				break
+			}
+		}
+
 		indentCh := lspFileConfig.Language.Indent.Unit
 		trimmed := strings.TrimSpace(string(prevLine.Value))
 		for _, ch := range indentChars {
 			if strings.HasSuffix(trimmed, ch) {
-				indentCh += indentCh
+				prefix += indentCh
 			}
 		}
 
-		TextInsert(ctx.Buf, line, 0, indentCh)
+		TextInsert(ctx.Buf, line, 0, prefix)
 		CmdGotoLineEnd(ctx)
 
 		break
