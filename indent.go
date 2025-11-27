@@ -14,7 +14,7 @@ func indentInsert(ctx Context) {
 		indentCh = "\t"
 	}
 	TextInsert(ctx.Buf, line, cur.Char, indentCh)
-	cur.Char++
+	cur.Char += len(indentCh)
 }
 
 func indent(ctx Context) {
