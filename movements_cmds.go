@@ -423,13 +423,13 @@ func CmdWindowClose(ctx Context) {
 	}
 
 	curWin := ctx.Editor.activeWindow
+	CmdWindowNext(ctx)
 	ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
 		if win == curWin {
 			return true
 		}
 		return false
 	})
-
 }
 
 func CmdWindowCloseOther(ctx Context) {
