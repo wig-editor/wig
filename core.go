@@ -7,7 +7,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 )
-
+ 
 const minVisibleLines = 5
 const smode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scanner.ScanStrings | scanner.ScanRawStrings | scanner.ScanComments
 

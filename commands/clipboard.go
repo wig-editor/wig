@@ -34,7 +34,10 @@ func CmdClipboardPaste(ctx wig.Context) {
 		}
 	}
 
-	wig.TextInsert(ctx.Buf, wig.CursorLine(ctx.Buf, cur), cur.Char, text)
+	if ctx.Buf.TxStart() {
+		wig.TextInsert(ctx.Buf, wig.CursorLine(ctx.Buf, cur), cur.Char, text)
+		ctx.Buf.TxEnd()
+	}
 	wig.CmdNormalMode(ctx)
 }
 
