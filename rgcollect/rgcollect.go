@@ -8,6 +8,10 @@ import (
 )
 
 func Init(ctx wig.Context, title string, items []wig.Location) {
+	if len(items) == 0 {
+		ctx.Editor.EchoMessage("no items found")
+		return
+	}
 	if len(ctx.Editor.Windows) == 1 {
 		wig.CmdWindowVSplit(ctx)
 	}
@@ -111,6 +115,10 @@ func visitLine(ctx wig.Context, upOrDown func(wig.Context)) {
 		nctx.Win = rgWin
 		upOrDown(nctx)
 		line = wig.CursorLine(rgBuf, bufCur)
+	}
+
+	if line == nil {
+		return
 	}
 
 	filename, lineNum, chNum := wig.ParseFileLocation(line.Value.String(), 0)
