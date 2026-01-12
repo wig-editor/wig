@@ -22,12 +22,14 @@ func (win *Window) VisitBuffer(ctx Context, cursor ...Cursor) {
 		newCur := &Cursor{}
 		newCur.Line = cursor[0].Line
 		newCur.Char = cursor[0].Char
+		newCur.ScrollOffset = cursor[0].ScrollOffset
 		win.cursors[ctx.Buf] = newCur
 	}
 
 	win.Jumps.Push(ctx.Buf, cur)
 	win.buf = ctx.Buf
 
+	ctx.Win = win
 	CmdCursorCenter(ctx)
 }
 
@@ -47,8 +49,12 @@ func CreateWindow(parent *Window) *Window {
 	cursors := map[*Buffer]*Cursor{}
 	if parent != nil {
 		for k, v := range parent.cursors {
-			nc := *v
-			cursors[k] = &nc
+			cursors[k] = &Cursor{
+				Line:                 v.Line,
+				Char:                 v.Char,
+				PreserveCharPosition: v.PreserveCharPosition,
+				ScrollOffset:         v.ScrollOffset,
+			}
 		}
 	}
 
