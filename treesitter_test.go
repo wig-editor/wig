@@ -80,10 +80,11 @@ func add(a int, b int) {
 		testutils.Viewport,
 		nil,
 	)
-	buf := e.BufferFindByFilePath("testfile", true)
+	buf := e.BufferFindByFilePath("testfile.go", true)
 	buf.ResetLines()
 	buf.Append(source)
 	require.Equal(t, source+"\n", buf.String())
+	buf.Highlighter = TreeSitterHighlighterInitBuffer(e, buf)
 	highlighter := buf.Highlighter.(*TreeSitterHighlighter)
 
 	wg := sync.WaitGroup{}
@@ -138,13 +139,14 @@ func add(a int, b int) {
 		nil,
 	)
 
-	buf := e.BufferFindByFilePath("testfile", true)
+	buf := e.BufferFindByFilePath("testfile.go", true)
 	buf.ResetLines()
 	buf.Append(source)
 	cur := CursorGet(e, buf)
 	cur.Line = 4
 	cur.Char = 0
 	require.Equal(t, source+"\n", buf.String())
+	buf.Highlighter = TreeSitterHighlighterInitBuffer(e, buf)
 	highlighter := buf.Highlighter.(*TreeSitterHighlighter)
 
 	wg := sync.WaitGroup{}
