@@ -204,6 +204,16 @@ func (b *Buffer) ResetLines() {
 	b.Lines = List[Line]{}
 }
 
+func (b *Buffer) CountLines() int {
+	i := 0
+	l := b.Lines.First()
+	for l != nil {
+		i++
+		l = l.Next()
+	}
+	return i
+}
+
 func (b *Buffer) String() string {
 	buf := bytes.NewBuffer(nil)
 	line := b.Lines.First()

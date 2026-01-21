@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	str "github.com/boyter/go-string"
@@ -32,7 +33,15 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	currentLine := buf.Lines.First()
 	offset := cur.ScrollOffset
 
+	// Line numbers config
 	lineNum := 0
+	lineNumTextStyle := wig.Color("ui.linenr")
+	lineNumTextStyleSelected := wig.Color("ui.linenr.selected")
+	leftPadding := 0
+	if e.Config.ShowLineNumbers {
+		leftPadding = len(fmt.Sprintf("%d", buf.CountLines())) + 1
+	}
+
 	y := 0
 
 	isActiveWin := win == e.ActiveWindow()
@@ -53,7 +62,7 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	for currentLine != nil {
 		if lineNum >= offset && y <= termHeight {
 			// render each character in the line separately
-			x := 0 // onscreen position
+			x := leftPadding // onscreen position
 
 			// highlight search
 			searchMatches := [][]int{}
@@ -114,6 +123,24 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				}
 
 				/////////////////////////////////
+
+				// Line numbers
+				if e.Config.ShowLineNumbers {
+					lnNum := lineNum + 1
+					if e.Config.RelativeLineNumbers {
+						lnNum = cur.Line - lineNum
+						if lnNum < 0 {
+							lnNum = -lnNum
+						}
+					}
+
+					if lineNum == cur.Line {
+						view.SetContent(0, y, fmt.Sprintf("%d", lnNum), lineNumTextStyleSelected)
+					} else {
+						view.SetContent(0, y, fmt.Sprintf("%d", lnNum), lineNumTextStyle)
+					}
+				}
+				// End Line Numbers
 
 				ch := getRenderChar(currentLine.Value[i])
 

@@ -34,6 +34,8 @@ func main() {
 		wig.NewKeyHandler(config.DefaultKeyMap()),
 	)
 	editor.AutocompleteTrigger = autocomplete.Register(editor)
+	editor.ReadConfigFile()
+	wig.ApplyTheme(editor.Config.Theme)
 
 	args := os.Args
 	wig.CmdNewBuffer(editor.NewContext())

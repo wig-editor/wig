@@ -8,6 +8,12 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+type EditorConfig struct {
+	Theme               string
+	ShowLineNumbers     bool
+	RelativeLineNumbers bool
+}
+
 type View interface {
 	SetContent(x, y int, str string, st tcell.Style)
 	Size() (width, height int)
@@ -65,6 +71,7 @@ type Editor struct {
 	Events              *EventsManager
 	AutocompleteTrigger AutocompleteFn
 	Snippets            *SnippetsManager
+	Config              EditorConfig
 }
 
 func NewEditor(
@@ -93,6 +100,14 @@ func NewEditor(
 	TreeSitterHighlighterGo(EditorInst)
 
 	return EditorInst
+}
+
+func (e *Editor) ReadConfigFile() {
+	e.Config = EditorConfig{
+		Theme:               "yo",
+		ShowLineNumbers:     true,
+		RelativeLineNumbers: true,
+	}
 }
 
 func (e *Editor) OpenFile(path string) (*Buffer, error) {
