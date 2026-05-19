@@ -104,7 +104,7 @@ func NewEditor(
 
 func (e *Editor) ReadConfigFile() {
 	e.Config = EditorConfig{
-		Theme:               "yo",
+		Theme:               "solarized_dark",
 		ShowLineNumbers:     true,
 		RelativeLineNumbers: true,
 	}

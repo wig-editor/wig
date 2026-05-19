@@ -50,7 +50,6 @@ func HandleInsertKey(ctx Context, ev *tcell.EventKey) {
 				}
 			}
 			goto insertChar
-			return
 		}
 	}
 

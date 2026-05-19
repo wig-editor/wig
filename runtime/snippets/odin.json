@@ -1,0 +1,19 @@
+{
+		"fmtp": {
+			"prefix": "fmtp",
+			"body": "fmt.println($0)"
+		},
+		"fmtf": {
+			"prefix": "fmtf",
+			"body": "fmt.printf($1, $0)"
+		},
+		"proc": {
+			"prefix": "proc",
+			"body": "$1 :: proc{\n\t$0\n}\n"
+		},
+		"if": {
+			"prefix": "if",
+			"body": "if $1 {\n$0\n}\n"
+		}
+}
+

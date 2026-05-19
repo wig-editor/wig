@@ -219,6 +219,18 @@ func CmdFormatBuffer(ctx wig.Context) {
 			ctx.Buf.Append(line)
 		}
 	}
+
+	if strings.HasSuffix(ctx.Buf.FilePath, ".odin") {
+		formatcmd := fmt.Sprintf("odinfmt %s -w", ctx.Buf.FilePath)
+		cmd := exec.Command("bash", "-c", formatcmd)
+		stdout, err := cmd.Output()
+		if err != nil {
+			ctx.Editor.LogMessage(err.Error())
+			ctx.Editor.LogMessage(string(stdout))
+			return
+		}
+		CmdReloadBuffer(ctx)
+	}
 }
 
 func CmdSearchWordUnderCursor(ctx wig.Context) {
@@ -275,17 +287,24 @@ func CmdMakeBuild(ctx wig.Context) {
 func CmdMakeTest(ctx wig.Context) {
 	cmd := exec.Command("make", "test")
 	stdout, err := cmd.CombinedOutput()
-	if err != nil {
-		mbuf := ctx.Editor.BufferFindByFilePath("[make test]", true)
+	std := string(stdout)
+	mbuf := ctx.Editor.BufferFindByFilePath("[make test]", true)
+	if err != nil || strings.Contains(std, "leak") {
 
 		mbuf.TxStart()
 		mbuf.ResetLines()
-		mbuf.Append(string(stdout))
+		mbuf.Append(std)
 		mbuf.TxEnd()
 
 		ctx.Editor.EnsureBufferIsVisible(mbuf)
 		return
 	}
+
+	mbuf.TxStart()
+	mbuf.ResetLines()
+	mbuf.Append(std)
+	mbuf.TxEnd()
+
 	ctx.Editor.EchoMessage("[tests ok]")
 }
 
