@@ -136,6 +136,35 @@ func (l *lspConn) didOpen(buf *Buffer) {
 	}
 }
 
+func (l *LspManager) DidSave(buf *Buffer) {
+	root, _ := l.e.Projects.FindRoot(buf)
+
+	_, ignore := l.ignore[root]
+	if ignore {
+		return
+	}
+
+	var client *lspConn
+	var err error
+
+	client, ok := l.conns[root]
+	if !ok {
+		return
+	}
+
+	// todo export text only if required by server
+	didSave := protocol.DidSaveTextDocumentParams{
+		Text: buf.String(),
+		TextDocument: protocol.TextDocumentIdentifier{
+			URI: protocol.DocumentURI(fmt.Sprintf("file://%s", buf.FilePath)),
+		},
+	}
+	err = client.rpcConn.Notify(context.Background(), protocol.MethodTextDocumentDidSave, didSave)
+	if err != nil {
+		EditorInst.LogError(err)
+	}
+}
+
 func (l *LspManager) DidChange(event EventTextChange) {
 	root, _ := l.e.Projects.FindRoot(event.Buf)
 
@@ -493,10 +522,12 @@ func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Bu
 
 		if req.Method() == "textDocument/publishDiagnostics" {
 			rest := protocol.PublishDiagnosticsParams{}
-			json.Unmarshal(req.Params(), &rest)
+			err = json.Unmarshal(req.Params(), &rest)
+			if err != nil {
+				l.e.LogError(err)
+			}
 
 			filepath := rest.URI.Filename()
-
 			l.rw.Lock()
 			l.diagnostics[filepath] = map[uint32][]protocol.Diagnostic{}
 			for _, r := range rest.Diagnostics {
