@@ -106,6 +106,13 @@ warning = "yellow"
 "ui.virtual.ruler" = { bg = "bg1" }
 "ui.window" = { fg = "bg3" }
 
+
+"ui.cursor.primary" = { fg = "bg0", bg = "fg0" }
+
+"ui.cursor.primary" = { fg = "bg0", bg = "fg0" }
+
+ 	text:= 101, 71, 53
+
 [palette]
 fg0 = "#654735"
 fg1 = "#4f3829"

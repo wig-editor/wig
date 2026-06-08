@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -104,7 +105,7 @@ func NewEditor(
 
 func (e *Editor) ReadConfigFile() {
 	e.Config = EditorConfig{
-		Theme:               "solarized_dark",
+		Theme:               "naysayer",
 		ShowLineNumbers:     true,
 		RelativeLineNumbers: true,
 	}
@@ -244,6 +245,7 @@ func (e *Editor) RuntimeDir(elems ...string) string {
 }
 
 func (e *Editor) EchoMessage(msg string) {
+	msg = strings.ReplaceAll(msg, "\n", " ")
 	buf := e.BufferFindByFilePath("[Messages]", true)
 	buf.Append(msg)
 	e.Message = msg
