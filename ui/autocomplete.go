@@ -2,6 +2,7 @@ package ui
 
 import (
 	"math"
+	"unicode"
 
 	"github.com/firstrow/wig"
 )
@@ -102,11 +103,21 @@ func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 		if label == "" {
 			label = item.InsertText
 		}
-		wig.CmdBackwardWord(ctx)
-		wig.CmdDeleteEndOfLine(ctx)
+		cur2 := cur
+		cur2.Char -= 1
+		r := wig.CursorChar(ctx.Buf, cur2)
+		if !unicode.IsPunct(r) && !unicode.IsSpace(r) {
+			cur := wig.ContextCursorGet(ctx)
+			wig.SelectionStart(ctx.Buf, cur)
+			wig.WithSelection(wig.CmdBackwardWord)(ctx)
+			wig.SelectionDelete(ctx)
+			wig.CmdCursorLeft(ctx)
+		}
+		cur = wig.ContextCursorGet(ctx)
 		wig.TextInsert(ctx.Buf, line, cur.Char+1, label)
-		wig.CmdGotoLineEnd(ctx)
+		cur.Char += len(label)
 		wig.CmdEnterInsertMode(ctx)
+		wig.CmdCursorRight(ctx)
 		return
 	}
 

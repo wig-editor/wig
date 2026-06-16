@@ -272,7 +272,7 @@ func CmdFormatBufferAndSave(ctx wig.Context) {
 
 func CmdMakeBuild(ctx wig.Context) {
 	CmdFormatBufferAndSave(ctx)
-	cmd := exec.Command("make", "build")
+	cmd := exec.Command("make", "run")
 	stdout, err := cmd.CombinedOutput()
 	if err != nil {
 		ctx.Editor.LogMessage(err.Error())
