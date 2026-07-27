@@ -248,7 +248,7 @@ func CmdForwardWord(ctx Context) {
 	cur := ContextCursorGet(ctx)
 
 	// on line change skip all whitespaces
-	startLine := cur.Char
+	startLine := cur.Line
 	defer func() {
 		if startLine != cur.Line {
 			for CursorChClass(ctx.Buf, cur) == chWhitespace {
