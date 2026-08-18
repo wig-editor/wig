@@ -49,6 +49,7 @@ type Buffer struct {
 	UndoRedo    *UndoRedo
 	Highlighter Highlighter
 	KeyHandler  *KeyHandler
+	GitSigns    map[int]rune
 
 	rootDir string
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/firstrow/wig"
 	"github.com/firstrow/wig/autocomplete"
+	"github.com/firstrow/wig/commands"
 	"github.com/firstrow/wig/config"
 	"github.com/firstrow/wig/metrics"
 	"github.com/firstrow/wig/render"
@@ -45,6 +46,7 @@ func main() {
 	editor.AutocompleteTrigger = autocomplete.Register(editor)
 	editor.Config = editorCfg
 	wig.ApplyTheme(editor.Config.Theme)
+	commands.NewGitGutterManager(editor)
 
 	args := os.Args
 	if len(args) > 1 {
