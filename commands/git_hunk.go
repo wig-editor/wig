@@ -135,30 +135,18 @@ func CmdGitHunkPrev(ctx wig.Context) {
 		}
 	}
 }
-func CmdGitHunkRevert(ctx wig.Context) {
-	hunks, err := getGitHunks(ctx)
-	if err != nil || len(hunks) == 0 {
-		return
-	}
-
-	cur := wig.ContextCursorGet(ctx)
-	currentLine := cur.Line + 1 // 1-indexed
-
-	var targetHunk *GitHunk
+func findHunkAtCursor(hunks []GitHunk, currentLine int) *GitHunk {
 	for i := range hunks {
 		hunk := &hunks[i]
 		hunkEnd := hunk.NewStart + hunk.NewLen - 1
 		if currentLine >= hunk.NewStart && currentLine <= hunkEnd {
-			targetHunk = hunk
-			break
+			return hunk
 		}
 	}
+	return nil
+}
 
-	if targetHunk == nil {
-		ctx.Editor.EchoMessage("No hunk to revert here")
-		return
-	}
-
+func revertHunk(ctx wig.Context, targetHunk *GitHunk) {
 	// Reconstruct the original lines from the hunk
 	var oldLines []string
 	for _, line := range targetHunk.Lines {
@@ -210,10 +198,29 @@ func CmdGitHunkRevert(ctx wig.Context) {
 	}
 
 	// Move cursor to the start of the reverted hunk
+	cur := wig.ContextCursorGet(ctx)
 	cur.Line = startLine
 	cur.Char = 0
 	ctx.Editor.EchoMessage("Reverted hunk")
 	wig.CmdCursorCenter(ctx)
+}
+
+func CmdGitHunkRevert(ctx wig.Context) {
+	hunks, err := getGitHunks(ctx)
+	if err != nil || len(hunks) == 0 {
+		return
+	}
+
+	cur := wig.ContextCursorGet(ctx)
+	currentLine := cur.Line + 1 // 1-indexed
+
+	targetHunk := findHunkAtCursor(hunks, currentLine)
+	if targetHunk == nil {
+		ctx.Editor.EchoMessage("No hunk to revert here")
+		return
+	}
+
+	revertHunk(ctx, targetHunk)
 }
 
 func CmdGitHunkPreview(ctx wig.Context) {
@@ -226,47 +233,22 @@ func CmdGitHunkPreview(ctx wig.Context) {
 	cur := wig.ContextCursorGet(ctx)
 	currentLine := cur.Line + 1 // 1-indexed
 
-	var targetHunk *GitHunk
-	for i := range hunks {
-		hunk := &hunks[i]
-		hunkEnd := hunk.NewStart + hunk.NewLen - 1
-		if currentLine >= hunk.NewStart && currentLine <= hunkEnd {
-			targetHunk = hunk
-			break
-		}
-	}
-
+	targetHunk := findHunkAtCursor(hunks, currentLine)
 	if targetHunk == nil {
 		ctx.Editor.EchoMessage("No hunk to preview here")
 		return
 	}
 
 	header := fmt.Sprintf("@@ -%d,%d +%d,%d @@", targetHunk.OldStart, targetHunk.OldLen, targetHunk.NewStart, targetHunk.NewLen)
-	items := make([]ui.PickerItem[string], 0, len(targetHunk.Lines)+1)
-	items = append(items, ui.PickerItem[string]{
-		Name:  header,
-		Value: header,
-	})
+	lines := make([]string, 0, len(targetHunk.Lines))
 	for _, line := range targetHunk.Lines {
 		if line == "" {
 			continue
 		}
-		items = append(items, ui.PickerItem[string]{
-			Name:  line,
-			Value: line,
-		})
+		lines = append(lines, line)
 	}
 
-	action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
-		defer ctx.Editor.PopUi()
-		if i == nil {
-			return
-		}
-	}
-
-	ui.PickerInit(
-		ctx.Editor,
-		action,
-		items,
-	)
+	ui.HunkPreviewInit(ctx, header, lines, func(ctx wig.Context) {
+		revertHunk(ctx, targetHunk)
+	})
 }
