@@ -68,47 +68,71 @@ func getGitHunks(ctx wig.Context) ([]GitHunk, error) {
 	return hunks, nil
 }
 
+// hunkFirstChangeLine returns the 1-indexed new-file line of the first actual
+// +/- change in the hunk, skipping the leading context lines that NewStart
+// includes (mirrors the walk done in ComputeGitSigns).
+func hunkFirstChangeLine(hunk GitHunk) int {
+	currentNewLine := hunk.NewStart
+	for i := 0; i < len(hunk.Lines); i++ {
+		line := hunk.Lines[i]
+		if len(line) == 0 {
+			currentNewLine++
+			continue
+		}
+		switch line[0] {
+		case '+':
+			return currentNewLine
+		case '-':
+			if i+1 < len(hunk.Lines) && len(hunk.Lines[i+1]) > 0 && hunk.Lines[i+1][0] == '+' {
+				return currentNewLine
+			}
+			if currentNewLine == 1 {
+				return currentNewLine
+			}
+			return currentNewLine - 1
+		default:
+			currentNewLine++
+		}
+	}
+	return hunk.NewStart
+}
 func CmdGitHunkNext(ctx wig.Context) {
 	hunks, err := getGitHunks(ctx)
 	if err != nil || len(hunks) == 0 {
 		return
 	}
-
 	cur := wig.ContextCursorGet(ctx)
 	currentLine := cur.Line + 1 // 1-indexed
-
 	for _, hunk := range hunks {
 		if hunk.NewStart > currentLine {
-			cur.Line = hunk.NewStart - 1
+			target := hunkFirstChangeLine(hunk)
+			cur.Line = target - 1
 			cur.Char = 0
-			ctx.Editor.EchoMessage("Hunk " + strconv.Itoa(hunk.NewStart))
+			ctx.Editor.EchoMessage("Hunk " + strconv.Itoa(target))
 			wig.CmdCursorCenter(ctx)
 			return
 		}
 	}
 }
-
 func CmdGitHunkPrev(ctx wig.Context) {
 	hunks, err := getGitHunks(ctx)
 	if err != nil || len(hunks) == 0 {
 		return
 	}
-
 	cur := wig.ContextCursorGet(ctx)
 	currentLine := cur.Line + 1 // 1-indexed
-
 	for i := len(hunks) - 1; i >= 0; i-- {
 		hunk := hunks[i]
 		if hunk.NewStart < currentLine {
-			cur.Line = hunk.NewStart - 1
+			target := hunkFirstChangeLine(hunk)
+			cur.Line = target - 1
 			cur.Char = 0
-			ctx.Editor.EchoMessage("Hunk " + strconv.Itoa(hunk.NewStart))
+			ctx.Editor.EchoMessage("Hunk " + strconv.Itoa(target))
 			wig.CmdCursorCenter(ctx)
 			return
 		}
 	}
 }
-
 func CmdGitHunkRevert(ctx wig.Context) {
 	hunks, err := getGitHunks(ctx)
 	if err != nil || len(hunks) == 0 {

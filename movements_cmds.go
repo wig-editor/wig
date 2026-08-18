@@ -8,34 +8,31 @@ import (
 	"unicode"
 )
 
+// viewHeight returns the number of visible buffer rows in the active window,
+// matching the termHeight calc in ui.WindowRender (which reserves 1 row for
+// the statusline). Scroll/visibility math must use this, not the raw
+// ctx.Editor.View.Size() height, or PgUp/PgDn drift from what's on screen.
+func viewHeight(ctx Context) int {
+	_, h := ctx.Editor.View.Size()
+	return h - 1
+}
 func CmdScrollUp(ctx Context) {
 	cur := ContextCursorGet(ctx)
-	defer func() {
-		if cur.ScrollOffset < 0 {
-			cur.ScrollOffset = 0
-		}
-	}()
-	if cur.ScrollOffset > 0 {
-		cur.ScrollOffset--
-
-		_, h := ctx.Editor.View.Size()
-		if cur.Line > cur.ScrollOffset+h-minVisibleLines {
-			CmdCursorLineUp(ctx)
-		}
-	}
+	h := viewHeight(ctx)
+	step := max(h-minVisibleLines, 1)
+	cur.ScrollOffset = max(cur.ScrollOffset-step, 0)
+	cur.Line = max(cur.Line-step, 0)
+	restoreCharPosition(ctx.Buf, cur)
 }
-
 func CmdScrollDown(ctx Context) {
 	cur := ContextCursorGet(ctx)
-	if cur.ScrollOffset < ctx.Buf.Lines.Len-minVisibleLines {
-		cur.ScrollOffset++
-
-		if cur.Line <= cur.ScrollOffset+minVisibleLines {
-			CmdCursorLineDown(ctx)
-		}
-	}
+	h := viewHeight(ctx)
+	step := max(h-minVisibleLines, 1)
+	maxOffset := max(ctx.Buf.Lines.Len-minVisibleLines, 0)
+	cur.ScrollOffset = min(cur.ScrollOffset+step, maxOffset)
+	cur.Line = min(cur.Line+step, ctx.Buf.Lines.Len-1)
+	restoreCharPosition(ctx.Buf, cur)
 }
-
 func CmdCursorLeft(ctx Context) {
 	count := max(ctx.Count, 1)
 	cur := ContextCursorGet(ctx)
@@ -458,17 +455,14 @@ func CmdEnsureCursorVisible(ctx Context) {
 			cur.ScrollOffset = 0
 		}
 	}()
-
-	_, h := ctx.Editor.View.Size()
+	h := viewHeight(ctx)
 	if cur.Line > cur.ScrollOffset+h-minVisibleLines {
 		cur.ScrollOffset = cur.Line - h + minVisibleLines
 	}
-
 	if cur.Line < cur.ScrollOffset+minVisibleLines {
 		cur.ScrollOffset = cur.Line - minVisibleLines
 	}
 }
-
 func CmdCursorCenter(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	defer func() {
@@ -476,11 +470,9 @@ func CmdCursorCenter(ctx Context) {
 			cur.ScrollOffset = 0
 		}
 	}()
-
-	_, h := ctx.Editor.View.Size()
+	h := viewHeight(ctx)
 	cur.ScrollOffset = cur.Line - (h / 2) + minVisibleLines
 }
-
 func CmdJumpBack(ctx Context) {
 	ctx.Editor.ActiveWindow().Jumps.JumpBack()
 	CmdCursorCenter(ctx)
