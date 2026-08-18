@@ -156,6 +156,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"G":      wig.CmdGotoLineEndOfFile,
 			"n":      wig.CmdSearchNext,
 			"N":      wig.CmdSearchPrev,
+			"%":      wig.CmdMatchPair,
 			"u":      wig.CmdUndo,
 			"ctrl+r": wig.CmdRedo,
 			":":      ui.CmdLineInit,
@@ -274,6 +275,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"c":      wig.CmdSelectionChange,
 			"Esc":    wig.CmdNormalMode,
 			"*":      commands.CmdSearchWordUnderCursor,
+			"%":      wig.WithSelection(wig.CmdMatchPair),
 			"g": wig.KeyMap{
 				"g": wig.WithSelection(wig.CmdGotoLine0),
 				"c": wig.CmdToggleComment,
@@ -303,6 +305,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"d":      wig.CmdSelectionDelete,
 			"y":      wig.CmdYank,
 			"p":      wig.CmdYankPut,
+			"%":      wig.WithSelection(wig.CmdMatchPair),
 			"g": wig.KeyMap{
 				"g": wig.WithSelection(wig.CmdGotoLine0),
 				"c": wig.CmdToggleComment,

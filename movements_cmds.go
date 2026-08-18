@@ -473,6 +473,78 @@ func CmdCursorCenter(ctx Context) {
 	h := viewHeight(ctx)
 	cur.ScrollOffset = cur.Line - (h / 2) + minVisibleLines
 }
+func CmdMatchPair(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	line := CursorLine(ctx.Buf, cur)
+	if line == nil || cur.Char >= len(line.Value) {
+		return
+	}
+
+	ch := line.Value[cur.Char]
+	var open, close rune
+	switch ch {
+	case '(', ')':
+		open, close = '(', ')'
+	case '[', ']':
+		open, close = '[', ']'
+	case '{', '}':
+		open, close = '{', '}'
+	default:
+		return
+	}
+
+	tmpCur := *cur
+	found := false
+
+	if ch == open {
+		depth := 0
+		for {
+			l := CursorLine(ctx.Buf, &tmpCur)
+			if tmpCur.Char < len(l.Value) {
+				c := l.Value[tmpCur.Char]
+				if c == open {
+					depth++
+				} else if c == close {
+					depth--
+					if depth == 0 {
+						found = true
+						break
+					}
+				}
+			}
+			if !CursorInc(ctx.Buf, &tmpCur) {
+				break
+			}
+		}
+	} else {
+		depth := 0
+		for {
+			l := CursorLine(ctx.Buf, &tmpCur)
+			if tmpCur.Char < len(l.Value) {
+				c := l.Value[tmpCur.Char]
+				if c == close {
+					depth++
+				} else if c == open {
+					depth--
+					if depth == 0 {
+						found = true
+						break
+					}
+				}
+			}
+			if !CursorDec(ctx.Buf, &tmpCur) {
+				break
+			}
+		}
+	}
+
+	if found {
+		cur.Line = tmpCur.Line
+		cur.Char = tmpCur.Char
+		CmdEnsureCursorVisible(ctx)
+	}
+}
+
 func CmdJumpBack(ctx Context) {
 	ctx.Editor.ActiveWindow().Jumps.JumpBack()
 	CmdCursorCenter(ctx)
