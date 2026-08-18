@@ -42,7 +42,7 @@ func WhichKeyInit(e *Editor, keymap *KeyHandler, mode Mode, items KeyMap) *Which
 }
 
 func (w *WhichKey) Close() {
-	w.e.PopUi()
+	w.e.PopUiComponent(w)
 	w.e.Redraw()
 }
 
