@@ -145,7 +145,20 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 
 				// selection
 				if buf.Selection != nil {
-					if wig.SelectionCursorInRange(buf.Selection, wig.Cursor{Line: lineNum, Char: i}) {
+					if buf.Mode() == wig.MODE_VISUAL_BLOCK {
+						sel := buf.Selection
+						minLine, maxLine := sel.Start.Line, sel.End.Line
+						if minLine > maxLine {
+							minLine, maxLine = maxLine, minLine
+						}
+						minChar, maxChar := sel.Start.Char, sel.End.Char
+						if minChar > maxChar {
+							minChar, maxChar = maxChar, minChar
+						}
+						if lineNum >= minLine && lineNum <= maxLine && i >= minChar && i <= maxChar {
+							textStyle = wig.ApplyBg("ui.selection.primary", textStyle)
+						}
+					} else if wig.SelectionCursorInRange(buf.Selection, wig.Cursor{Line: lineNum, Char: i}) {
 						textStyle = wig.ApplyBg("ui.selection.primary", textStyle)
 					}
 				}
