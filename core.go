@@ -547,6 +547,34 @@ func CmdVisualMode(ctx Context) {
 	setBufferMode(ctx, MODE_VISUAL)
 }
 
+func CmdVisualBlockMode(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	SelectionStart(ctx.Buf, cur)
+	setBufferMode(ctx, MODE_VISUAL_BLOCK)
+}
+
+func CmdVisualBlockInsert(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	if ctx.Buf.Selection == nil {
+		return
+	}
+	sel := SelectionNormalize(ctx.Buf.Selection)
+
+	cur.Line = sel.Start.Line
+	cur.Char = sel.Start.Char
+	cur.PreserveCharPosition = cur.Char
+
+	ctx.Buf.VisualBlockInsert = &VisualBlockInsertState{
+		StartLine: sel.Start.Line,
+		EndLine:   sel.End.Line,
+		Char:      sel.Start.Char,
+	}
+
+	ctx.Buf.Selection = nil
+	ctx.Buf.TxStart()
+	setBufferMode(ctx, MODE_INSERT)
+}
+
 func CmdExitInsertMode(ctx Context) {
 	CmdNormalMode(ctx)
 }
@@ -555,6 +583,30 @@ func CmdNormalMode(ctx Context) {
 	if ctx.Buf.Mode() == MODE_INSERT {
 		cur := ContextCursorGet(ctx)
 		line := CursorLine(ctx.Buf, cur)
+
+		if ctx.Buf.VisualBlockInsert != nil {
+			vbi := ctx.Buf.VisualBlockInsert
+			ctx.Buf.VisualBlockInsert = nil
+
+			endChar := cur.Char
+			if endChar > len(line.Value) {
+				endChar = len(line.Value) - 1
+			}
+
+			if vbi.Char < endChar {
+				insertedText := string(line.Value[vbi.Char:endChar])
+				for i := vbi.StartLine + 1; i <= vbi.EndLine; i++ {
+					l := CursorLineByNum(ctx.Buf, i)
+					if l != nil {
+						TextInsert(ctx.Buf, l, vbi.Char, insertedText)
+					}
+				}
+			}
+
+			cur.Line = vbi.StartLine
+			cur.Char = vbi.Char
+		}
+
 		CmdCursorLeft(ctx)
 		if cur.Char >= len(line.Value) {
 			CmdGotoLineEnd(ctx)

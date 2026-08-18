@@ -10,10 +10,11 @@ import (
 type Mode int
 
 const (
-	MODE_NORMAL      Mode = 0
-	MODE_INSERT      Mode = 1
-	MODE_VISUAL      Mode = 2
-	MODE_VISUAL_LINE Mode = 3
+	MODE_NORMAL       Mode = 0
+	MODE_INSERT       Mode = 1
+	MODE_VISUAL       Mode = 2
+	MODE_VISUAL_LINE  Mode = 3
+	MODE_VISUAL_BLOCK Mode = 4
 )
 
 func (m Mode) String() string {
@@ -25,6 +26,9 @@ func (m Mode) String() string {
 	}
 	if m == MODE_VISUAL_LINE {
 		return "VIS LINE"
+	}
+	if m == MODE_VISUAL_BLOCK {
+		return "VIS BLOCK"
 	}
 	return "VIS"
 }
@@ -38,18 +42,25 @@ type Driver interface {
 	ExecBuffer()
 }
 
+type VisualBlockInsertState struct {
+	StartLine int
+	EndLine   int
+	Char      int
+}
+
 type Buffer struct {
-	mode        Mode
-	FilePath    string
-	Lines       List[Line]
-	Selection   *Selection
-	Driver      Driver
-	IndentCh    []rune
-	Tx          *Transaction
-	UndoRedo    *UndoRedo
-	Highlighter Highlighter
-	KeyHandler  *KeyHandler
-	GitSigns    map[int]rune
+	mode              Mode
+	FilePath          string
+	Lines             List[Line]
+	Selection         *Selection
+	Driver            Driver
+	IndentCh          []rune
+	Tx                *Transaction
+	UndoRedo          *UndoRedo
+	Highlighter       Highlighter
+	KeyHandler        *KeyHandler
+	GitSigns          map[int]rune
+	VisualBlockInsert *VisualBlockInsertState
 
 	rootDir string
 }

@@ -24,10 +24,11 @@ type EditorSettings struct {
 }
 
 type UserKeysConfig struct {
-	Normal     map[string]string `toml:"normal"`
-	Insert     map[string]string `toml:"insert"`
-	Visual     map[string]string `toml:"visual"`
-	VisualLine map[string]string `toml:"visual_line"`
+	Normal      map[string]string `toml:"normal"`
+	Insert      map[string]string `toml:"insert"`
+	Visual      map[string]string `toml:"visual"`
+	VisualLine  map[string]string `toml:"visual_line"`
+	VisualBlock map[string]string `toml:"visual_block"`
 }
 
 // LoadUserConfig reads ~/.config/wig/config.toml for editor settings and keymaps
@@ -39,10 +40,11 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 		CurrentLineAbsolute: true,
 	}
 	userMap := wig.ModeKeyMap{
-		wig.MODE_NORMAL:      wig.KeyMap{},
-		wig.MODE_INSERT:      wig.KeyMap{},
-		wig.MODE_VISUAL:      wig.KeyMap{},
-		wig.MODE_VISUAL_LINE: wig.KeyMap{},
+		wig.MODE_NORMAL:       wig.KeyMap{},
+		wig.MODE_INSERT:       wig.KeyMap{},
+		wig.MODE_VISUAL:       wig.KeyMap{},
+		wig.MODE_VISUAL_LINE:  wig.KeyMap{},
+		wig.MODE_VISUAL_BLOCK: wig.KeyMap{},
 	}
 
 	home, _ := os.UserHomeDir()
@@ -99,6 +101,11 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 			userMap[wig.MODE_VISUAL_LINE][key] = fn
 		}
 	}
+	for key, cmdName := range cfg.Keys.VisualBlock {
+		if fn := resolve(cmdName); fn != nil {
+			userMap[wig.MODE_VISUAL_BLOCK][key] = fn
+		}
+	}
 
 	return editorCfg, userMap
 }
@@ -126,6 +133,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"i":      wig.CmdEnterInsertMode,
 			"v":      wig.CmdVisualMode,
 			"V":      wig.CmdVisualLineMode,
+			"ctrl+v": wig.CmdVisualBlockMode,
 			"a":      wig.CmdEnterInsertModeAppend,
 			"A":      wig.CmdAppendLine,
 			"w":      wig.CmdForwardWord,
@@ -302,6 +310,26 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"y": commands.CmdClipboardCopy,
 				"p": commands.CmdClipboardPaste,
 			},
+		},
+		wig.MODE_VISUAL_BLOCK: wig.KeyMap{
+			"ctrl+e": wig.CmdScrollDown,
+			"ctrl+y": wig.CmdScrollUp,
+			"j":      wig.WithSelection(wig.CmdCursorLineDown),
+			"k":      wig.WithSelection(wig.CmdCursorLineUp),
+			"h":      wig.WithSelection(wig.CmdCursorLeft),
+			"l":      wig.WithSelection(wig.CmdCursorRight),
+			"Left":   wig.WithSelection(wig.CmdCursorLeft),
+			"Right":  wig.WithSelection(wig.CmdCursorRight),
+			"Up":     wig.WithSelection(wig.CmdCursorLineUp),
+			"Down":   wig.WithSelection(wig.CmdCursorLineDown),
+			"Home":   wig.WithSelection(wig.CmdCursorBeginningOfTheLine),
+			"End":    wig.WithSelection(wig.CmdGotoLineEnd),
+			"PgUp":   wig.WithSelection(wig.CmdScrollUp),
+			"PgDn":   wig.WithSelection(wig.CmdScrollDown),
+			"$":      wig.WithSelection(wig.CmdGotoLineEnd),
+			"0":      wig.WithSelection(wig.CmdCursorBeginningOfTheLine),
+			"I":      wig.CmdVisualBlockInsert,
+			"Esc":    wig.CmdNormalMode,
 		},
 		wig.MODE_INSERT: wig.KeyMap{
 			"Esc":    wig.CmdExitInsertMode,
