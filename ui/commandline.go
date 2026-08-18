@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -185,9 +186,80 @@ func (u *uiCommandLine) insertCh(ctx wig.Context, ev *tcell.EventKey) {
 }
 
 func (u *uiCommandLine) autocomplete() {
-	prefix := string(u.chBuf)
+	input := string(u.chBuf)
+	parts := strings.SplitN(input, " ", 2)
 
-	// Cycle through existing candidates if we already have them
+	// File path completion for :e or :edit
+	if len(parts) == 2 && (parts[0] == "e" || parts[0] == "edit") {
+		cmdPart := parts[0]
+		prefix := parts[1]
+
+		if len(u.candidates) > 0 {
+			u.candIdx++
+			if u.candIdx >= len(u.candidates) {
+				u.candIdx = 0
+			}
+			u.chBuf = []rune(fmt.Sprintf("%s %s", cmdPart, u.candidates[u.candIdx]))
+			return
+		}
+
+		dir := "."
+		filePrefix := prefix
+		if strings.Contains(prefix, "/") {
+			lastSlash := strings.LastIndex(prefix, "/")
+			dir = prefix[:lastSlash]
+			if dir == "" {
+				dir = "/"
+			}
+			filePrefix = prefix[lastSlash+1:]
+		}
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			return
+		}
+
+		var matches []string
+		for _, entry := range entries {
+			name := entry.Name()
+			if strings.HasPrefix(name, filePrefix) {
+				if entry.IsDir() {
+					name += "/"
+				}
+				if dir != "." {
+					if dir == "/" {
+						name = "/" + name
+					} else {
+						name = dir + "/" + name
+					}
+				}
+				matches = append(matches, name)
+			}
+		}
+
+		if len(matches) == 0 {
+			return
+		}
+
+		sort.Strings(matches)
+
+		common := matches[0]
+		for _, m := range matches[1:] {
+			i := 0
+			for i < len(common) && i < len(m) && common[i] == m[i] {
+				i++
+			}
+			common = common[:i]
+		}
+
+		u.chBuf = []rune(fmt.Sprintf("%s %s", cmdPart, common))
+		u.candidates = matches
+		u.candIdx = -1 // Next Tab will cycle to 0
+		return
+	}
+
+	// Command name completion
+	prefix := input
 	if len(u.candidates) > 0 {
 		u.candIdx++
 		if u.candIdx >= len(u.candidates) {
@@ -197,7 +269,6 @@ func (u *uiCommandLine) autocomplete() {
 		return
 	}
 
-	// Find new matches
 	var matches []string
 	for name := range wig.AllCommands {
 		if strings.HasPrefix(name, prefix) {
@@ -209,7 +280,6 @@ func (u *uiCommandLine) autocomplete() {
 		return
 	}
 
-	// Sort matches for consistent cycling
 	sort.Strings(matches)
 
 	if len(matches) == 1 {
@@ -219,7 +289,6 @@ func (u *uiCommandLine) autocomplete() {
 		return
 	}
 
-	// Find common prefix to complete immediately
 	common := matches[0]
 	for _, m := range matches[1:] {
 		i := 0
@@ -230,13 +299,32 @@ func (u *uiCommandLine) autocomplete() {
 	}
 	u.chBuf = []rune(common)
 	u.candidates = matches
-	u.candIdx = -1 // Next Tab will cycle to 0
+	u.candIdx = -1
 }
 
 func (u *uiCommandLine) execute(cmd string) {
 	cmd = strings.TrimSpace(cmd)
 	if cmd == "" {
 		u.e.PopUi()
+		return
+	}
+
+	parts := strings.SplitN(cmd, " ", 2)
+	if len(parts) > 0 && (parts[0] == "e" || parts[0] == "edit") {
+		u.e.PopUi()
+		if len(parts) < 2 || strings.TrimSpace(parts[1]) == "" {
+			u.e.EchoMessage("No file name")
+			return
+		}
+		filePath := strings.TrimSpace(parts[1])
+		buf, err := u.e.OpenFile(filePath)
+		if err != nil {
+			u.e.EchoMessage(fmt.Sprintf("Error opening %s: %v", filePath, err))
+			return
+		}
+		ctx := u.e.NewContext()
+		ctx.Buf = buf
+		u.e.ActiveWindow().VisitBuffer(ctx)
 		return
 	}
 

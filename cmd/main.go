@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -38,15 +37,23 @@ func main() {
 	wig.ApplyTheme(editor.Config.Theme)
 
 	args := os.Args
-	wig.CmdNewBuffer(editor.NewContext())
 	if len(args) > 1 {
-		ctx := wig.EditorInst.NewContext()
-		fullPath, _ := filepath.Abs(args[1])
-		buf, _ := editor.OpenFile(fullPath)
-		if buf != nil {
-			ctx.Buf = buf
-			editor.ActiveWindow().VisitBuffer(ctx)
+		// Open all files provided as arguments
+		for _, arg := range args[1:] {
+			editor.OpenFile(arg)
 		}
+
+		// If at least one file opened successfully, show the first one
+		if len(editor.Buffers) > 0 {
+			ctx := wig.EditorInst.NewContext()
+			ctx.Buf = editor.Buffers[0]
+			editor.ActiveWindow().VisitBuffer(ctx)
+		} else {
+			// All files failed to open, fallback to new empty buffer
+			wig.CmdNewBuffer(editor.NewContext())
+		}
+	} else {
+		wig.CmdNewBuffer(editor.NewContext())
 	}
 
 	renderer := render.New(editor, tscreen)
