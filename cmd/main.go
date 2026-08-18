@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -50,8 +52,16 @@ func main() {
 
 	args := os.Args
 	if len(args) > 1 {
-		// Open all files provided as arguments
+		targetLine := -1
+
+		// Open all files provided as arguments, skipping line number args like +10
 		for _, arg := range args[1:] {
+			if strings.HasPrefix(arg, "+") {
+				if num, err := strconv.Atoi(arg[1:]); err == nil {
+					targetLine = num - 1
+				}
+				continue
+			}
 			editor.OpenFile(arg)
 		}
 
@@ -59,7 +69,15 @@ func main() {
 		if len(editor.Buffers) > 0 {
 			ctx := wig.EditorInst.NewContext()
 			ctx.Buf = editor.Buffers[0]
-			editor.ActiveWindow().VisitBuffer(ctx)
+			if targetLine >= 0 {
+				if targetLine >= ctx.Buf.Lines.Len {
+					targetLine = ctx.Buf.Lines.Len - 1
+				}
+				editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{Line: targetLine, Char: 0})
+				wig.CmdCursorCenter(ctx)
+			} else {
+				editor.ActiveWindow().VisitBuffer(ctx)
+			}
 		} else {
 			// All files failed to open, fallback to new empty buffer
 			wig.CmdNewBuffer(editor.NewContext())
