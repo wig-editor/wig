@@ -1,11 +1,13 @@
 package commands
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/ui"
 )
 
 type GitHunk struct {
@@ -104,8 +106,8 @@ func CmdGitHunkNext(ctx wig.Context) {
 	cur := wig.ContextCursorGet(ctx)
 	currentLine := cur.Line + 1 // 1-indexed
 	for _, hunk := range hunks {
-		if hunk.NewStart > currentLine {
-			target := hunkFirstChangeLine(hunk)
+		target := hunkFirstChangeLine(hunk)
+		if target > currentLine {
 			cur.Line = target - 1
 			cur.Char = 0
 			ctx.Editor.EchoMessage("Hunk " + strconv.Itoa(target))
@@ -123,8 +125,8 @@ func CmdGitHunkPrev(ctx wig.Context) {
 	currentLine := cur.Line + 1 // 1-indexed
 	for i := len(hunks) - 1; i >= 0; i-- {
 		hunk := hunks[i]
-		if hunk.NewStart < currentLine {
-			target := hunkFirstChangeLine(hunk)
+		target := hunkFirstChangeLine(hunk)
+		if target < currentLine {
 			cur.Line = target - 1
 			cur.Char = 0
 			ctx.Editor.EchoMessage("Hunk " + strconv.Itoa(target))
@@ -212,4 +214,59 @@ func CmdGitHunkRevert(ctx wig.Context) {
 	cur.Char = 0
 	ctx.Editor.EchoMessage("Reverted hunk")
 	wig.CmdCursorCenter(ctx)
+}
+
+func CmdGitHunkPreview(ctx wig.Context) {
+	hunks, err := getGitHunks(ctx)
+	if err != nil || len(hunks) == 0 {
+		ctx.Editor.EchoMessage("No git hunks")
+		return
+	}
+
+	cur := wig.ContextCursorGet(ctx)
+	currentLine := cur.Line + 1 // 1-indexed
+
+	var targetHunk *GitHunk
+	for i := range hunks {
+		hunk := &hunks[i]
+		hunkEnd := hunk.NewStart + hunk.NewLen - 1
+		if currentLine >= hunk.NewStart && currentLine <= hunkEnd {
+			targetHunk = hunk
+			break
+		}
+	}
+
+	if targetHunk == nil {
+		ctx.Editor.EchoMessage("No hunk to preview here")
+		return
+	}
+
+	header := fmt.Sprintf("@@ -%d,%d +%d,%d @@", targetHunk.OldStart, targetHunk.OldLen, targetHunk.NewStart, targetHunk.NewLen)
+	items := make([]ui.PickerItem[string], 0, len(targetHunk.Lines)+1)
+	items = append(items, ui.PickerItem[string]{
+		Name:  header,
+		Value: header,
+	})
+	for _, line := range targetHunk.Lines {
+		if line == "" {
+			continue
+		}
+		items = append(items, ui.PickerItem[string]{
+			Name:  line,
+			Value: line,
+		})
+	}
+
+	action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
+		defer ctx.Editor.PopUi()
+		if i == nil {
+			return
+		}
+	}
+
+	ui.PickerInit(
+		ctx.Editor,
+		action,
+		items,
+	)
 }

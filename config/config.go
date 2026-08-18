@@ -233,6 +233,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"p": commands.CmdClipboardPaste,
 				"g": wig.KeyMap{
 					"r": commands.CmdGitHunkRevert,
+					"p": commands.CmdGitHunkPreview,
 				},
 			},
 		},
