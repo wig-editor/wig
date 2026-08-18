@@ -46,7 +46,7 @@ func main() {
 	editor.AutocompleteTrigger = autocomplete.Register(editor)
 	editor.Config = editorCfg
 	wig.ApplyTheme(editor.Config.Theme)
-	commands.NewGitGutterManager(editor)
+	gutterMgr := commands.NewGitGutterManager(editor)
 
 	args := os.Args
 	if len(args) > 1 {
@@ -66,6 +66,11 @@ func main() {
 		}
 	} else {
 		wig.CmdNewBuffer(editor.NewContext())
+	}
+
+	// Initial git gutter update for all open buffers
+	for _, buf := range editor.Buffers {
+		gutterMgr.UpdateBuffer(buf)
 	}
 
 	renderer := render.New(editor, tscreen)

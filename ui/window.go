@@ -39,14 +39,15 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	lineNumTextStyleSelected := wig.Color("ui.linenr.selected")
 	hasGitSigns := len(buf.GitSigns) > 0
 	leftPadding := 0
-	if e.Config.ShowLineNumbers {
-		leftPadding = len(fmt.Sprintf("%d", buf.CountLines())) + 1
-		if hasGitSigns {
-			leftPadding += 2
-		}
-	} else if hasGitSigns {
-		leftPadding = 2
+	signColWidth := 0
+	if hasGitSigns {
+		signColWidth = 2
 	}
+	lineNumWidth := 0
+	if e.Config.ShowLineNumbers {
+		lineNumWidth = len(fmt.Sprintf("%d", buf.CountLines())) + 1
+	}
+	leftPadding = signColWidth + lineNumWidth
 
 	y := 0
 
@@ -77,6 +78,49 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 			}
 
 			diagnostics := e.Lsp.Diagnostics(buf, lineNum)
+
+			// Line numbers & Git Signs
+			if e.Config.ShowLineNumbers || hasGitSigns {
+				xCur := 0
+				if hasGitSigns {
+					sign, ok := buf.GitSigns[lineNum+1] // GitSigns is 1-indexed
+					signStyle := wig.Color("default")
+					if ok {
+						if sign == '+' {
+							signStyle = wig.Color("diff.plus")
+						} else if sign == '-' {
+							signStyle = wig.Color("diff.minus")
+						} else if sign == '~' {
+							signStyle = wig.Color("diff.delta")
+						}
+						view.SetContent(xCur, y, string(sign), signStyle)
+					} else {
+						view.SetContent(xCur, y, " ", signStyle)
+					}
+					xCur += signColWidth
+				}
+
+				if e.Config.ShowLineNumbers {
+					lnNum := lineNum + 1
+					if e.Config.RelativeLineNumbers {
+						lnNum = cur.Line - lineNum
+						if lnNum < 0 {
+							lnNum = -lnNum
+						}
+						// If hybrid mode is enabled, show absolute line number on current line
+						if e.Config.CurrentLineAbsolute && lineNum == cur.Line {
+							lnNum = lineNum + 1
+						}
+					}
+
+					if lineNum == cur.Line {
+						view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyleSelected)
+					} else {
+						view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyle)
+					}
+				}
+			}
+			// End Line Numbers & Git Signs
 
 			// render line
 			for i := skip; i < len(currentLine.Value); i++ {
@@ -129,52 +173,6 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				}
 
 				/////////////////////////////////
-
-				// Line numbers & Git Signs
-				if e.Config.ShowLineNumbers || hasGitSigns {
-					if hasGitSigns {
-						sign, ok := buf.GitSigns[lineNum+1] // GitSigns is 1-indexed
-						signStyle := wig.Color("default")
-						if ok {
-							if sign == '+' {
-								signStyle = wig.Color("diff.plus")
-							} else if sign == '-' {
-								signStyle = wig.Color("diff.minus")
-							} else if sign == '~' {
-								signStyle = wig.Color("diff.delta")
-							}
-							view.SetContent(0, y, string(sign), signStyle)
-						} else {
-							view.SetContent(0, y, " ", signStyle)
-						}
-					}
-
-					if e.Config.ShowLineNumbers {
-						lnNum := lineNum + 1
-						if e.Config.RelativeLineNumbers {
-							lnNum = cur.Line - lineNum
-							if lnNum < 0 {
-								lnNum = -lnNum
-							}
-							// If hybrid mode is enabled, show absolute line number on current line
-							if e.Config.CurrentLineAbsolute && lineNum == cur.Line {
-								lnNum = lineNum + 1
-							}
-						}
-
-						lnX := 0
-						if hasGitSigns {
-							lnX = 2
-						}
-
-						if lineNum == cur.Line {
-							view.SetContent(lnX, y, fmt.Sprintf("%d", lnNum), lineNumTextStyleSelected)
-						} else {
-							view.SetContent(lnX, y, fmt.Sprintf("%d", lnNum), lineNumTextStyle)
-						}
-					}
-				}
-				// End Line Numbers & Git Signs
 
 				ch := getRenderChar(currentLine.Value[i])
 

@@ -30,6 +30,10 @@ type EventBufferModeChange struct {
 	NewMode Mode
 }
 
+type EventBufferReloaded struct {
+	Buf *Buffer
+}
+
 type EventsManager struct {
 	source         chan any
 	listeners      []chan Event

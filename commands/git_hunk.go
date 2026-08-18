@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -18,22 +17,9 @@ type GitHunk struct {
 }
 
 func getGitHunks(ctx wig.Context) ([]GitHunk, error) {
-	rootDir, err := ctx.Editor.Projects.FindRoot(ctx.Buf)
+	stdout, err := getBufferDiff(ctx.Editor, ctx.Buf)
 	if err != nil {
 		return nil, err
-	}
-
-	relPath := strings.TrimPrefix(ctx.Buf.FilePath, rootDir+"/")
-	if relPath == "" {
-		return nil, nil
-	}
-
-	cmd := exec.Command("git", "diff", "HEAD", "--", relPath)
-	cmd.Dir = rootDir
-	stdout, err := cmd.Output()
-	if err != nil {
-		// Ignore errors (e.g., file not tracked, no git repo), just return no hunks
-		return nil, nil
 	}
 
 	var hunks []GitHunk
@@ -96,6 +82,7 @@ func CmdGitHunkNext(ctx wig.Context) {
 			cur.Line = hunk.NewStart - 1
 			cur.Char = 0
 			ctx.Editor.EchoMessage("Hunk " + strconv.Itoa(hunk.NewStart))
+			wig.CmdCursorCenter(ctx)
 			return
 		}
 	}
@@ -112,11 +99,11 @@ func CmdGitHunkPrev(ctx wig.Context) {
 
 	for i := len(hunks) - 1; i >= 0; i-- {
 		hunk := hunks[i]
-		hunkEnd := hunk.NewStart + hunk.NewLen - 1
-		if hunkEnd < currentLine || (currentLine >= hunk.NewStart && currentLine <= hunkEnd) {
+		if hunk.NewStart < currentLine {
 			cur.Line = hunk.NewStart - 1
 			cur.Char = 0
 			ctx.Editor.EchoMessage("Hunk " + strconv.Itoa(hunk.NewStart))
+			wig.CmdCursorCenter(ctx)
 			return
 		}
 	}
@@ -200,4 +187,5 @@ func CmdGitHunkRevert(ctx wig.Context) {
 	cur.Line = startLine
 	cur.Char = 0
 	ctx.Editor.EchoMessage("Reverted hunk")
+	wig.CmdCursorCenter(ctx)
 }

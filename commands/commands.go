@@ -419,4 +419,5 @@ func CmdReloadBuffer(ctx wig.Context) {
 		ctx.Editor.EchoMessage(err.Error())
 	}
 	ctx.Buf.Highlighter.Build()
+	ctx.Editor.Events.Broadcast(wig.EventBufferReloaded{Buf: ctx.Buf})
 }

@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"bytes"
+	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -27,6 +30,8 @@ func NewGitGutterManager(e *wig.Editor) *GitGutterManager {
 			switch msg := event.Msg.(type) {
 			case wig.EventTextChange:
 				m.scheduleUpdate(msg.Buf)
+			case wig.EventBufferReloaded:
+				m.scheduleUpdate(msg.Buf)
 			}
 			event.Wg.Done()
 		}
@@ -48,31 +53,64 @@ func (m *GitGutterManager) scheduleUpdate(buf *wig.Buffer) {
 	}
 
 	m.timers[key] = time.AfterFunc(500*time.Millisecond, func() {
-		m.updateBuffer(buf)
+		m.UpdateBuffer(buf)
 	})
 }
 
-func (m *GitGutterManager) updateBuffer(buf *wig.Buffer) {
-	rootDir, err := m.e.Projects.FindRoot(buf)
+// getBufferDiff diffs the in-memory buffer against HEAD to ensure line numbers match unsaved changes
+func getBufferDiff(e *wig.Editor, buf *wig.Buffer) (string, error) {
+	rootDir, err := e.Projects.FindRoot(buf)
 	if err != nil {
-		return
+		return "", err
 	}
 
 	relPath := strings.TrimPrefix(buf.FilePath, rootDir+"/")
 	if relPath == "" || relPath == buf.FilePath {
-		return
+		return "", nil
 	}
 
-	cmd := exec.Command("git", "diff", "HEAD", "--", relPath)
-	cmd.Dir = rootDir
-	stdout, err := cmd.Output()
+	// 1. Get HEAD content
+	headCmd := exec.Command("git", "show", fmt.Sprintf("HEAD:%s", relPath))
+	headCmd.Dir = rootDir
+	headContent, _ := headCmd.Output()
+
+	// 2. Write buffer to temp file
+	tmpFile, err := os.CreateTemp("", "wig-buf-*")
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(tmpFile.Name())
+	tmpFile.WriteString(buf.String())
+	tmpFile.Close()
+
+	// 3. Write HEAD content to temp file
+	headTmpFile, err := os.CreateTemp("", "wig-head-*")
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(headTmpFile.Name())
+	headTmpFile.Write(headContent)
+	headTmpFile.Close()
+
+	// 4. Diff them
+	diffCmd := exec.Command("git", "diff", "--no-index", headTmpFile.Name(), tmpFile.Name())
+	diffCmd.Dir = rootDir
+	var diffStdout bytes.Buffer
+	diffCmd.Stdout = &diffStdout
+	diffCmd.Run() // exit code 1 is normal for differences
+
+	return diffStdout.String(), nil
+}
+
+func (m *GitGutterManager) UpdateBuffer(buf *wig.Buffer) {
+	stdout, err := getBufferDiff(m.e, buf)
 	if err != nil {
 		buf.GitSigns = nil
 		m.e.Redraw()
 		return
 	}
 
-	signs := ComputeGitSigns(string(stdout))
+	signs := ComputeGitSigns(stdout)
 	buf.GitSigns = signs
 	m.e.Redraw()
 }

@@ -510,6 +510,7 @@ func CmdUndo(ctx Context) {
 		ctx.Editor.Lsp.DidClose(ctx.Buf)
 		ctx.Editor.Lsp.DidOpen(ctx.Buf)
 	}
+	EditorInst.Events.Broadcast(EventBufferReloaded{Buf: ctx.Buf})
 }
 
 func CmdRedo(ctx Context) {
@@ -518,6 +519,7 @@ func CmdRedo(ctx Context) {
 		ctx.Editor.Lsp.DidClose(ctx.Buf)
 		ctx.Editor.Lsp.DidOpen(ctx.Buf)
 	}
+	EditorInst.Events.Broadcast(EventBufferReloaded{Buf: ctx.Buf})
 }
 
 func CmdExit(ctx Context) {
