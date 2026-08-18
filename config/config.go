@@ -1,11 +1,79 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/firstrow/wig"
 	"github.com/firstrow/wig/commands"
 	"github.com/firstrow/wig/rgcollect"
 	"github.com/firstrow/wig/ui"
+	"github.com/pelletier/go-toml/v2"
 )
+
+type UserConfig struct {
+	Keys UserKeysConfig `toml:"keys"`
+}
+
+type UserKeysConfig struct {
+	Normal     map[string]string `toml:"normal"`
+	Insert     map[string]string `toml:"insert"`
+	Visual     map[string]string `toml:"visual"`
+	VisualLine map[string]string `toml:"visual_line"`
+}
+
+// LoadUserKeyMap reads ~/.config/wig/config.toml and maps string command names to Go functions
+func LoadUserKeyMap() wig.ModeKeyMap {
+	userMap := wig.ModeKeyMap{
+		wig.MODE_NORMAL:      wig.KeyMap{},
+		wig.MODE_INSERT:      wig.KeyMap{},
+		wig.MODE_VISUAL:      wig.KeyMap{},
+		wig.MODE_VISUAL_LINE: wig.KeyMap{},
+	}
+
+	home, _ := os.UserHomeDir()
+	configPath := filepath.Join(home, ".config", "wig", "config.toml")
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		return userMap // File doesn't exist, return empty map
+	}
+
+	var cfg UserConfig
+	if err := toml.Unmarshal(data, &cfg); err != nil {
+		return userMap
+	}
+
+	resolve := func(name string) any {
+		if def, ok := commands.AllCommands[name]; ok {
+			return def.Fn
+		}
+		return nil
+	}
+
+	for key, cmdName := range cfg.Keys.Normal {
+		if fn := resolve(cmdName); fn != nil {
+			userMap[wig.MODE_NORMAL][key] = fn
+		}
+	}
+	for key, cmdName := range cfg.Keys.Insert {
+		if fn := resolve(cmdName); fn != nil {
+			userMap[wig.MODE_INSERT][key] = fn
+		}
+	}
+	for key, cmdName := range cfg.Keys.Visual {
+		if fn := resolve(cmdName); fn != nil {
+			userMap[wig.MODE_VISUAL][key] = fn
+		}
+	}
+	for key, cmdName := range cfg.Keys.VisualLine {
+		if fn := resolve(cmdName); fn != nil {
+			userMap[wig.MODE_VISUAL_LINE][key] = fn
+		}
+	}
+
+	return userMap
+}
 
 func DefaultKeyMap() wig.ModeKeyMap {
 	return wig.ModeKeyMap{
