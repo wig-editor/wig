@@ -204,9 +204,11 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			},
 			"]": wig.KeyMap{
 				"]": wig.CmdJumpForward,
+				"h": commands.CmdGitHunkNext,
 			},
 			"[": wig.KeyMap{
 				"[": wig.CmdJumpBack,
+				"h": commands.CmdGitHunkPrev,
 			},
 			"Space": wig.KeyMap{
 				"/": commands.CmdSearchProject,
@@ -229,6 +231,9 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"t": commands.CmdThemeSelect,
 				"y": commands.CmdClipboardCopy,
 				"p": commands.CmdClipboardPaste,
+				"g": wig.KeyMap{
+					"r": commands.CmdGitHunkRevert,
+				},
 			},
 		},
 		wig.MODE_VISUAL: wig.KeyMap{
