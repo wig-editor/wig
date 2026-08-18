@@ -23,6 +23,60 @@ func init() {
 		"w":  func(ctx wig.Context) { wig.CmdSaveFile(ctx) },
 		"wq": func(ctx wig.Context) { wig.CmdSaveFile(ctx); wig.CmdExit(ctx) },
 		"bd": func(ctx wig.Context) { wig.CmdKillBuffer(ctx) },
+		"bn": func(ctx wig.Context) {
+			active := ctx.Editor.ActiveBuffer()
+			buffers := ctx.Editor.Buffers
+			if len(buffers) <= 1 {
+				return
+			}
+			idx := 0
+			for i, b := range buffers {
+				if b == active {
+					idx = i
+					break
+				}
+			}
+			for i := 1; i <= len(buffers); i++ {
+				next := buffers[(idx+i)%len(buffers)]
+				// Skip internal buffers like [No Name], [Messages], etc.
+				if !strings.HasPrefix(next.GetName(), "[") {
+					ctx.Buf = next
+					ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+					return
+				}
+			}
+		},
+		"bp": func(ctx wig.Context) {
+			active := ctx.Editor.ActiveBuffer()
+			buffers := ctx.Editor.Buffers
+			if len(buffers) <= 1 {
+				return
+			}
+			idx := 0
+			for i, b := range buffers {
+				if b == active {
+					idx = i
+					break
+				}
+			}
+			for i := 1; i <= len(buffers); i++ {
+				prev := buffers[(idx-i+len(buffers))%len(buffers)]
+				// Skip internal buffers like [No Name], [Messages], etc.
+				if !strings.HasPrefix(prev.GetName(), "[") {
+					ctx.Buf = prev
+					ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+					return
+				}
+			}
+		},
+		"bl": func(ctx wig.Context) {
+			buffers := ctx.Editor.Buffers
+			if len(buffers) == 0 {
+				return
+			}
+			ctx.Buf = buffers[len(buffers)-1]
+			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+		},
 	}
 
 	for name, fn := range basics {
