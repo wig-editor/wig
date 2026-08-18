@@ -207,4 +207,3 @@ func getRenderChar(c rune) string {
 	}
 	return string(c)
 }
-

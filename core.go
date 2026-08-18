@@ -604,4 +604,3 @@ func CmdAutocompleteTrigger(ctx Context) {
 func CmdPaste(ctx Context) {
 	panic(1)
 }
-

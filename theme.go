@@ -286,4 +286,3 @@ func MergeStyles(base tcell.Style, color string) tcell.Style {
 	}
 	return base
 }
-

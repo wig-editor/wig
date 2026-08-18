@@ -64,6 +64,55 @@ func PickerInit[T any](e *wig.Editor, action PickerAction[T], items []PickerItem
 			"Esc": func(ctx wig.Context) {
 				ctx.Editor.PopUi()
 			},
+			"Up": func(ctx wig.Context) {
+				if picker.activeItem > 0 {
+					picker.activeItem--
+					if len(picker.filtered) > 0 {
+						picker.onSelect(&picker.filtered[picker.activeItem])
+					}
+				}
+			},
+			"Down": func(ctx wig.Context) {
+				if picker.activeItem < len(picker.filtered)-1 {
+					picker.activeItem++
+					if len(picker.filtered) > 0 {
+						picker.onSelect(&picker.filtered[picker.activeItem])
+					}
+				}
+			},
+			"Home": func(ctx wig.Context) {
+				if len(picker.filtered) > 0 {
+					picker.activeItem = 0
+					picker.onSelect(&picker.filtered[picker.activeItem])
+				}
+			},
+			"End": func(ctx wig.Context) {
+				if len(picker.filtered) > 0 {
+					picker.activeItem = len(picker.filtered) - 1
+					picker.onSelect(&picker.filtered[picker.activeItem])
+				}
+			},
+			"PgUp": func(ctx wig.Context) {
+				picker.activeItem -= 10
+				if picker.activeItem < 0 {
+					picker.activeItem = 0
+				}
+				if len(picker.filtered) > 0 {
+					picker.onSelect(&picker.filtered[picker.activeItem])
+				}
+			},
+			"PgDn": func(ctx wig.Context) {
+				picker.activeItem += 10
+				if picker.activeItem >= len(picker.filtered) {
+					picker.activeItem = len(picker.filtered) - 1
+				}
+				if picker.activeItem < 0 {
+					picker.activeItem = 0
+				}
+				if len(picker.filtered) > 0 {
+					picker.onSelect(&picker.filtered[picker.activeItem])
+				}
+			},
 			"Tab": func(ctx wig.Context) {
 				if picker.activeItem < len(picker.filtered)-1 {
 					picker.activeItem++
@@ -257,4 +306,3 @@ func (u *UiPicker[T]) Render(view wig.View) {
 		i++
 	}
 }
-

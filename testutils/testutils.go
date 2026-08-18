@@ -19,4 +19,3 @@ func Filepath(filename string) string {
 	wd, _ := os.Getwd()
 	return fmt.Sprintf("%s/%s", wd, filename)
 }
-

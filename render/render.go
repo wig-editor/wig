@@ -143,4 +143,3 @@ func (t *mview) SetContent(x, y int, str string, st tcell.Style) {
 		x += w
 	}
 }
-

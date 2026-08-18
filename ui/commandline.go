@@ -107,4 +107,3 @@ func (u *uiCommandLine) Render(view wig.View) {
 func (u *uiCommandLine) Mode() wig.Mode {
 	return wig.MODE_NORMAL
 }
-

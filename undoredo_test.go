@@ -41,4 +41,3 @@ func linesToString(l List[Line]) string {
 
 	return buf.String()
 }
-

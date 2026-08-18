@@ -111,4 +111,3 @@ func main() {
 	tscreen.Clear()
 	tscreen.Fini()
 }
-

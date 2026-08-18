@@ -136,4 +136,3 @@ func SelectionDelete(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	*cur = sel.Start
 }
-

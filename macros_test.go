@@ -33,4 +33,3 @@ func TestMacroRepeat(t *testing.T) {
 
 	e.HandleInput(key('d'))
 }
-

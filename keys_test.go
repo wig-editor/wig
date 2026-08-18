@@ -234,4 +234,3 @@ func TestKeyNames(t *testing.T) {
 func key(ch rune) *tcell.EventKey {
 	return tcell.NewEventKey(tcell.KeyRune, ch, tcell.ModNone)
 }
-

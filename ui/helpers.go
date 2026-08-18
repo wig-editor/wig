@@ -68,4 +68,3 @@ func drawBoxNoBorder(s wig.View, x1, y1, width, height int, style tcell.Style) {
 		}
 	}
 }
-

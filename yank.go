@@ -169,4 +169,3 @@ func yankPut(ctx Context) {
 		CursorInc(ctx.Buf, cur)
 	}
 }
-

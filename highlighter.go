@@ -62,4 +62,3 @@ func (c *HighlighterCursor) Seek(line, ch uint32) (node *Element[HighlighterNode
 
 	return nil, false
 }
-

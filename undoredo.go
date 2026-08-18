@@ -129,4 +129,3 @@ func (u *UndoRedo) Redo() {
 		u.Buf.Highlighter.Build()
 	}
 }
-

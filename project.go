@@ -49,4 +49,3 @@ func (p ProjectManager) Dir(buf *Buffer) (dir string) {
 	}
 	return p.root
 }
-

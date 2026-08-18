@@ -420,4 +420,3 @@ func CmdReloadBuffer(ctx wig.Context) {
 	}
 	ctx.Buf.Highlighter.Build()
 }
-

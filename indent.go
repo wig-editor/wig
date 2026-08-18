@@ -82,4 +82,3 @@ func IndentGetNumber(line []rune, indentUnit []rune) int {
 
 	return count
 }
-

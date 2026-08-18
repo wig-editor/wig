@@ -223,4 +223,3 @@ func (b *Buffer) String() string {
 	}
 	return buf.String()
 }
-

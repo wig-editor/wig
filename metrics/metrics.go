@@ -17,4 +17,3 @@ func Track(name string, fn func()) {
 func Get() map[string]time.Duration {
 	return stats
 }
-

@@ -40,4 +40,3 @@ func CmdClipboardPaste(ctx wig.Context) {
 	}
 	wig.CmdNormalMode(ctx)
 }
-

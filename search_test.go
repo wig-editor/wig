@@ -29,4 +29,3 @@ func TestSearch(t *testing.T) {
 	require.Equal(t, 0, cur.Line)
 	require.Equal(t, 5, cur.Char)
 }
-

@@ -149,4 +149,3 @@ func TestSnippetsDecode(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "for", result["For Loop"].Prefix)
 }
-

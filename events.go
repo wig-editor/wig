@@ -97,4 +97,3 @@ func (e *EventsManager) Broadcast(msg any) {
 		wg.Wait()
 	}
 }
-

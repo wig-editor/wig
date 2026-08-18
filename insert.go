@@ -110,4 +110,3 @@ insertChar:
 		cur.PreserveCharPosition = cur.Char
 	}
 }
-

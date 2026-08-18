@@ -16,4 +16,3 @@ var AllCommands = map[string]CmdDefinition{
 	"CmdReloadBuffer":  {Desc: "", Fn: CmdReloadBuffer},
 	"CmdNewBuffer":     {Desc: "", Fn: wig.CmdNewBuffer},
 }
-

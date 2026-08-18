@@ -108,4 +108,3 @@ func TextObjectBlock(buf *Buffer, ch rune, include bool) (found bool, sel *Selec
 
 	return false, nil, bufCursor
 }
-

@@ -141,4 +141,3 @@ func (j *Jumps) JumpForward() {
 	EditorInst.ActiveWindow().buf = b
 	j.current = item
 }
-

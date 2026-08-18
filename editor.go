@@ -258,4 +258,3 @@ func (e *Editor) Redraw() {
 func (e *Editor) ScreenSync() {
 	e.ScreenSyncCh <- 1
 }
-
