@@ -2,16 +2,46 @@ package ui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/firstrow/wig"
 	"github.com/gdamore/tcell/v2"
 )
 
+var cmdHistory []string
+
+// init ensures that basic fallback commands are registered so Tab completion works.
+func init() {
+	if wig.AllCommands == nil {
+		wig.AllCommands = map[string]wig.CmdDefinition{}
+	}
+
+	basics := map[string]func(wig.Context){
+		"q":  func(ctx wig.Context) { wig.CmdExit(ctx) },
+		"q!": func(ctx wig.Context) { wig.CmdExit(ctx) },
+		"w":  func(ctx wig.Context) { wig.CmdSaveFile(ctx) },
+		"wq": func(ctx wig.Context) { wig.CmdSaveFile(ctx); wig.CmdExit(ctx) },
+		"bd": func(ctx wig.Context) { wig.CmdKillBuffer(ctx) },
+	}
+
+	for name, fn := range basics {
+		if _, exists := wig.AllCommands[name]; !exists {
+			wig.AllCommands[name] = wig.CmdDefinition{
+				Desc: "Built-in command",
+				Fn:   fn,
+			}
+		}
+	}
+}
+
 type uiCommandLine struct {
-	e      *wig.Editor
-	keymap *wig.KeyHandler
-	chBuf  []rune
+	e          *wig.Editor
+	keymap     *wig.KeyHandler
+	chBuf      []rune
+	historyIdx int
+	candidates []string
+	candIdx    int
 }
 
 func (u *uiCommandLine) Plane() wig.RenderPlane {
@@ -19,73 +49,154 @@ func (u *uiCommandLine) Plane() wig.RenderPlane {
 }
 
 func CmdLineInit(ctx wig.Context) {
-	cmdLine := &uiCommandLine{
-		e:     ctx.Editor,
-		chBuf: []rune{},
+	u := &uiCommandLine{
+		e:          ctx.Editor,
+		chBuf:      make([]rune, 0, 32),
+		historyIdx: len(cmdHistory), // Start at the end of history
+		candidates: []string{},
+		candIdx:    -1,
 	}
-
-	cmdLine.keymap = wig.NewKeyHandler(wig.ModeKeyMap{
-		wig.MODE_NORMAL: wig.KeyMap{
+	u.keymap = wig.NewKeyHandler(wig.ModeKeyMap{
+		wig.MODE_INSERT: wig.KeyMap{
 			"Esc": func(ctx wig.Context) {
 				ctx.Editor.PopUi()
 			},
+			"Enter": func(ctx wig.Context) {
+				cmd := string(u.chBuf)
+				if strings.TrimSpace(cmd) != "" {
+					cmdHistory = append(cmdHistory, cmd)
+				}
+				u.execute(cmd)
+			},
 			"Tab": func(ctx wig.Context) {
-				// todo autocomplete
+				u.autocomplete()
+			},
+			"Up": func(ctx wig.Context) {
+				if u.historyIdx > 0 {
+					u.historyIdx--
+					u.chBuf = []rune(cmdHistory[u.historyIdx])
+					u.candidates = []string{}
+					u.candIdx = -1
+				}
+			},
+			"Down": func(ctx wig.Context) {
+				if u.historyIdx < len(cmdHistory)-1 {
+					u.historyIdx++
+					u.chBuf = []rune(cmdHistory[u.historyIdx])
+					u.candidates = []string{}
+					u.candIdx = -1
+				} else {
+					u.historyIdx = len(cmdHistory)
+					u.chBuf = []rune{}
+					u.candidates = []string{}
+					u.candIdx = -1
+				}
 			},
 		},
 	})
-	cmdLine.keymap.Fallback(cmdLine.insertCh)
-
-	ctx.Editor.PushUi(cmdLine)
+	u.keymap.Fallback(u.insertCh)
+	ctx.Editor.PushUi(u)
 }
 
 func (u *uiCommandLine) insertCh(ctx wig.Context, ev *tcell.EventKey) {
 	if ev.Modifiers()&tcell.ModCtrl != 0 {
 		return
 	}
-
 	if ev.Modifiers()&tcell.ModAlt != 0 {
 		return
 	}
-
 	if ev.Modifiers()&tcell.ModMeta != 0 {
 		return
 	}
 
+	// Removed tcell.KeyEnter handling here!
+	// If it was handled here, it bypassed the keymap's "Enter" handler,
+	// meaning the command was never executed and history was never saved.
+
 	if ev.Key() == tcell.KeyBackspace || ev.Key() == tcell.KeyBackspace2 {
 		if len(u.chBuf) > 0 {
 			u.chBuf = u.chBuf[:len(u.chBuf)-1]
-		} else {
-			ctx.Editor.PopUi()
 		}
-		return
-	}
-	if ev.Key() == tcell.KeyEnter {
-		cmd := strings.TrimSpace(string(u.chBuf))
-		u.execute(cmd)
-		ctx.Editor.PopUi()
+		u.candidates = []string{}
+		u.candIdx = -1
 		return
 	}
 
+	if ev.Key() != tcell.KeyRune {
+		return
+	}
 	u.chBuf = append(u.chBuf, ev.Rune())
+	u.candidates = []string{}
+	u.candIdx = -1
+}
+
+func (u *uiCommandLine) autocomplete() {
+	prefix := string(u.chBuf)
+
+	// Cycle through existing candidates if we already have them
+	if len(u.candidates) > 0 {
+		u.candIdx++
+		if u.candIdx >= len(u.candidates) {
+			u.candIdx = 0
+		}
+		u.chBuf = []rune(u.candidates[u.candIdx])
+		return
+	}
+
+	// Find new matches
+	var matches []string
+	for name := range wig.AllCommands {
+		if strings.HasPrefix(name, prefix) {
+			matches = append(matches, name)
+		}
+	}
+
+	if len(matches) == 0 {
+		return
+	}
+
+	// Sort matches for consistent cycling
+	sort.Strings(matches)
+
+	if len(matches) == 1 {
+		u.chBuf = []rune(matches[0])
+		u.candidates = matches
+		u.candIdx = 0
+		return
+	}
+
+	// Find common prefix to complete immediately
+	common := matches[0]
+	for _, m := range matches[1:] {
+		i := 0
+		for i < len(common) && i < len(m) && common[i] == m[i] {
+			i++
+		}
+		common = common[:i]
+	}
+	u.chBuf = []rune(common)
+	u.candidates = matches
+	u.candIdx = -1 // Next Tab will cycle to 0
 }
 
 func (u *uiCommandLine) execute(cmd string) {
-	ctx := u.e.NewContext()
-
-	switch cmd {
-	case "q":
-		wig.CmdExit(ctx)
-	case "q!":
-		wig.CmdExit(ctx)
-	case "w":
-		wig.CmdSaveFile(ctx)
-	case "wq":
-		wig.CmdSaveFile(ctx)
-		wig.CmdExit(ctx)
-	case "bd":
-		wig.CmdKillBuffer(ctx)
+	cmd = strings.TrimSpace(cmd)
+	if cmd == "" {
+		u.e.PopUi()
+		return
 	}
+
+	if def, ok := wig.AllCommands[cmd]; ok {
+		ctx := u.e.NewContext()
+		if fn, ok := def.Fn.(func(wig.Context)); ok {
+			fn(ctx)
+		} else {
+			u.e.EchoMessage(fmt.Sprintf("Command %s is not executable", cmd))
+		}
+	} else {
+		u.e.EchoMessage(fmt.Sprintf("Unknown command: %s", cmd))
+	}
+	u.e.PopUi()
 }
 
 func (u *uiCommandLine) Keymap() *wig.KeyHandler {
@@ -93,17 +204,30 @@ func (u *uiCommandLine) Keymap() *wig.KeyHandler {
 }
 
 func (u *uiCommandLine) Render(view wig.View) {
-	st := wig.Color("statusline")
-	w, h := view.Size()
-	h -= 1
+	vw, vh := view.Size()
+	prompt := fmt.Sprintf(":%s", string(u.chBuf))
 
-	bg := strings.Repeat(" ", w)
-	view.SetContent(0, h, bg, st)
+	bgStyle := wig.Color("default")
+	view.SetContent(0, vh-1, strings.Repeat(" ", vw), bgStyle)
+	view.SetContent(0, vh-1, prompt, bgStyle)
 
-	msg := fmt.Sprintf(":%s%s", string(u.chBuf), string(tcell.RuneBlock))
-	view.SetContent(0, h, msg, st)
+	cursorStyle := bgStyle.Reverse(true)
+	if len(prompt) < vw {
+		view.SetContent(len(prompt), vh-1, " ", cursorStyle)
+	}
+
+	// Show candidates visually on the line above the prompt (like Vim)
+	if len(u.candidates) > 1 {
+		candStr := strings.Join(u.candidates, "  ")
+		if len(candStr) > vw {
+			candStr = candStr[:vw]
+		}
+		if vh-2 >= 0 {
+			view.SetContent(0, vh-2, candStr, bgStyle)
+		}
+	}
 }
 
 func (u *uiCommandLine) Mode() wig.Mode {
-	return wig.MODE_NORMAL
+	return wig.MODE_INSERT
 }
