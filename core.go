@@ -421,10 +421,27 @@ func CmdKillBuffer(ctx Context) {
 	buf := ctx.Buf
 	ctx.Editor.Lsp.DidClose(buf)
 
-	CmdBufferCycle(ctx)
+	// Switch to the next available buffer before deleting the current one
+	CmdBufferNext(ctx)
+
+	// If we are still on the buffer we are trying to delete (e.g. only internal buffers left)
+	if ctx.Editor.ActiveWindow().Buffer() == buf {
+		if len(ctx.Editor.Buffers) > 1 {
+			for _, b := range ctx.Editor.Buffers {
+				if b != buf {
+					ctx.Buf = b
+					ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+					break
+				}
+			}
+		} else {
+			// No other buffers left, create a new empty one
+			CmdNewBuffer(ctx)
+		}
+	}
 
 	ctx.Editor.Buffers = slices.DeleteFunc(ctx.Editor.Buffers, func(b *Buffer) bool {
-		if ctx.Buf != b {
+		if b != buf {
 			return false
 		}
 
@@ -455,10 +472,6 @@ func CmdKillBuffer(ctx Context) {
 
 		return true
 	})
-
-	if len(ctx.Editor.Buffers) == 0 {
-		CmdNewBuffer(ctx)
-	}
 }
 
 func CmdNewBuffer(ctx Context) {
@@ -599,6 +612,61 @@ func CmdMacroRepeat(ctx Context) {
 
 func CmdAutocompleteTrigger(ctx Context) {
 	ctx.Editor.AutocompleteTrigger(ctx)
+}
+
+func CmdBufferNext(ctx Context) {
+	active := ctx.Editor.ActiveBuffer()
+	buffers := ctx.Editor.Buffers
+	if len(buffers) <= 1 {
+		return
+	}
+	idx := 0
+	for i, b := range buffers {
+		if b == active {
+			idx = i
+			break
+		}
+	}
+	for i := 1; i <= len(buffers); i++ {
+		next := buffers[(idx+i)%len(buffers)]
+		if !strings.HasPrefix(next.GetName(), "[") {
+			ctx.Buf = next
+			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+			return
+		}
+	}
+}
+
+func CmdBufferPrev(ctx Context) {
+	active := ctx.Editor.ActiveBuffer()
+	buffers := ctx.Editor.Buffers
+	if len(buffers) <= 1 {
+		return
+	}
+	idx := 0
+	for i, b := range buffers {
+		if b == active {
+			idx = i
+			break
+		}
+	}
+	for i := 1; i <= len(buffers); i++ {
+		prev := buffers[(idx-i+len(buffers))%len(buffers)]
+		if !strings.HasPrefix(prev.GetName(), "[") {
+			ctx.Buf = prev
+			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+			return
+		}
+	}
+}
+
+func CmdBufferLast(ctx Context) {
+	buffers := ctx.Editor.Buffers
+	if len(buffers) == 0 {
+		return
+	}
+	ctx.Buf = buffers[len(buffers)-1]
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx)
 }
 
 func CmdPaste(ctx Context) {

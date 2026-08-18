@@ -129,61 +129,6 @@ func CmdExecute(ctx wig.Context) {
 	ctx.Buf.Driver.Exec(ctx.Editor, ctx.Buf, wig.CursorLine(ctx.Buf, cur))
 }
 
-func CmdBufferNext(ctx wig.Context) {
-	active := ctx.Editor.ActiveBuffer()
-	buffers := ctx.Editor.Buffers
-	if len(buffers) <= 1 {
-		return
-	}
-	idx := 0
-	for i, b := range buffers {
-		if b == active {
-			idx = i
-			break
-		}
-	}
-	for i := 1; i <= len(buffers); i++ {
-		next := buffers[(idx+i)%len(buffers)]
-		if !strings.HasPrefix(next.GetName(), "[") {
-			ctx.Buf = next
-			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
-			return
-		}
-	}
-}
-
-func CmdBufferPrev(ctx wig.Context) {
-	active := ctx.Editor.ActiveBuffer()
-	buffers := ctx.Editor.Buffers
-	if len(buffers) <= 1 {
-		return
-	}
-	idx := 0
-	for i, b := range buffers {
-		if b == active {
-			idx = i
-			break
-		}
-	}
-	for i := 1; i <= len(buffers); i++ {
-		prev := buffers[(idx-i+len(buffers))%len(buffers)]
-		if !strings.HasPrefix(prev.GetName(), "[") {
-			ctx.Buf = prev
-			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
-			return
-		}
-	}
-}
-
-func CmdBufferLast(ctx wig.Context) {
-	buffers := ctx.Editor.Buffers
-	if len(buffers) == 0 {
-		return
-	}
-	ctx.Buf = buffers[len(buffers)-1]
-	ctx.Editor.ActiveWindow().VisitBuffer(ctx)
-}
-
 func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 	rootDir := ctx.Editor.Projects.Dir(ctx.Buf)
 	ctx.Editor.EchoMessage("listing dir: " + rootDir)

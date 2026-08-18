@@ -14,9 +14,11 @@ func init() {
 	wig.AllCommands["CmdCommandPalettePicker"] = wig.CmdDefinition{Desc: "Command palette", Fn: CmdCommandPalettePicker}
 	wig.AllCommands["CmdFindProjectFilePicker"] = wig.CmdDefinition{Desc: "Find file", Fn: CmdFindProjectFilePicker}
 	wig.AllCommands["CmdBufferPicker"] = wig.CmdDefinition{Desc: "Buffer picker", Fn: CmdBufferPicker}
-	wig.AllCommands["CmdBufferNext"] = wig.CmdDefinition{Desc: "Next buffer", Fn: CmdBufferNext}
-	wig.AllCommands["CmdBufferPrev"] = wig.CmdDefinition{Desc: "Previous buffer", Fn: CmdBufferPrev}
-	wig.AllCommands["CmdBufferLast"] = wig.CmdDefinition{Desc: "Last buffer", Fn: CmdBufferLast}
+	wig.AllCommands["CmdBufferNext"] = wig.CmdDefinition{Desc: "Next buffer", Fn: wig.CmdBufferNext}
+	wig.AllCommands["CmdBufferPrev"] = wig.CmdDefinition{Desc: "Previous buffer", Fn: wig.CmdBufferPrev}
+	wig.AllCommands["CmdBufferLast"] = wig.CmdDefinition{Desc: "Last buffer", Fn: wig.CmdBufferLast}
+	wig.AllCommands["CmdKillBuffer"] = wig.CmdDefinition{Desc: "Kill buffer", Fn: wig.CmdKillBuffer}
+	wig.AllCommands["CmdSaveFile"] = wig.CmdDefinition{Desc: "Save file", Fn: wig.CmdSaveFile}
 
 	// Command-line basics
 	wig.AllCommands["q"] = wig.CmdDefinition{Desc: "Quit", Fn: wig.CmdExit}
@@ -27,7 +29,7 @@ func init() {
 		wig.CmdExit(ctx)
 	}}
 	wig.AllCommands["bd"] = wig.CmdDefinition{Desc: "Delete buffer", Fn: wig.CmdKillBuffer}
-	wig.AllCommands["bn"] = wig.CmdDefinition{Desc: "Next buffer", Fn: CmdBufferNext}
-	wig.AllCommands["bp"] = wig.CmdDefinition{Desc: "Previous buffer", Fn: CmdBufferPrev}
-	wig.AllCommands["bl"] = wig.CmdDefinition{Desc: "Last buffer", Fn: CmdBufferLast}
+	wig.AllCommands["bn"] = wig.CmdDefinition{Desc: "Next buffer", Fn: wig.CmdBufferNext}
+	wig.AllCommands["bp"] = wig.CmdDefinition{Desc: "Previous buffer", Fn: wig.CmdBufferPrev}
+	wig.AllCommands["bl"] = wig.CmdDefinition{Desc: "Last buffer", Fn: wig.CmdBufferLast}
 }
