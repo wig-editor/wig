@@ -73,7 +73,7 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 	}
 
 	resolve := func(name string) any {
-		if def, ok := commands.AllCommands[name]; ok {
+		if def, ok := wig.AllCommands[name]; ok {
 			return def.Fn
 		}
 		return nil

@@ -91,17 +91,17 @@ func CmdBufferPicker(ctx wig.Context) {
 }
 
 func CmdCommandPalettePicker(ctx wig.Context) {
-	items := make([]ui.PickerItem[CmdDefinition], 0, 128)
+	items := make([]ui.PickerItem[wig.CmdDefinition], 0, 128)
 
-	for k, v := range AllCommands {
+	for k, v := range wig.AllCommands {
 		name := fmt.Sprintf("%s [%s]", v.Desc, k)
-		items = append(items, ui.PickerItem[CmdDefinition]{
+		items = append(items, ui.PickerItem[wig.CmdDefinition]{
 			Name:  name,
 			Value: v,
 		})
 	}
 
-	action := func(p *ui.UiPicker[CmdDefinition], i *ui.PickerItem[CmdDefinition]) {
+	action := func(p *ui.UiPicker[wig.CmdDefinition], i *ui.PickerItem[wig.CmdDefinition]) {
 		ctx.Editor.PopUi()
 
 		if i == nil {
