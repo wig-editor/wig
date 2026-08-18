@@ -62,7 +62,8 @@ type Buffer struct {
 	GitSigns          map[int]rune
 	VisualBlockInsert *VisualBlockInsertState
 
-	rootDir string
+	OpenCount int
+	rootDir   string
 }
 
 func NewBuffer() *Buffer {
@@ -75,6 +76,7 @@ func NewBuffer() *Buffer {
 		Driver:      nil,
 		Tx:          nil,
 		Highlighter: nil,
+		OpenCount:   1,
 	}
 	b.UndoRedo = NewUndoRedo(b)
 	return b

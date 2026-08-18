@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/firstrow/wig"
@@ -88,6 +89,75 @@ func CmdBufferPicker(ctx wig.Context) {
 		wig.CmdWindowNext(ctx)
 		picker.CallAction()
 	})
+}
+
+func CmdMRUBufferPicker(ctx wig.Context) {
+	posCache := wig.LoadPositionCache()
+
+	type kv struct {
+		Key string
+		Val wig.PositionEntry
+	}
+	var entries []kv
+	for k, v := range posCache.Files {
+		if _, err := os.Stat(k); err == nil {
+			entries = append(entries, kv{k, v})
+		}
+	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Val.OpenCount > entries[j].Val.OpenCount
+	})
+
+	items := make([]ui.PickerItem[string], 0, len(entries))
+	for _, e := range entries {
+		items = append(items, ui.PickerItem[string]{
+			Name:  e.Key,
+			Value: e.Key,
+		})
+	}
+
+	action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
+		defer ctx.Editor.PopUi()
+		if i == nil {
+			return
+		}
+
+		filePath := i.Value
+		var targetBuf *wig.Buffer
+		for _, b := range ctx.Editor.Buffers {
+			if b.FilePath == filePath {
+				targetBuf = b
+				break
+			}
+		}
+
+		if targetBuf != nil {
+			targetBuf.OpenCount++
+			ctx.Buf = targetBuf
+			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+		} else {
+			buf, err := ctx.Editor.OpenFile(filePath)
+			if err != nil {
+				return
+			}
+			buf.OpenCount = posCache.Files[filePath].OpenCount + 1
+			ctx.Buf = buf
+
+			targetLine := posCache.Files[filePath].Line
+			if targetLine >= buf.Lines.Len {
+				targetLine = buf.Lines.Len - 1
+			}
+			ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{Line: targetLine, Char: 0})
+			wig.CmdCursorCenter(ctx)
+		}
+	}
+
+	ui.PickerInit(
+		ctx.Editor,
+		action,
+		items,
+	)
 }
 
 func CmdCommandPalettePicker(ctx wig.Context) {

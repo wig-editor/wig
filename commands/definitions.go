@@ -24,6 +24,7 @@ func init() {
 	wig.AllCommands["CmdGitHunkRevert"] = wig.CmdDefinition{Desc: "Revert git hunk", Fn: CmdGitHunkRevert}
 	wig.AllCommands["CmdDeleteLine"] = wig.CmdDefinition{Desc: "Delete line", Fn: wig.CmdDeleteLine}
 	wig.AllCommands["CmdGitHunkPreview"] = wig.CmdDefinition{Desc: "Preview git hunk", Fn: CmdGitHunkPreview}
+	wig.AllCommands["CmdMRUBufferPicker"] = wig.CmdDefinition{Desc: "MRU Buffer Picker", Fn: CmdMRUBufferPicker}
 
 	// Command-line basics
 	wig.AllCommands["q"] = wig.CmdDefinition{Desc: "Quit", Fn: wig.CmdExit}
