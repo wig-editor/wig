@@ -162,7 +162,7 @@ func (u *HunkPreviewWidget) Render(view wig.View) {
 	// hint line
 	hint := "[r] revert  [Esc/q] close"
 	if u.onRevert == nil {
-		hint = "[j/k] scroll  [Esc/q] close"
+		hint = "[Esc/q] close"
 	}
 	view.SetContent(x+2, h-1, fmt.Sprintf("%s", hint), wig.Color("ui.linenr"))
 }

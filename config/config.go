@@ -329,6 +329,9 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"$":      wig.WithSelection(wig.CmdGotoLineEnd),
 			"0":      wig.WithSelection(wig.CmdCursorBeginningOfTheLine),
 			"I":      wig.CmdVisualBlockInsert,
+			"d":      wig.CmdSelectionBlockDelete,
+			"x":      wig.CmdSelectionBlockDelete,
+			"y":      wig.CmdSelectionBlockYank,
 			"Esc":    wig.CmdNormalMode,
 		},
 		wig.MODE_INSERT: wig.KeyMap{

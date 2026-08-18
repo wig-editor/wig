@@ -64,6 +64,58 @@ func SelectionToString(buf *Buffer, sel *Selection) string {
 	return acc
 }
 
+// SelectionBlockBounds returns the rectangular bounds of a block selection,
+// independent per axis (unlike SelectionNormalize, which couples Line/Char).
+func SelectionBlockBounds(sel *Selection) (minLine, maxLine, minChar, maxChar int) {
+	minLine, maxLine = sel.Start.Line, sel.End.Line
+	if minLine > maxLine {
+		minLine, maxLine = maxLine, minLine
+	}
+	minChar, maxChar = sel.Start.Char, sel.End.Char
+	if minChar > maxChar {
+		minChar, maxChar = maxChar, minChar
+	}
+	return
+}
+
+// CmdSelectionBlockDelete deletes the rectangular column range [minChar,maxChar]
+// on every line in [minLine,maxLine], independently per line (ragged lines are
+// clipped, never merged) — unlike SelectionDelete's single contiguous stream cut.
+func CmdSelectionBlockDelete(ctx Context) {
+	if ctx.Buf.Selection == nil {
+		return
+	}
+	defer CmdNormalMode(ctx)
+	if ctx.Buf.TxStart() {
+		defer ctx.Buf.TxEnd()
+	}
+	minLine, maxLine, minChar, maxChar := SelectionBlockBounds(ctx.Buf.Selection)
+	for i := minLine; i <= maxLine; i++ {
+		line := CursorLineByNum(ctx.Buf, i)
+		if line == nil {
+			continue
+		}
+		lineLen := len(line.Value)
+		if minChar >= lineLen-1 {
+			continue // only trailing "\n" left at/after start col
+		}
+		end := maxChar + 1
+		if end > lineLen-1 {
+			end = lineLen - 1 // never eat the trailing "\n" -> never merges lines
+		}
+		if end <= minChar {
+			continue
+		}
+		TextDelete(ctx.Buf, &Selection{
+			Start: Cursor{Line: i, Char: minChar},
+			End:   Cursor{Line: i, Char: end},
+		})
+	}
+	cur := ContextCursorGet(ctx)
+	cur.Line = minLine
+	cur.Char = minChar
+	ctx.Buf.Selection = nil
+}
 func SelectionNormalize(sel *Selection) Selection {
 	if sel == nil {
 		return Selection{}
