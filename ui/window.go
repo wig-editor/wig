@@ -132,6 +132,10 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 						if lnNum < 0 {
 							lnNum = -lnNum
 						}
+						// If hybrid mode is enabled, show absolute line number on current line
+						if e.Config.CurrentLineAbsolute && lineNum == cur.Line {
+							lnNum = lineNum + 1
+						}
 					}
 
 					if lineNum == cur.Line {

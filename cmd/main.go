@@ -28,10 +28,10 @@ func main() {
 
 	w, h := tscreen.Size()
 
-	keys := wig.NewKeyHandler(config.DefaultKeyMap())
+	// Load user config from ~/.config/wig/config.toml
+	editorCfg, userKeys := config.LoadUserConfig()
 
-	// Load user config from ~/.config/wig/config.toml and merge
-	userKeys := config.LoadUserKeyMap()
+	keys := wig.NewKeyHandler(config.DefaultKeyMap())
 	for mode, kmap := range userKeys {
 		if len(kmap) > 0 {
 			keys.Map(mode, kmap)
@@ -43,7 +43,7 @@ func main() {
 		keys,
 	)
 	editor.AutocompleteTrigger = autocomplete.Register(editor)
-	editor.ReadConfigFile()
+	editor.Config = editorCfg
 	wig.ApplyTheme(editor.Config.Theme)
 
 	args := os.Args

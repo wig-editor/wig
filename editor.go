@@ -13,6 +13,7 @@ type EditorConfig struct {
 	Theme               string
 	ShowLineNumbers     bool
 	RelativeLineNumbers bool
+	CurrentLineAbsolute bool // If true, shows absolute line number on current line when relative is on
 }
 
 type View interface {
@@ -108,6 +109,7 @@ func (e *Editor) ReadConfigFile() {
 		Theme:               "naysayer",
 		ShowLineNumbers:     true,
 		RelativeLineNumbers: true,
+		CurrentLineAbsolute: true,
 	}
 }
 

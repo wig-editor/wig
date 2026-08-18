@@ -12,7 +12,15 @@ import (
 )
 
 type UserConfig struct {
-	Keys UserKeysConfig `toml:"keys"`
+	Editor EditorSettings `toml:"editor"`
+	Keys   UserKeysConfig `toml:"keys"`
+}
+
+type EditorSettings struct {
+	Theme               *string `toml:"theme"`
+	ShowLineNumbers     *bool   `toml:"show_line_numbers"`
+	RelativeLineNumbers *bool   `toml:"relative_line_numbers"`
+	CurrentLineAbsolute *bool   `toml:"current_line_absolute"`
 }
 
 type UserKeysConfig struct {
@@ -22,8 +30,14 @@ type UserKeysConfig struct {
 	VisualLine map[string]string `toml:"visual_line"`
 }
 
-// LoadUserKeyMap reads ~/.config/wig/config.toml and maps string command names to Go functions
-func LoadUserKeyMap() wig.ModeKeyMap {
+// LoadUserConfig reads ~/.config/wig/config.toml for editor settings and keymaps
+func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
+	editorCfg := wig.EditorConfig{
+		Theme:               "naysayer",
+		ShowLineNumbers:     true,
+		RelativeLineNumbers: true,
+		CurrentLineAbsolute: true,
+	}
 	userMap := wig.ModeKeyMap{
 		wig.MODE_NORMAL:      wig.KeyMap{},
 		wig.MODE_INSERT:      wig.KeyMap{},
@@ -36,12 +50,26 @@ func LoadUserKeyMap() wig.ModeKeyMap {
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return userMap // File doesn't exist, return empty map
+		return editorCfg, userMap // File doesn't exist, return defaults
 	}
 
 	var cfg UserConfig
 	if err := toml.Unmarshal(data, &cfg); err != nil {
-		return userMap
+		return editorCfg, userMap
+	}
+
+	// Apply editor settings if they were provided in the TOML
+	if cfg.Editor.Theme != nil {
+		editorCfg.Theme = *cfg.Editor.Theme
+	}
+	if cfg.Editor.ShowLineNumbers != nil {
+		editorCfg.ShowLineNumbers = *cfg.Editor.ShowLineNumbers
+	}
+	if cfg.Editor.RelativeLineNumbers != nil {
+		editorCfg.RelativeLineNumbers = *cfg.Editor.RelativeLineNumbers
+	}
+	if cfg.Editor.CurrentLineAbsolute != nil {
+		editorCfg.CurrentLineAbsolute = *cfg.Editor.CurrentLineAbsolute
 	}
 
 	resolve := func(name string) any {
@@ -72,7 +100,7 @@ func LoadUserKeyMap() wig.ModeKeyMap {
 		}
 	}
 
-	return userMap
+	return editorCfg, userMap
 }
 
 func DefaultKeyMap() wig.ModeKeyMap {
