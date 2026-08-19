@@ -37,6 +37,9 @@ func restoreCharPosition(buf *Buffer, cur *Cursor) {
 
 func CursorInc(buf *Buffer, cur *Cursor) (moved bool) {
 	line := CursorLine(buf, cur)
+	if line == nil {
+		return false
+	}
 	if cur.Char < len(line.Value)-1 {
 		cur.Char++
 		cur.PreserveCharPosition = cur.Char
@@ -61,6 +64,9 @@ func CursorDec(buf *Buffer, cur *Cursor) (moved bool) {
 	}
 
 	line := CursorLine(buf, cur)
+	if line == nil {
+		return false
+	}
 	if line.Prev() != nil {
 		chLen := max(len(line.Prev().Value)-1, 0)
 		cur.Char = chLen
@@ -153,7 +159,7 @@ const (
 func CursorChClass(buf *Buffer, cur *Cursor) chClass {
 	line := CursorLine(buf, cur)
 
-	if len(line.Value) == 0 {
+	if line == nil || len(line.Value) == 0 {
 		return chWhitespace
 	}
 
@@ -169,7 +175,7 @@ func CursorChClass(buf *Buffer, cur *Cursor) chClass {
 func CursorChar(buf *Buffer, cur *Cursor) rune {
 	line := CursorLine(buf, cur)
 
-	if line.Value.IsEmpty() {
+	if line == nil || line.Value.IsEmpty() {
 		return -1
 	}
 

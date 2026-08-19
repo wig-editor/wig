@@ -33,7 +33,7 @@ func SelectionToString(buf *Buffer, sel *Selection) string {
 	lineStart := CursorLineByNum(buf, s.Start.Line)
 	lineEnd := CursorLineByNum(buf, s.End.Line)
 
-	if lineStart == nil {
+	if lineStart == nil || lineEnd == nil {
 		return ""
 	}
 
