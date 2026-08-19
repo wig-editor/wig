@@ -52,6 +52,7 @@ func CmdThemeSelect(ctx wig.Context) {
 		action,
 		items,
 	)
+	picker.SetTitle("Themes")
 
 	picker.OnSelect(func(item *ui.PickerItem[string]) {
 		wig.ApplyTheme(item.Value)
@@ -84,6 +85,7 @@ func CmdBufferPicker(ctx wig.Context) {
 		action,
 		items,
 	)
+	picker.SetTitle("Buffers")
 	picker.OnKey("ctrl+o", func(ctx wig.Context) {
 		wig.CmdWindowVSplit(ctx)
 		wig.CmdWindowNext(ctx)
@@ -153,11 +155,12 @@ func CmdMRUBufferPicker(ctx wig.Context) {
 		}
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
 		items,
 	)
+	picker.SetTitle("MRU Buffers")
 }
 
 func CmdCommandPalettePicker(ctx wig.Context) {
@@ -184,11 +187,12 @@ func CmdCommandPalettePicker(ctx wig.Context) {
 		}
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
 		items,
 	)
+	picker.SetTitle("Command Palette")
 }
 
 func CmdExecute(ctx wig.Context) {
@@ -265,11 +269,12 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 		ctx.Editor.PopUi()
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
 		getItems(rootDir),
 	)
+	picker.SetTitle("Files")
 }
 
 func CmdFormatBuffer(ctx wig.Context) {
@@ -406,11 +411,12 @@ func CmdSearchLine(ctx wig.Context) {
 		wig.CmdCursorCenter(ctx)
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
 		items,
 	)
+	picker.SetTitle("Search Line")
 }
 
 func CmdGotoDefinition(ctx wig.Context) {

@@ -142,6 +142,9 @@ func (e *Editor) OpenFile(path string) (*Buffer, error) {
 		buf.Highlighter = hl
 	}
 
+	// Broadcast event so GitGutterManager calculates signs for newly opened file
+	e.Events.Broadcast(EventBufferReloaded{Buf: buf})
+
 	return buf, nil
 }
 

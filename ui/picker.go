@@ -37,6 +37,7 @@ type UiPicker[T any] struct {
 	activeItemT *PickerItem[T]
 	onChange    func()               // on user change input
 	onSelect    func(*PickerItem[T]) // when Tab pressed
+	title       string
 }
 
 func (u *UiPicker[T]) Plane() wig.RenderPlane {
@@ -167,6 +168,10 @@ func (u *UiPicker[T]) OnSelect(callback func(*PickerItem[T])) {
 	u.onSelect = callback
 }
 
+func (u *UiPicker[T]) SetTitle(title string) {
+	u.title = title
+}
+
 func (u *UiPicker[T]) CallAction() {
 	u.action(u, u.activeItemT)
 }
@@ -269,6 +274,11 @@ func (u *UiPicker[T]) Render(view wig.View) {
 
 	// fill box
 	drawBox(view, x, y, w, h, wig.Color("default"))
+
+	if u.title != "" {
+		titleStr := " " + truncate(u.title, w-x-4) + " "
+		view.SetContent(x+2, y, titleStr, wig.Color("ui.linenr"))
+	}
 
 	// prompt
 	prompt := fmt.Sprintf(" %s%s", string(u.chBuf), string(tcell.RuneBlock))

@@ -53,6 +53,7 @@ func CmdFindProjectFilePicker(ctx wig.Context) {
 		},
 		items,
 	)
+	picker.SetTitle("Find File")
 
 	picker.OnKey("ctrl+o", func(ctx wig.Context) {
 		wig.CmdWindowVSplit(ctx)
@@ -161,6 +162,7 @@ func rgDoSearch(ctx wig.Context, pat string) {
 	)
 
 	p.SetInput(pat)
+	p.SetTitle("Search Project")
 
 	p.OnChange(func() {
 		p.SetItems(searchFn(p.GetInput()))

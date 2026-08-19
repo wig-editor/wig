@@ -133,15 +133,18 @@ func (u *HunkPreviewWidget) Render(view wig.View) {
 
 	drawBox(view, x, y, w, h, wig.Color("default"))
 
-	// header
-	view.SetContent(x+2, y+1, truncate(u.header, w-x-4), wig.Color("ui.linenr"))
+	// header as title on the border
+	if u.header != "" {
+		titleStr := " " + truncate(u.header, w-x-4) + " "
+		view.SetContent(x+2, y, titleStr, wig.Color("ui.linenr"))
+	}
 
 	// separator
 	sep := strings.Repeat(string('─'), w-x-3)
-	view.SetContent(x+2, y+2, sep, wig.Color("default"))
+	view.SetContent(x+2, y+1, sep, wig.Color("default"))
 
 	// body (scrollable)
-	pageSize := h - y - 4 // rows available below header/separator, above hint line
+	pageSize := h - y - 3 // rows available below separator, above hint line
 	if pageSize < 1 {
 		pageSize = 1
 	}
@@ -156,7 +159,7 @@ func (u *HunkPreviewWidget) Render(view wig.View) {
 	}
 
 	for i, line := range u.lines[start:end] {
-		view.SetContent(x+2, y+3+i, truncate(line, w-x-4), lineStyle(line))
+		view.SetContent(x+2, y+2+i, truncate(line, w-x-4), lineStyle(line))
 	}
 
 	// hint line
