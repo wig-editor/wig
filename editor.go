@@ -14,6 +14,7 @@ type EditorConfig struct {
 	ShowLineNumbers     bool
 	RelativeLineNumbers bool
 	CurrentLineAbsolute bool // If true, shows absolute line number on current line when relative is on
+	FormatOnSave        bool
 }
 
 type View interface {
@@ -110,6 +111,7 @@ func (e *Editor) ReadConfigFile() {
 		ShowLineNumbers:     true,
 		RelativeLineNumbers: true,
 		CurrentLineAbsolute: true,
+		FormatOnSave:        false,
 	}
 }
 

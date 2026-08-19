@@ -410,6 +410,19 @@ func CmdSaveFile(ctx Context) {
 		ctx.Editor.LogMessage(err.Error())
 		ctx.Editor.EchoMessage(err.Error())
 	}
+	if ctx.Editor.Config.FormatOnSave {
+		if def, ok := AllCommands["CmdFormatBuffer"]; ok {
+			if fn, ok := def.Fn.(func(Context)); ok {
+				fn(ctx)
+				_ = ctx.Buf.Save()
+				ctx.Editor.Lsp.DidClose(ctx.Buf)
+				ctx.Editor.Lsp.DidOpen(ctx.Buf)
+				if ctx.Buf.Highlighter != nil {
+					ctx.Buf.Highlighter.Build()
+				}
+			}
+		}
+	}
 	ctx.Editor.Lsp.DidSave(ctx.Buf)
 }
 

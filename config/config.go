@@ -21,6 +21,7 @@ type EditorSettings struct {
 	ShowLineNumbers     *bool   `toml:"show_line_numbers"`
 	RelativeLineNumbers *bool   `toml:"relative_line_numbers"`
 	CurrentLineAbsolute *bool   `toml:"current_line_absolute"`
+	FormatOnSave        *bool   `toml:"format_on_save"`
 }
 
 type UserKeysConfig struct {
@@ -38,6 +39,7 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 		ShowLineNumbers:     true,
 		RelativeLineNumbers: true,
 		CurrentLineAbsolute: true,
+		FormatOnSave:        false,
 	}
 	userMap := wig.ModeKeyMap{
 		wig.MODE_NORMAL:       wig.KeyMap{},
@@ -72,6 +74,9 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 	}
 	if cfg.Editor.CurrentLineAbsolute != nil {
 		editorCfg.CurrentLineAbsolute = *cfg.Editor.CurrentLineAbsolute
+	}
+	if cfg.Editor.FormatOnSave != nil {
+		editorCfg.FormatOnSave = *cfg.Editor.FormatOnSave
 	}
 
 	resolve := func(name string) any {
