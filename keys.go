@@ -28,10 +28,11 @@ type KeyHandler struct {
 
 func DefaultKeyHandler(mergeKeys ModeKeyMap) *KeyHandler {
 	m := ModeKeyMap{
-		MODE_NORMAL:      KeyMap{},
-		MODE_INSERT:      KeyMap{},
-		MODE_VISUAL:      KeyMap{},
-		MODE_VISUAL_LINE: KeyMap{},
+		MODE_NORMAL:       KeyMap{},
+		MODE_INSERT:       KeyMap{},
+		MODE_VISUAL:       KeyMap{},
+		MODE_VISUAL_LINE:  KeyMap{},
+		MODE_VISUAL_BLOCK: KeyMap{},
 	}
 	k := NewKeyHandler(m)
 	for mode, keys := range EditorInst.Keys.keymap {
@@ -52,7 +53,6 @@ func NewKeyHandler(mkeys ModeKeyMap) *KeyHandler {
 	}
 	k.Macros = NewMacrosManager(k)
 	return k
-
 }
 
 func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
@@ -233,3 +233,4 @@ func isNumeric(s string) bool {
 	_, err := strconv.ParseInt(s, 10, 64)
 	return err == nil
 }
+

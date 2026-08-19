@@ -138,3 +138,4 @@ func visitLine(ctx wig.Context, upOrDown func(wig.Context)) {
 		Char: chNum,
 	})
 }
+
