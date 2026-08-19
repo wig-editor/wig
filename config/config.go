@@ -356,4 +356,3 @@ func DefaultKeyMap() wig.ModeKeyMap {
 		},
 	}
 }
-

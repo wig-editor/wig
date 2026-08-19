@@ -476,8 +476,13 @@ func CmdEnsureCursorVisible(ctx Context) {
 		}
 	}()
 	h := viewHeight(ctx)
-	if cur.Line > cur.ScrollOffset+h-minVisibleLines {
-		cur.ScrollOffset = cur.Line - h + minVisibleLines
+	// Bottom clamp uses (minVisibleLines + 1): the cursor's own row is not
+	// "below" it, so without the -1 the cursor settles one row too low and
+	// only minVisibleLines-1 rows are visible below it (asymmetric with the
+	// top clamp which leaves minVisibleLines rows above). The +1 here makes
+	// both clamps leave exactly minVisibleLines rows of context.
+	if cur.Line > cur.ScrollOffset+h-minVisibleLines-1 {
+		cur.ScrollOffset = cur.Line - h + minVisibleLines + 1
 	}
 	if cur.Line < cur.ScrollOffset+minVisibleLines {
 		cur.ScrollOffset = cur.Line - minVisibleLines
@@ -605,4 +610,3 @@ func CmdBufferCycle(ctx Context) {
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
 }
-
