@@ -14,7 +14,9 @@ Wig is still in an early stage of development and may damage your files. But if 
 - Tree-sitter support
 - Color themes (borrowed from the Helix text editor)
 - Lots of bugs
-- Macro support
+- Macros support
+- Whichkey helper
+- Git gutter, hunk editor
 - Something like Emacs org-mode: Open `test.txt`, place the cursor at line 15, and press `"Ctrl-C Ctrl-C"`.
 
 This project was written as a "speed run" — not for speed in terms of time, but rather as an exercise to explore the text editor problem space without overthinking or planning ahead. It’s a quick and "dirty" implementation, so to speak.
@@ -55,5 +57,9 @@ I plan to turn this "toy project" into a stable, fully-featured Vim-like text ed
 
 ---
 
+## Contributors
 
+<a href="https://github.com/wig-editor/wig/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=wig-editor/wig" />
+</a>
 
