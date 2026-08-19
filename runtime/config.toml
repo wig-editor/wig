@@ -1,0 +1,23 @@
+# Wig user config file.
+# see movements_cmds.go and core.go for available commands
+
+[keys.normal]
+#"alt+e" = "CmdFindProjectFilePicker"
+#"alt+b" = "CmdBufferPicker"
+#"alt+d" = "CmdDeleteLine"
+#"alt+=" = "CmdBufferNext"
+#"alt+-" = "CmdBufferPrev"
+
+[keys.insert]
+#"alt+e" = "CmdFindProjectFilePicker"
+#"alt+b" = "CmdBufferPicker"
+#"alt+d" = "CmdDeleteLine"
+#"alt+=" = "CmdBufferNext"
+#"alt+-" = "CmdBufferPrev"
+
+[editor]
+theme = "naysayer"
+show_line_numbers = true
+relative_line_numbers = true
+current_line_absolute = true
+

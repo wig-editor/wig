@@ -16,7 +16,8 @@ func viewHeight(ctx Context) int {
 	_, h := ctx.Editor.View.Size()
 	return h - 1
 }
-func CmdScrollUp(ctx Context) {
+
+func CmdScrollUpPage(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	h := viewHeight(ctx)
 	step := max(h-minVisibleLines, 1)
@@ -24,7 +25,8 @@ func CmdScrollUp(ctx Context) {
 	cur.Line = max(cur.Line-step, 0)
 	restoreCharPosition(ctx.Buf, cur)
 }
-func CmdScrollDown(ctx Context) {
+
+func CmdScrollDownPage(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	h := viewHeight(ctx)
 	step := max(h-minVisibleLines, 1)
@@ -33,6 +35,24 @@ func CmdScrollDown(ctx Context) {
 	cur.Line = min(cur.Line+step, ctx.Buf.Lines.Len-1)
 	restoreCharPosition(ctx.Buf, cur)
 }
+
+func CmdScrollUpLine(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	step := 1
+	cur.ScrollOffset = max(cur.ScrollOffset-step, 0)
+	cur.Line = max(cur.Line-step, 0)
+	restoreCharPosition(ctx.Buf, cur)
+}
+
+func CmdScrollDownLine(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	step := 1
+	maxOffset := max(ctx.Buf.Lines.Len-minVisibleLines, 0)
+	cur.ScrollOffset = min(cur.ScrollOffset+step, maxOffset)
+	cur.Line = min(cur.Line+step, ctx.Buf.Lines.Len-1)
+	restoreCharPosition(ctx.Buf, cur)
+}
+
 func CmdCursorLeft(ctx Context) {
 	count := max(ctx.Count, 1)
 	cur := ContextCursorGet(ctx)
@@ -585,3 +605,4 @@ func CmdBufferCycle(ctx Context) {
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
 }
+
