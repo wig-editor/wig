@@ -22,6 +22,8 @@ type EditorSettings struct {
 	RelativeLineNumbers *bool   `toml:"relative_line_numbers"`
 	CurrentLineAbsolute *bool   `toml:"current_line_absolute"`
 	FormatOnSave        *bool   `toml:"format_on_save"`
+	GitStatusView       *string `toml:"git_status_view"`
+	GitBlameView        *string `toml:"git_blame_view"`
 }
 
 type UserKeysConfig struct {
@@ -40,6 +42,8 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 		RelativeLineNumbers: true,
 		CurrentLineAbsolute: true,
 		FormatOnSave:        false,
+		GitStatusView:       "full",
+		GitBlameView:        "split",
 	}
 	userMap := wig.ModeKeyMap{
 		wig.MODE_NORMAL:       wig.KeyMap{},
@@ -77,6 +81,12 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 	}
 	if cfg.Editor.FormatOnSave != nil {
 		editorCfg.FormatOnSave = *cfg.Editor.FormatOnSave
+	}
+	if cfg.Editor.GitStatusView != nil {
+		editorCfg.GitStatusView = *cfg.Editor.GitStatusView
+	}
+	if cfg.Editor.GitBlameView != nil {
+		editorCfg.GitBlameView = *cfg.Editor.GitBlameView
 	}
 
 	resolve := func(name string) any {
@@ -118,6 +128,7 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 func DefaultKeyMap() wig.ModeKeyMap {
 	return wig.ModeKeyMap{
 		wig.MODE_NORMAL: wig.KeyMap{
+			"F1":     commands.CmdGitView,
 			"F2":     commands.CmdFormatBufferAndSave,
 			"F3":     commands.CmdMakeTest,
 			"F5":     commands.CmdMakeBuild,

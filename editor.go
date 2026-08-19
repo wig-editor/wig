@@ -15,6 +15,8 @@ type EditorConfig struct {
 	RelativeLineNumbers bool
 	CurrentLineAbsolute bool // If true, shows absolute line number on current line when relative is on
 	FormatOnSave        bool
+	GitStatusView       string // "full" or "split"
+	GitBlameView        string // "full" or "split"
 }
 
 type View interface {
@@ -112,6 +114,8 @@ func (e *Editor) ReadConfigFile() {
 		RelativeLineNumbers: true,
 		CurrentLineAbsolute: true,
 		FormatOnSave:        false,
+		GitStatusView:       "full",
+		GitBlameView:        "split",
 	}
 }
 
