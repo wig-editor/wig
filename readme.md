@@ -28,6 +28,8 @@ This project was written as a "speed run" — not for speed in terms of time, bu
 ```bash
 make setup-runtime
 make build-run
+
+# then edit ~/.config/wig/config.toml
 ```
 
 ---
