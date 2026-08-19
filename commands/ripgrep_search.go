@@ -187,4 +187,3 @@ func CmdProjectSearchWordUnderCursor(ctx wig.Context) {
 
 	rgDoSearch(ctx, pat)
 }
-

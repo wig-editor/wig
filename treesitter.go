@@ -200,4 +200,3 @@ func (h *TreeSitterHighlighter) editEditInput(event EventTextChange) (r sitter.I
 		NewEndByte:     uint(pointToByte(event.Buf, event.Start.Line, event.Start.Char) + utf8.RuneCountInString(event.Text)),
 	}
 }
-

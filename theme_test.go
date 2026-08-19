@@ -24,4 +24,3 @@ name = "value"
 	require.Equal(t, configs["keyword"], Style{Fg: "violet", Bg: ""})
 	require.Equal(t, configs["attr"], Style{Fg: "violet", Bg: "white"})
 }
-

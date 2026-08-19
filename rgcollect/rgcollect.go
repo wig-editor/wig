@@ -29,6 +29,10 @@ func Init(ctx wig.Context, title string, items []wig.Location) {
 		wig.MODE_NORMAL: wig.KeyMap{
 			"Enter": func(ctx wig.Context) {
 			},
+			"j":    CmdVisitNextLine,
+			"k":    CmdVisitPrevLine,
+			"Down": CmdVisitNextLine,
+			"Up":   CmdVisitPrevLine,
 		},
 	})
 
@@ -134,4 +138,3 @@ func visitLine(ctx wig.Context, upOrDown func(wig.Context)) {
 		Char: chNum,
 	})
 }
-

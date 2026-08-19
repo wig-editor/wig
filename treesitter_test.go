@@ -188,4 +188,3 @@ func add(a int, b int) {
 		Char:   "",
 	})
 }
-

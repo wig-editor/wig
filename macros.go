@@ -75,4 +75,3 @@ func (m *MacrosManager) StopRepeatRecording() {
 	}
 	m.repeatKeys = []tcell.EventKey{}
 }
-

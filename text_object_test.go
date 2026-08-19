@@ -111,4 +111,3 @@ func TestTextObjects(t *testing.T) {
 	}
 
 }
-

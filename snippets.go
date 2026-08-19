@@ -291,4 +291,3 @@ func SnippetParseLocations(s string) (str string, pos []SnippetTabstopLocation) 
 
 	return s, pos
 }
-

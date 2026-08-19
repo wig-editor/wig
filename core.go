@@ -421,10 +421,27 @@ func CmdKillBuffer(ctx Context) {
 	buf := ctx.Buf
 	ctx.Editor.Lsp.DidClose(buf)
 
-	CmdBufferCycle(ctx)
+	// Switch to the next available buffer before deleting the current one
+	CmdBufferNext(ctx)
+
+	// If we are still on the buffer we are trying to delete (e.g. only internal buffers left)
+	if ctx.Editor.ActiveWindow().Buffer() == buf {
+		if len(ctx.Editor.Buffers) > 1 {
+			for _, b := range ctx.Editor.Buffers {
+				if b != buf {
+					ctx.Buf = b
+					ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+					break
+				}
+			}
+		} else {
+			// No other buffers left, create a new empty one
+			CmdNewBuffer(ctx)
+		}
+	}
 
 	ctx.Editor.Buffers = slices.DeleteFunc(ctx.Editor.Buffers, func(b *Buffer) bool {
-		if ctx.Buf != b {
+		if b != buf {
 			return false
 		}
 
@@ -455,10 +472,6 @@ func CmdKillBuffer(ctx Context) {
 
 		return true
 	})
-
-	if len(ctx.Editor.Buffers) == 0 {
-		CmdNewBuffer(ctx)
-	}
 }
 
 func CmdNewBuffer(ctx Context) {
@@ -497,6 +510,7 @@ func CmdUndo(ctx Context) {
 		ctx.Editor.Lsp.DidClose(ctx.Buf)
 		ctx.Editor.Lsp.DidOpen(ctx.Buf)
 	}
+	EditorInst.Events.Broadcast(EventBufferReloaded{Buf: ctx.Buf})
 }
 
 func CmdRedo(ctx Context) {
@@ -505,6 +519,7 @@ func CmdRedo(ctx Context) {
 		ctx.Editor.Lsp.DidClose(ctx.Buf)
 		ctx.Editor.Lsp.DidOpen(ctx.Buf)
 	}
+	EditorInst.Events.Broadcast(EventBufferReloaded{Buf: ctx.Buf})
 }
 
 func CmdExit(ctx Context) {
@@ -532,6 +547,34 @@ func CmdVisualMode(ctx Context) {
 	setBufferMode(ctx, MODE_VISUAL)
 }
 
+func CmdVisualBlockMode(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	SelectionStart(ctx.Buf, cur)
+	setBufferMode(ctx, MODE_VISUAL_BLOCK)
+}
+
+func CmdVisualBlockInsert(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	if ctx.Buf.Selection == nil {
+		return
+	}
+	sel := SelectionNormalize(ctx.Buf.Selection)
+
+	cur.Line = sel.Start.Line
+	cur.Char = sel.Start.Char
+	cur.PreserveCharPosition = cur.Char
+
+	ctx.Buf.VisualBlockInsert = &VisualBlockInsertState{
+		StartLine: sel.Start.Line,
+		EndLine:   sel.End.Line,
+		Char:      sel.Start.Char,
+	}
+
+	ctx.Buf.Selection = nil
+	ctx.Buf.TxStart()
+	setBufferMode(ctx, MODE_INSERT)
+}
+
 func CmdExitInsertMode(ctx Context) {
 	CmdNormalMode(ctx)
 }
@@ -540,6 +583,30 @@ func CmdNormalMode(ctx Context) {
 	if ctx.Buf.Mode() == MODE_INSERT {
 		cur := ContextCursorGet(ctx)
 		line := CursorLine(ctx.Buf, cur)
+
+		if ctx.Buf.VisualBlockInsert != nil {
+			vbi := ctx.Buf.VisualBlockInsert
+			ctx.Buf.VisualBlockInsert = nil
+
+			endChar := cur.Char
+			if endChar > len(line.Value) {
+				endChar = len(line.Value) - 1
+			}
+
+			if vbi.Char < endChar {
+				insertedText := string(line.Value[vbi.Char:endChar])
+				for i := vbi.StartLine + 1; i <= vbi.EndLine; i++ {
+					l := CursorLineByNum(ctx.Buf, i)
+					if l != nil {
+						TextInsert(ctx.Buf, l, vbi.Char, insertedText)
+					}
+				}
+			}
+
+			cur.Line = vbi.StartLine
+			cur.Char = vbi.Char
+		}
+
 		CmdCursorLeft(ctx)
 		if cur.Char >= len(line.Value) {
 			CmdGotoLineEnd(ctx)
@@ -601,7 +668,61 @@ func CmdAutocompleteTrigger(ctx Context) {
 	ctx.Editor.AutocompleteTrigger(ctx)
 }
 
+func CmdBufferNext(ctx Context) {
+	active := ctx.Editor.ActiveBuffer()
+	buffers := ctx.Editor.Buffers
+	if len(buffers) <= 1 {
+		return
+	}
+	idx := 0
+	for i, b := range buffers {
+		if b == active {
+			idx = i
+			break
+		}
+	}
+	for i := 1; i <= len(buffers); i++ {
+		next := buffers[(idx+i)%len(buffers)]
+		if !strings.HasPrefix(next.GetName(), "[") {
+			ctx.Buf = next
+			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+			return
+		}
+	}
+}
+
+func CmdBufferPrev(ctx Context) {
+	active := ctx.Editor.ActiveBuffer()
+	buffers := ctx.Editor.Buffers
+	if len(buffers) <= 1 {
+		return
+	}
+	idx := 0
+	for i, b := range buffers {
+		if b == active {
+			idx = i
+			break
+		}
+	}
+	for i := 1; i <= len(buffers); i++ {
+		prev := buffers[(idx-i+len(buffers))%len(buffers)]
+		if !strings.HasPrefix(prev.GetName(), "[") {
+			ctx.Buf = prev
+			ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+			return
+		}
+	}
+}
+
+func CmdBufferLast(ctx Context) {
+	buffers := ctx.Editor.Buffers
+	if len(buffers) == 0 {
+		return
+	}
+	ctx.Buf = buffers[len(buffers)-1]
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx)
+}
+
 func CmdPaste(ctx Context) {
 	panic(1)
 }
-

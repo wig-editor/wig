@@ -4,16 +4,38 @@ import (
 	"github.com/firstrow/wig"
 )
 
-type CmdDefinition struct {
-	Desc string
-	Fn   interface{}
-}
+func init() {
+	wig.AllCommands["CmdFormatBuffer"] = wig.CmdDefinition{Desc: "Format buffer", Fn: CmdFormatBuffer}
+	wig.AllCommands["CmdSearchProject"] = wig.CmdDefinition{Desc: "Search project", Fn: CmdSearchProject}
+	wig.AllCommands["CmdJumpForward"] = wig.CmdDefinition{Desc: "Jump forward", Fn: wig.CmdJumpForward}
+	wig.AllCommands["CmdReloadBuffer"] = wig.CmdDefinition{Desc: "Reload buffer", Fn: CmdReloadBuffer}
+	wig.AllCommands["CmdNewBuffer"] = wig.CmdDefinition{Desc: "New buffer", Fn: wig.CmdNewBuffer}
+	wig.AllCommands["CmdExit"] = wig.CmdDefinition{Desc: "Quit editor", Fn: wig.CmdExit}
+	wig.AllCommands["CmdCommandPalettePicker"] = wig.CmdDefinition{Desc: "Command palette", Fn: CmdCommandPalettePicker}
+	wig.AllCommands["CmdFindProjectFilePicker"] = wig.CmdDefinition{Desc: "Find file", Fn: CmdFindProjectFilePicker}
+	wig.AllCommands["CmdBufferPicker"] = wig.CmdDefinition{Desc: "Buffer picker", Fn: CmdBufferPicker}
+	wig.AllCommands["CmdBufferNext"] = wig.CmdDefinition{Desc: "Next buffer", Fn: wig.CmdBufferNext}
+	wig.AllCommands["CmdBufferPrev"] = wig.CmdDefinition{Desc: "Previous buffer", Fn: wig.CmdBufferPrev}
+	wig.AllCommands["CmdBufferLast"] = wig.CmdDefinition{Desc: "Last buffer", Fn: wig.CmdBufferLast}
+	wig.AllCommands["CmdKillBuffer"] = wig.CmdDefinition{Desc: "Kill buffer", Fn: wig.CmdKillBuffer}
+	wig.AllCommands["CmdSaveFile"] = wig.CmdDefinition{Desc: "Save file", Fn: wig.CmdSaveFile}
+	wig.AllCommands["CmdGitHunkNext"] = wig.CmdDefinition{Desc: "Next git hunk", Fn: CmdGitHunkNext}
+	wig.AllCommands["CmdGitHunkPrev"] = wig.CmdDefinition{Desc: "Previous git hunk", Fn: CmdGitHunkPrev}
+	wig.AllCommands["CmdGitHunkRevert"] = wig.CmdDefinition{Desc: "Revert git hunk", Fn: CmdGitHunkRevert}
+	wig.AllCommands["CmdDeleteLine"] = wig.CmdDefinition{Desc: "Delete line", Fn: wig.CmdDeleteLine}
+	wig.AllCommands["CmdGitHunkPreview"] = wig.CmdDefinition{Desc: "Preview git hunk", Fn: CmdGitHunkPreview}
+	wig.AllCommands["CmdMRUBufferPicker"] = wig.CmdDefinition{Desc: "MRU Buffer Picker", Fn: CmdMRUBufferPicker}
 
-var AllCommands = map[string]CmdDefinition{
-	"CmdFormatBuffer":  {Desc: "", Fn: CmdFormatBuffer},
-	"CmdSearchProject": {Desc: "", Fn: CmdSearchProject},
-	"CmdJumpForward":   {Desc: "", Fn: wig.CmdJumpForward},
-	"CmdReloadBuffer":  {Desc: "", Fn: CmdReloadBuffer},
-	"CmdNewBuffer":     {Desc: "", Fn: wig.CmdNewBuffer},
+	// Command-line basics
+	wig.AllCommands["q"] = wig.CmdDefinition{Desc: "Quit", Fn: wig.CmdExit}
+	wig.AllCommands["q!"] = wig.CmdDefinition{Desc: "Quit", Fn: wig.CmdExit}
+	wig.AllCommands["w"] = wig.CmdDefinition{Desc: "Save", Fn: wig.CmdSaveFile}
+	wig.AllCommands["wq"] = wig.CmdDefinition{Desc: "Save and quit", Fn: func(ctx wig.Context) {
+		wig.CmdSaveFile(ctx)
+		wig.CmdExit(ctx)
+	}}
+	wig.AllCommands["bd"] = wig.CmdDefinition{Desc: "Delete buffer", Fn: wig.CmdKillBuffer}
+	wig.AllCommands["bn"] = wig.CmdDefinition{Desc: "Next buffer", Fn: wig.CmdBufferNext}
+	wig.AllCommands["bp"] = wig.CmdDefinition{Desc: "Previous buffer", Fn: wig.CmdBufferPrev}
+	wig.AllCommands["bl"] = wig.CmdDefinition{Desc: "Last buffer", Fn: wig.CmdBufferLast}
 }
-

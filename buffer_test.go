@@ -216,4 +216,3 @@ func copyFile(src string, dst string) error {
 	}
 	return os.WriteFile(dst, data, 0644)
 }
-

@@ -570,4 +570,3 @@ func (l *LspManager) startAndInitializeServer(conf LanguageServerConfig, buf *Bu
 		rpcConn: c,
 	}, nil
 }
-

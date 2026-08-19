@@ -56,4 +56,3 @@ func StatuslineRender(
 
 	view.SetContent(w-len(rightSide)-1, h, rightSide, st)
 }
-

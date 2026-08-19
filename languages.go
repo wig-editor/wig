@@ -67,4 +67,3 @@ func LoadLanguagesConfig() LangConfig {
 	}
 	return cfg
 }
-

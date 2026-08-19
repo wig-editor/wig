@@ -27,4 +27,3 @@ func Register(e *wig.Editor) wig.AutocompleteFn {
 		return true
 	}
 }
-

@@ -42,6 +42,39 @@ func AutocompleteInit(
 			"Esc": func(ctx wig.Context) {
 				widget.Close()
 			},
+			"Up": func(ctx wig.Context) {
+				if widget.activeItem > 0 {
+					widget.activeItem--
+				}
+			},
+			"Down": func(ctx wig.Context) {
+				if widget.activeItem < len(widget.items.Items)-1 {
+					widget.activeItem++
+				}
+			},
+			"Home": func(ctx wig.Context) {
+				widget.activeItem = 0
+			},
+			"End": func(ctx wig.Context) {
+				if len(widget.items.Items) > 0 {
+					widget.activeItem = len(widget.items.Items) - 1
+				}
+			},
+			"PgUp": func(ctx wig.Context) {
+				widget.activeItem -= 5
+				if widget.activeItem < 0 {
+					widget.activeItem = 0
+				}
+			},
+			"PgDn": func(ctx wig.Context) {
+				widget.activeItem += 5
+				if widget.activeItem >= len(widget.items.Items) {
+					widget.activeItem = len(widget.items.Items) - 1
+				}
+				if widget.activeItem < 0 {
+					widget.activeItem = 0
+				}
+			},
 			"Tab": func(ctx wig.Context) {
 				if widget.activeItem < len(widget.items.Items)-1 {
 					widget.activeItem++
@@ -183,4 +216,3 @@ func (w *AutocompleteWidget) Render(view wig.View) {
 		y++
 	}
 }
-

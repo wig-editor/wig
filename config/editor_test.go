@@ -113,4 +113,3 @@ line five
 func key(ch rune) *tcell.EventKey {
 	return tcell.NewEventKey(tcell.KeyRune, ch, tcell.ModNone)
 }
-

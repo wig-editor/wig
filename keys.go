@@ -22,7 +22,8 @@ type KeyHandler struct {
 	waitingForInput any
 	times           []string
 
-	Macros *MacrosManager
+	Macros   *MacrosManager
+	whichKey *WhichKey
 }
 
 func DefaultKeyHandler(mergeKeys ModeKeyMap) *KeyHandler {
@@ -114,12 +115,23 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 		switch action := action.(type) {
 		case KeyMap:
 			k.waitingForInput = action
+			if k.whichKey == nil {
+				k.whichKey = WhichKeyInit(editor, k, mode, action)
+			} else {
+				k.whichKey.Update(action)
+			}
 		case func(Context):
 			cmdExec(action, ctx)
 		case func(Context) func(Context): // func return next func
 			v := action(ctx)
 			if v != nil {
 				k.waitingForInput = v
+				if k.whichKey != nil {
+					k.whichKey.Close()
+					k.whichKey = nil
+				}
+			} else {
+				k.resetState()
 			}
 		default:
 			k.resetState()
@@ -198,6 +210,10 @@ func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {
 func (k *KeyHandler) resetState() {
 	k.times = k.times[:0]
 	k.waitingForInput = nil
+	if k.whichKey != nil {
+		k.whichKey.Close()
+		k.whichKey = nil
+	}
 }
 
 func (k *KeyHandler) GetCount() int {
@@ -217,4 +233,3 @@ func isNumeric(s string) bool {
 	_, err := strconv.ParseInt(s, 10, 64)
 	return err == nil
 }
-

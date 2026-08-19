@@ -13,6 +13,7 @@ type EditorConfig struct {
 	Theme               string
 	ShowLineNumbers     bool
 	RelativeLineNumbers bool
+	CurrentLineAbsolute bool // If true, shows absolute line number on current line when relative is on
 }
 
 type View interface {
@@ -108,6 +109,7 @@ func (e *Editor) ReadConfigFile() {
 		Theme:               "naysayer",
 		ShowLineNumbers:     true,
 		RelativeLineNumbers: true,
+		CurrentLineAbsolute: true,
 	}
 }
 
@@ -188,6 +190,20 @@ func (e *Editor) PopUi() {
 	}
 }
 
+// PopUiComponent removes a specific UI component from the stack.
+// This is required for WhichKey because commands executed from WhichKey
+// can push their own UI components (Picker, CommandLine, etc.) before
+// WhichKey.Close is called. Using PopUi in that case removes the newly
+// pushed component instead of WhichKey, leaving WhichKey stuck on screen.
+func (e *Editor) PopUiComponent(c UiComponent) {
+	for i := len(e.UiComponents) - 1; i >= 0; i-- {
+		if e.UiComponents[i] == c {
+			e.UiComponents = append(e.UiComponents[:i], e.UiComponents[i+1:]...)
+			break
+		}
+	}
+}
+
 func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
 	for _, win := range e.Windows {
 		if win.Buffer() == b {
@@ -258,4 +274,3 @@ func (e *Editor) Redraw() {
 func (e *Editor) ScreenSync() {
 	e.ScreenSyncCh <- 1
 }
-

@@ -189,4 +189,3 @@ func isTrue(val string) bool {
 
 	return false
 }
-

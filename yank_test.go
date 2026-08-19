@@ -97,4 +97,3 @@ line five
 `
 	assert.Equal(t, expected, buf.String())
 }
-

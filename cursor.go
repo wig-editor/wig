@@ -191,4 +191,3 @@ func getChClass(r rune) chClass {
 
 	return chWord
 }
-

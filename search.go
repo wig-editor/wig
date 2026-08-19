@@ -81,4 +81,3 @@ func CmdSearchNext(ctx Context) {
 func CmdSearchPrev(ctx Context) {
 	SearchPrev(ctx, LastSearchPattern)
 }
-
