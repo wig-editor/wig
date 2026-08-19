@@ -23,16 +23,12 @@ func Init(ctx wig.Context, title string, items []wig.Location) {
 	buf.Highlighter = &TestHighlighter{}
 	buf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
 		wig.MODE_INSERT: wig.KeyMap{
-			"Enter": func(ctx wig.Context) {
-			},
+			"Enter": func(ctx wig.Context) {},
 		},
 		wig.MODE_NORMAL: wig.KeyMap{
 			"Enter": func(ctx wig.Context) {
+				visitLine(ctx, func(_ wig.Context) {})
 			},
-			"j":    CmdVisitNextLine,
-			"k":    CmdVisitPrevLine,
-			"Down": CmdVisitNextLine,
-			"Up":   CmdVisitPrevLine,
 		},
 	})
 
@@ -59,17 +55,6 @@ func (h *TestHighlighter) TextChanged(wig.EventTextChange) {
 
 func (h *TestHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCursor {
 	return nil
-	// nodes := wig.List[wig.HighlighterNode]{}
-	// nodes.PushBack(wig.HighlighterNode{
-	// NodeName:  "constant",
-	// StartLine: 0,
-	// StartChar: 2,
-	// EndLine:   0,
-	// EndChar:   20,
-	// })
-	// return &wig.HighlighterCursor{
-	// Cursor: nodes.First(),
-	// }
 }
 
 // Commands
