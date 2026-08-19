@@ -187,6 +187,10 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 
 				/////////////////////////////////
 
+				if i > len(currentLine.Value)-1 {
+					continue
+				}
+
 				ch := getRenderChar(currentLine.Value[i])
 
 				// todo: handle tabs colors?
@@ -252,3 +256,4 @@ func getRenderChar(c rune) string {
 	}
 	return string(c)
 }
+
