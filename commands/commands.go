@@ -274,20 +274,19 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 
 func CmdFormatBuffer(ctx wig.Context) {
 	if strings.HasSuffix(ctx.Buf.FilePath, ".go") {
-		formatcmd := fmt.Sprintf("cat %s | goimports", ctx.Buf.FilePath)
-		cmd := exec.Command("bash", "-c", formatcmd)
-		stdout, err := cmd.Output()
+		var cmd *exec.Cmd
+		if _, err := exec.LookPath("goimports"); err == nil {
+			cmd = exec.Command("goimports", "-w", ctx.Buf.FilePath)
+		} else {
+			cmd = exec.Command("go", "fmt", ctx.Buf.FilePath)
+		}
+		stdout, err := cmd.CombinedOutput()
 		if err != nil {
-			ctx.Editor.LogMessage(err.Error())
+			ctx.Editor.LogError(err)
 			ctx.Editor.LogMessage(string(stdout))
 			return
 		}
-		// TODO: update only changed lines
-		ctx.Buf.ResetLines()
-		lines := strings.Split(string(stdout), "\n")
-		for _, line := range lines {
-			ctx.Buf.Append(line)
-		}
+		CmdReloadBuffer(ctx)
 	}
 
 	if strings.HasSuffix(ctx.Buf.FilePath, ".odin") {

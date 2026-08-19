@@ -18,6 +18,13 @@ import (
 )
 
 func main() {
+	for _, arg := range os.Args[1:] {
+		if arg == "--health" || arg == "health" {
+			commands.PrintCLIHealth()
+			return
+		}
+	}
+
 	tscreen, err := tcell.NewScreen()
 	if err != nil {
 		panic(err)
