@@ -56,29 +56,27 @@ func CmdScrollDownLine(ctx Context) {
 func CmdCursorLeft(ctx Context) {
 	count := max(ctx.Count, 1)
 	cur := ContextCursorGet(ctx)
-
+	line := CursorLine(ctx.Buf, cur)
 	for i := uint32(0); i < count; i++ {
 		if cur.Char > 0 {
 			cur.Char--
-			cur.PreserveCharPosition = cur.Char
 		}
 	}
+	if line != nil {
+		cur.PreserveCharPosition = VisualCol(line.Value, cur.Char)
+	}
 }
-
 func CmdCursorRight(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	line := CursorLine(ctx.Buf, cur)
-
 	count := max(ctx.Count, 1)
-
 	for i := uint32(0); i < count; i++ {
 		if cur.Char < len(line.Value)-1 {
 			cur.Char++
-			cur.PreserveCharPosition = cur.Char
 		}
 	}
+	cur.PreserveCharPosition = VisualCol(line.Value, cur.Char)
 }
-
 func CmdCursorLineUp(ctx Context) {
 	count := max(ctx.Count, 1)
 	cur := ContextCursorGet(ctx)
@@ -356,20 +354,18 @@ func CmdForwardBeforeChar(_ Context) func(Context) {
 		for i := cur.Char + 1; i < len(line.Value); i++ {
 			if strings.EqualFold(string(line.Value[i]), ctx.Char) {
 				cur.Char = i - 1
-				cur.PreserveCharPosition = i - 1
+				cur.PreserveCharPosition = VisualCol(line.Value, i-1)
 				break
 			}
 		}
 	}
 }
-
 func CmdForwardToChar(_ Context) func(Context) {
 	return func(ctx Context) {
 		cur := ContextCursorGet(ctx)
 		if ctx.Buf.Mode() == MODE_VISUAL {
 			defer SelectionStop(ctx.Buf, cur)
 		}
-
 		line := CursorLine(ctx.Buf, cur)
 		if line.Value.IsEmpty() {
 			return
@@ -377,13 +373,12 @@ func CmdForwardToChar(_ Context) func(Context) {
 		for i := cur.Char + 1; i < len(line.Value); i++ {
 			if strings.EqualFold(string(line.Value[i]), ctx.Char) {
 				cur.Char = i
-				cur.PreserveCharPosition = i
+				cur.PreserveCharPosition = VisualCol(line.Value, i)
 				break
 			}
 		}
 	}
 }
-
 func CmdBackwardChar(ctx Context) func(Context) {
 	return func(ctx Context) {
 		cur := ContextCursorGet(ctx)
@@ -391,17 +386,15 @@ func CmdBackwardChar(ctx Context) func(Context) {
 		if len(line.Value) == 0 {
 			return
 		}
-
 		for i := cur.Char - 1; i >= 0; i-- {
 			if string(line.Value[i]) == ctx.Char {
 				cur.Char = i
-				cur.PreserveCharPosition = i
+				cur.PreserveCharPosition = VisualCol(line.Value, i)
 				break
 			}
 		}
 	}
 }
-
 func CmdWindowVSplit(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	nwin := CreateWindow(ctx.Editor.ActiveWindow())

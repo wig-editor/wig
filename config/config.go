@@ -23,6 +23,7 @@ type EditorSettings struct {
 	FormatOnSave        *bool   `toml:"format_on_save"`
 	GitStatusView       *string `toml:"git_status_view"`
 	GitBlameView        *string `toml:"git_blame_view"`
+	IndentGuides        *bool   `toml:"indent_guides"`
 }
 
 type UserKeysConfig struct {
@@ -43,6 +44,7 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 		FormatOnSave:        false,
 		GitStatusView:       "full",
 		GitBlameView:        "split",
+		IndentGuides:        true,
 	}
 	userMap := wig.ModeKeyMap{
 		wig.MODE_NORMAL:       wig.KeyMap{},
@@ -86,6 +88,9 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 	}
 	if cfg.Editor.GitBlameView != nil {
 		editorCfg.GitBlameView = *cfg.Editor.GitBlameView
+	}
+	if cfg.Editor.IndentGuides != nil {
+		editorCfg.IndentGuides = *cfg.Editor.IndentGuides
 	}
 
 	resolve := func(name string) any {
@@ -254,6 +259,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 					"p": wig.CmdVisitPrevLine,
 				},
 				"t": commands.CmdThemeSelect,
+				"i": wig.CmdToggleIndentGuides,
 				"y": commands.CmdClipboardCopy,
 				"p": commands.CmdClipboardPaste,
 				"g": wig.KeyMap{
