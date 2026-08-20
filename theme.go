@@ -33,11 +33,21 @@ func init() {
 }
 
 func ApplyTheme(name string) {
-	currentTheme = loadColors(name)
+	t, err := loadColors(name)
+	if err != nil {
+		if EditorInst != nil {
+			EditorInst.LogError(err)
+		}
+		return
+	}
+	currentTheme = t
 	inherits := currentTheme.Colors["inherits"].Fg
 
 	for inherits != "" {
-		baseTheme := loadColors(inherits)
+		baseTheme, err := loadColors(inherits)
+		if err != nil {
+			break
+		}
 		currentTheme = mergeThemes(baseTheme, currentTheme)
 		inherits = baseTheme.Colors["inherits"].Fg
 	}
@@ -72,23 +82,23 @@ func mergeThemes(base, child Theme) Theme {
 	return result
 }
 
-func loadColors(name string) Theme {
+func loadColors(name string) (Theme, error) {
 	colorThemeFile := EditorInst.RuntimeDir("themes", fmt.Sprintf("%s.toml", name))
 	theme, err := os.ReadFile(colorThemeFile)
 	if err != nil {
-		panic(err.Error())
+		return Theme{}, fmt.Errorf("failed to read theme file %s: %w", colorThemeFile, err)
 	}
 	theme = append([]byte("[colors]"), theme...)
 	c := map[string]any{}
 	err = toml.Unmarshal(theme, &c)
 	if err != nil {
-		panic(err.Error())
+		return Theme{}, fmt.Errorf("failed to parse theme file %s: %w", colorThemeFile, err)
 	}
 
 	return Theme{
 		Colors:  parseColors(c),
 		Palette: parsePalette(c),
-	}
+	}, nil
 }
 
 // TODO: fix resolve of nested styles.
@@ -100,8 +110,16 @@ func buildStyles() {
 		styles[k] = getColor(k)
 	}
 
-	defaultBg := currentTheme.Palette[currentTheme.Colors["ui.background"].Bg]
-	defaultFg := currentTheme.Palette[currentTheme.Colors["ui.text"].Fg]
+	var defaultBgStr, defaultFgStr string
+	if bg, ok := currentTheme.Colors["ui.background"]; ok {
+		defaultBgStr = bg.Bg
+	}
+	if fg, ok := currentTheme.Colors["ui.text"]; ok {
+		defaultFgStr = fg.Fg
+	}
+
+	defaultBg := currentTheme.Palette[defaultBgStr]
+	defaultFg := currentTheme.Palette[defaultFgStr]
 	styles["default"] = tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
 }
 
@@ -219,8 +237,16 @@ func FindColor(color string) (s tcell.Style, found bool) {
 }
 
 func getColor(color string) tcell.Style {
-	defaultBg := currentTheme.Palette[currentTheme.Colors["ui.background"].Bg]
-	defaultFg := currentTheme.Palette[currentTheme.Colors["ui.text"].Fg]
+	var defaultBgStr, defaultFgStr string
+	if bg, ok := currentTheme.Colors["ui.background"]; ok {
+		defaultBgStr = bg.Bg
+	}
+	if fg, ok := currentTheme.Colors["ui.text"]; ok {
+		defaultFgStr = fg.Fg
+	}
+
+	defaultBg := currentTheme.Palette[defaultBgStr]
+	defaultFg := currentTheme.Palette[defaultFgStr]
 
 	if val, ok := currentTheme.Colors[color]; ok {
 		fgColor := val.Fg

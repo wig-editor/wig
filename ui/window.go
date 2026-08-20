@@ -200,9 +200,9 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				// render cursor
 				if isActiveWin {
 					if lineNum == cur.Line && i == cur.Char {
-						baseCursor, found := wig.FindColor("ui.selection")
-						if !found {
-							panic("theme ui.selection not defined")
+						baseCursor := wig.Color("default")
+						if c, found := wig.FindColor("ui.selection"); found {
+							baseCursor = c
 						}
 						if c, found := wig.FindColor("ui.cursor"); found {
 							baseCursor = c
