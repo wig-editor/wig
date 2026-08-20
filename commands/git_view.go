@@ -755,7 +755,7 @@ func populateGitStatusBuffer(buf *wig.Buffer) (map[int]gitStatusLine, int) {
 	lines := make([]string, 0, len(items)+2)
 
 	// Top shortcuts guide bar
-	lines = append(lines, "  [Enter] Open/Stash  [s] Stage  [d] Diff  [z] Stash  [r] Refresh  [q] Close")
+	lines = append(lines, "  [Enter] Open/Stash  [s] Stage  [d] Diff [c] Commit [z] Stash  [r] Refresh  [q] Close")
 	lineMap[0] = gitStatusLine{kind: "shortcut"}
 	lines = append(lines, "")
 	lineMap[1] = gitStatusLine{kind: "none"}
@@ -1074,7 +1074,7 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 			"q": func(ctx wig.Context) {
 				wig.CmdKillBuffer(ctx)
 			},
-			"ctrl+c": func(ctx wig.Context) {
+			"c": func(ctx wig.Context) {
 				GitShowCommitBuffer(ctx)
 			},
 			"Esc": func(ctx wig.Context) {
@@ -1099,12 +1099,17 @@ func exitModeOrClose(ctx wig.Context) {
 }
 
 func GitShowCommitBuffer(ctx wig.Context) {
-	contents := gitRun("commit", "-v")
+	contents := gitRun("status", "-v")
 	diffBufName := "[git: edit commit message]"
 	dBuf := ctx.Editor.BufferFindByFilePath(diffBufName, true)
 	dBuf.ResetLines()
+
+	dBuf.Append("")
+	dBuf.Append("")
+	dBuf.Append("# Please enter your commit message and press ctrl+c for commit or q for exit.")
+	dBuf.Append("")
 	for l := range strings.SplitSeq(contents, "\n") {
-		dBuf.Append(l)
+		dBuf.Append(fmt.Sprintf("# %s", l))
 	}
 	dBuf.Highlighter = &DiffHighlighter{Buf: dBuf}
 
@@ -1116,17 +1121,21 @@ func GitShowCommitBuffer(ctx wig.Context) {
 		},
 		wig.MODE_INSERT: wig.KeyMap{
 			"Esc":    exitModeOrClose,
-			"q":      exitModeOrClose,
-			"ctrl+q": gitCommitFinish,
+			"ctrl+c": gitCommitFinish,
 		},
 	})
 
 	ctx.Buf = dBuf
+	wig.CmdEnterInsertMode(ctx)
 	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{Line: 0, Char: 0})
 }
 
 func gitCommitFinish(ctx wig.Context) {
+	ctx.Buf.FilePath = "/tmp/commit_msg.txt"
+	ctx.Buf.Save()
+	gitRun("commit", "-F", "/tmp/commit_msg.txt", "--cleanup=strip")
 	wig.CmdKillBuffer(ctx)
+	wig.EditorInst.EchoMessage("commit done")
 }
 
 // GitStageItem stages or unstages a file.
