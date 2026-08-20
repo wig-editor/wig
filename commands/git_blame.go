@@ -342,14 +342,10 @@ func CmdGitBlame(ctx wig.Context) {
 					return
 				}
 				c.Buf = origBuf
-				if len(c.Editor.Windows) > 1 {
-					wig.CmdWindowNext(c)
-					c.Buf = origBuf
-					c.Editor.ActiveWindow().VisitBuffer(c, wig.Cursor{Line: lineIdx, Char: 0})
-				} else {
-					c.Editor.ActiveWindow().VisitBuffer(c, wig.Cursor{Line: lineIdx, Char: 0})
-				}
-				wig.CmdCursorCenter(c)
+				wig.VisitAtLine(c, blameBuf, wig.VisitOptions{
+					Center: true,
+					Cursor: &wig.Cursor{Line: lineIdx, Char: 0},
+				})
 			},
 			"c": func(c wig.Context) {
 				bCur := wig.ContextCursorGet(c)

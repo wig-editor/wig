@@ -22,12 +22,11 @@ func Init(ctx wig.Context, title string, items []wig.Location) {
 	buf.FilePath = "[rgcollect " + title + "]"
 	buf.Highlighter = &TestHighlighter{}
 	buf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
-		wig.MODE_INSERT: wig.KeyMap{
-			"Enter": func(ctx wig.Context) {},
-		},
 		wig.MODE_NORMAL: wig.KeyMap{
 			"Enter": func(ctx wig.Context) {
-				visitLine(ctx, func(_ wig.Context) {})
+				wig.VisitAtLine(ctx, buf, wig.VisitOptions{
+					ParseLocation: true,
+				})
 			},
 		},
 	})
@@ -42,7 +41,10 @@ func Init(ctx wig.Context, title string, items []wig.Location) {
 	}
 
 	wig.CmdWindowNext(ctx)
-	visitLine(ctx, wig.CmdGotoLine0)
+	wig.VisitAtLine(ctx, buf, wig.VisitOptions{
+		Movement:      wig.CmdGotoLine0,
+		ParseLocation: true,
+	})
 }
 
 type TestHighlighter struct{}
@@ -55,71 +57,4 @@ func (h *TestHighlighter) TextChanged(wig.EventTextChange) {
 
 func (h *TestHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCursor {
 	return nil
-}
-
-// Commands
-func CmdVisitNextLine(ctx wig.Context) {
-	visitLine(ctx, wig.CmdCursorLineDown)
-}
-
-func CmdVisitPrevLine(ctx wig.Context) {
-	visitLine(ctx, wig.CmdCursorLineUp)
-}
-
-func visitLine(ctx wig.Context, upOrDown func(wig.Context)) {
-	var rgBuf *wig.Buffer
-	var rgWin *wig.Window
-	for _, win := range ctx.Editor.Windows {
-		if strings.HasPrefix(win.Buffer().FilePath, "[rgcollect") {
-			rgBuf = win.Buffer()
-			rgWin = win
-			break
-		}
-	}
-	if rgBuf == nil {
-		ctx.Editor.EchoMessage("rgcollect buffer not visible. using other window.")
-
-		if len(ctx.Editor.Windows) > 1 {
-			for _, win := range ctx.Editor.Windows {
-				if win == ctx.Editor.ActiveWindow() {
-					continue
-				}
-				rgWin = win
-				rgBuf = win.Buffer()
-			}
-		}
-
-		if rgBuf == nil {
-			return
-		}
-	}
-
-	var line *wig.Element[wig.Line]
-	// this is what we need to do
-	// to perform action in scope of other window and buffer
-	{
-		bufCur := wig.WindowCursorGet(rgWin, rgBuf)
-		nctx := ctx.Editor.NewContext()
-		nctx.Buf = rgBuf
-		nctx.Win = rgWin
-		upOrDown(nctx)
-		line = wig.CursorLine(rgBuf, bufCur)
-	}
-
-	if line == nil {
-		return
-	}
-
-	filename, lineNum, chNum := wig.ParseFileLocation(line.Value.String(), 0)
-
-	var err error
-	ctx.Buf, err = ctx.Editor.OpenFile(filename)
-	if err != nil {
-		return
-	}
-
-	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{
-		Line: lineNum - 1,
-		Char: chNum,
-	})
 }

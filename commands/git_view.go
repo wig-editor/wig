@@ -923,14 +923,7 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 						return
 					}
 					ctx.Buf = buf
-					if len(ctx.Editor.Windows) > 1 {
-						wig.CmdWindowNext(ctx)
-						ctx.Buf = buf
-						ctx.Editor.ActiveWindow().VisitBuffer(ctx)
-					} else {
-						ctx.Buf = buf
-						ctx.Editor.ActiveWindow().VisitBuffer(ctx)
-					}
+					wig.VisitAtLine(ctx, gitBuf, wig.VisitOptions{})
 				case "branch":
 					pendingStash = nil
 					err := GitSwitchBranch(entry.item)
