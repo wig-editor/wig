@@ -245,3 +245,66 @@ func CmdGitBlame(ctx wig.Context) {
 	ctx.Buf.BlameEnabled = true
 	ctx.Editor.Redraw()
 }
+
+// CmdGitBlameCommit shows the commit that last modified the line under the
+// cursor when inline blame is enabled. Opens the git show output in a
+// temporary buffer with diff syntax highlighting.
+func CmdGitBlameCommit(ctx wig.Context) {
+	if ctx.Buf == nil || !ctx.Buf.BlameEnabled || len(ctx.Buf.BlameLines) == 0 {
+		ctx.Editor.EchoMessage("Blame not enabled")
+		return
+	}
+
+	cur := wig.ContextCursorGet(ctx)
+	info, ok := ctx.Buf.BlameLines[cur.Line]
+	if !ok {
+		ctx.Editor.EchoMessage("No blame info for this line")
+		return
+	}
+
+	hash := info.Hash
+	if strings.Trim(hash, "0") == "" {
+		ctx.Editor.EchoMessage("Not committed yet")
+		return
+	}
+
+	dir := filepath.Dir(ctx.Buf.FilePath)
+	showCmd := exec.Command("git", "show", "--stat", "-p", hash)
+	showCmd.Dir = dir
+	out, err := showCmd.CombinedOutput()
+	if err != nil {
+		ctx.Editor.EchoMessage("Error: " + err.Error())
+		return
+	}
+
+	shortHash := hash
+	if len(shortHash) > 7 {
+		shortHash = shortHash[:7]
+	}
+	commitBufName := fmt.Sprintf("[commit: %s]", shortHash)
+	cBuf := ctx.Editor.BufferFindByFilePath(commitBufName, true)
+	cBuf.ResetLines()
+	for _, l := range strings.Split(string(out), "\n") {
+		cBuf.Append(l)
+	}
+	cBuf.Highlighter = &DiffHighlighter{Buf: cBuf}
+
+	savedCur := *cur
+	savedBuf := ctx.Buf
+	backToBuf := func(c wig.Context) {
+		c.Buf = savedBuf
+		c.Editor.ActiveWindow().VisitBuffer(c, savedCur)
+		wig.CmdCursorCenter(c)
+	}
+
+	cBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
+		wig.MODE_NORMAL: wig.KeyMap{
+			"c":   backToBuf,
+			"q":   backToBuf,
+			"Esc": backToBuf,
+		},
+	})
+
+	ctx.Buf = cBuf
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{Line: 0, Char: 0})
+}

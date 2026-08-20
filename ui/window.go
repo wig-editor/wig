@@ -140,6 +140,7 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 						}
 					}
 				}
+				xCur += lineNumWidth
 
 				if buf.BlameEnabled && blameColWidth > 0 {
 					if info, ok := buf.BlameLines[lineNum]; ok {

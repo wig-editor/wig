@@ -259,6 +259,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"g": wig.KeyMap{
 					"r": commands.CmdGitHunkRevert,
 					"p": commands.CmdGitHunkPreview,
+					"d": commands.CmdGitBlameCommit,
 				},
 			},
 		},
