@@ -755,7 +755,7 @@ func populateGitStatusBuffer(buf *wig.Buffer) (map[int]gitStatusLine, int) {
 	lines := make([]string, 0, len(items)+2)
 
 	// Top shortcuts guide bar
-	lines = append(lines, "  [Enter] Open/Stash  [s] Stage  [d] Diff [c] Commit [z] Stash  [r] Refresh  [q] Close")
+	lines = append(lines, "  [Enter] Open/Stash  [s] Stage  [d] Diff  [c] Commit [P] Push  [z] Stash  [r] Refresh  [Esc] Close")
 	lineMap[0] = gitStatusLine{kind: "shortcut"}
 	lines = append(lines, "")
 	lineMap[1] = gitStatusLine{kind: "none"}
@@ -952,6 +952,12 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 				}
 			},
 			"p": func(ctx wig.Context) {
+				ctx.Editor.EchoMessage("running: git push origin HEAD")
+				ctx.Editor.Redraw()
+				gitRun("push", "origin", "HEAD")
+				ctx.Editor.EchoMessage("done")
+			},
+			"S": func(ctx wig.Context) {
 				if pendingStash != nil {
 					stashRef := pendingStash.StashRef
 					GitStashAction(*pendingStash, "pop")
@@ -1021,7 +1027,6 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 					dBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
 						wig.MODE_NORMAL: wig.KeyMap{
 							"d":   wig.CmdKillBuffer,
-							"q":   wig.CmdKillBuffer,
 							"Esc": wig.CmdKillBuffer,
 						},
 					})
@@ -1052,7 +1057,6 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 				dBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
 					wig.MODE_NORMAL: wig.KeyMap{
 						"d":   wig.CmdKillBuffer,
-						"q":   wig.CmdKillBuffer,
 						"Esc": wig.CmdKillBuffer,
 					},
 				})
@@ -1070,9 +1074,6 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 				pendingStash = nil
 				refresh(ctx, "")
 				ctx.Editor.EchoMessage("Git status refreshed")
-			},
-			"q": func(ctx wig.Context) {
-				wig.CmdKillBuffer(ctx)
 			},
 			"c": func(ctx wig.Context) {
 				GitShowCommitBuffer(ctx)
@@ -1106,7 +1107,7 @@ func GitShowCommitBuffer(ctx wig.Context) {
 
 	dBuf.Append("")
 	dBuf.Append("")
-	dBuf.Append("# Please enter your commit message and press ctrl+c for commit or q for exit.")
+	dBuf.Append("# Please enter your commit message and press ctrl+c for commit or Esc for exit.")
 	dBuf.Append("")
 	for l := range strings.SplitSeq(contents, "\n") {
 		dBuf.Append(fmt.Sprintf("# %s", l))
@@ -1116,7 +1117,6 @@ func GitShowCommitBuffer(ctx wig.Context) {
 	dBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
 		wig.MODE_NORMAL: wig.KeyMap{
 			"Esc":    exitModeOrClose,
-			"q":      exitModeOrClose,
 			"ctrl+c": gitCommitFinish,
 		},
 		wig.MODE_INSERT: wig.KeyMap{
@@ -1135,6 +1135,12 @@ func gitCommitFinish(ctx wig.Context) {
 	ctx.Buf.Save()
 	gitRun("commit", "-F", "/tmp/commit_msg.txt", "--cleanup=strip")
 	wig.CmdKillBuffer(ctx)
+
+	gitBuf := ctx.Editor.BufferFindByFilePath("[git]", false)
+	if gitBuf == nil {
+		return
+	}
+	populateGitStatusBuffer(gitBuf)
 	wig.EditorInst.EchoMessage("commit done")
 }
 
@@ -1160,9 +1166,5 @@ func GitStashAction(item wig.GitViewItem, action string) {
 	if item.Type != "stash" {
 		return
 	}
-	if action == "drop" {
-		gitRun("stash", "drop", item.StashRef)
-	} else if action == "pop" {
-		gitRun("stash", "pop", item.StashRef)
-	}
+	gitRun("stash", action, item.StashRef)
 }
