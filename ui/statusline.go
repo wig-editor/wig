@@ -31,21 +31,24 @@ func StatuslineRender(
 	}
 
 	bg := strings.Repeat(" ", w)
-	view.SetContent(0, h, bg, st)
+	if h >= 0 {
+		view.SetContent(0, h, bg, st)
+	}
 
 	macroStatus := ""
 	if e.Keys.Macros.Recording() {
 		macroStatus = "recording @" + e.Keys.Macros.Register
 	}
 
-	leftSide := ""
-	leftSide = fmt.Sprintf("%s %s %s ", buf.Mode().String(), buf.GetName(), macroStatus)
+	leftSide := fmt.Sprintf("%s %s %s ", buf.Mode().String(), buf.GetName(), macroStatus)
 
 	if win.Buffer() == e.ActiveWindow().Buffer() && len(e.Message) > 0 {
 		leftSide = e.Message
 	}
 
-	view.SetContent(2, h, leftSide, st)
+	if h >= 0 {
+		view.SetContent(2, h, leftSide, st)
+	}
 
 	cur := wig.CursorGet(e, buf)
 	rightSide := fmt.Sprintf("%d:%d", cur.Line+1, cur.Char)
@@ -54,5 +57,7 @@ func StatuslineRender(
 		rightSide = fmt.Sprintf("%d   %s", e.Keys.GetCount(), rightSide)
 	}
 
-	view.SetContent(w-len(rightSide)-1, h, rightSide, st)
+	if w-len(rightSide)-1 >= 0 && h >= 0 {
+		view.SetContent(w-len(rightSide)-1, h, rightSide, st)
+	}
 }

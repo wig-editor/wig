@@ -52,13 +52,17 @@ type UndoRedo struct {
 	Buf      *Buffer
 	History  []EditDiff
 	Position int
+	// SavedAtPosition stores the UndoRedo Position at the moment the file was saved.
+	// If Position == SavedAtPosition, the buffer is not dirty.
+	SavedAtPosition int
 }
 
 func NewUndoRedo(buf *Buffer) *UndoRedo {
 	return &UndoRedo{
-		Buf:      buf,
-		Position: -1,
-		History:  make([]EditDiff, 0, 256),
+		Buf:             buf,
+		Position:        -1,
+		SavedAtPosition: -1, // Initial state is considered "saved"
+		History:         make([]EditDiff, 0, 256),
 	}
 }
 
@@ -103,6 +107,9 @@ func (u *UndoRedo) Undo() {
 		u.Position--
 	}
 
+	// If we undid back to the exact state when the file was saved, it's not dirty
+	u.Buf.Dirty = u.Position != u.SavedAtPosition
+
 	if u.Buf.Highlighter != nil {
 		u.Buf.Highlighter.Build()
 	}
@@ -124,6 +131,9 @@ func (u *UndoRedo) Redo() {
 	if u.Position < len(u.History)-1 {
 		u.Position++
 	}
+
+	// If we redid back to the exact state when the file was saved, it's not dirty
+	u.Buf.Dirty = u.Position != u.SavedAtPosition
 
 	if u.Buf.Highlighter != nil {
 		u.Buf.Highlighter.Build()

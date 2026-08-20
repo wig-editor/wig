@@ -64,6 +64,7 @@ type Buffer struct {
 
 	OpenCount int
 	rootDir   string
+	Dirty     bool
 }
 
 func NewBuffer() *Buffer {

@@ -31,7 +31,7 @@ func init() {
 
 	// Command-line basics
 	wig.AllCommands["q"] = wig.CmdDefinition{Desc: "Quit", Fn: wig.CmdExit}
-	wig.AllCommands["q!"] = wig.CmdDefinition{Desc: "Quit", Fn: wig.CmdExit}
+	wig.AllCommands["q!"] = wig.CmdDefinition{Desc: "Quit without saving", Fn: wig.CmdForceExit}
 	wig.AllCommands["w"] = wig.CmdDefinition{Desc: "Save", Fn: wig.CmdSaveFile}
 	wig.AllCommands["wq"] = wig.CmdDefinition{Desc: "Save and quit", Fn: func(ctx wig.Context) {
 		wig.CmdSaveFile(ctx)

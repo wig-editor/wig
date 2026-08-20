@@ -250,6 +250,11 @@ func (u *uiCommandLine) execute(cmd string) {
 		return
 	}
 
+	// Pop the command line UI *before* executing the command.
+	// This allows commands (like :q) to push their own UI (like the exit prompt)
+	// without it being immediately popped by this deferred cleanup.
+	u.e.PopUi()
+
 	if def, ok := wig.AllCommands[cmd]; ok {
 		ctx := u.e.NewContext()
 		if fn, ok := def.Fn.(func(wig.Context)); ok {
@@ -260,7 +265,6 @@ func (u *uiCommandLine) execute(cmd string) {
 	} else {
 		u.e.EchoMessage(fmt.Sprintf("Unknown command: %s", cmd))
 	}
-	u.e.PopUi()
 }
 
 func (u *uiCommandLine) Keymap() *wig.KeyHandler {

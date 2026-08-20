@@ -85,17 +85,19 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				if hasGitSigns {
 					sign, ok := buf.GitSigns[lineNum+1] // GitSigns is 1-indexed
 					signStyle := wig.Color("default")
-					if ok {
-						if sign == '+' {
-							signStyle = wig.Color("diff.plus")
-						} else if sign == '-' {
-							signStyle = wig.Color("diff.minus")
-						} else if sign == '~' {
-							signStyle = wig.Color("diff.delta")
+					if xCur >= 0 && xCur < termWidth && y >= 0 && y < termHeight {
+						if ok {
+							if sign == '+' {
+								signStyle = wig.Color("diff.plus")
+							} else if sign == '-' {
+								signStyle = wig.Color("diff.minus")
+							} else if sign == '~' {
+								signStyle = wig.Color("diff.delta")
+							}
+							view.SetContent(xCur, y, string(sign), signStyle)
+						} else {
+							view.SetContent(xCur, y, " ", signStyle)
 						}
-						view.SetContent(xCur, y, string(sign), signStyle)
-					} else {
-						view.SetContent(xCur, y, " ", signStyle)
 					}
 					xCur += signColWidth
 				}
@@ -113,10 +115,12 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 						}
 					}
 
-					if lineNum == cur.Line {
-						view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyleSelected)
-					} else {
-						view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyle)
+					if xCur >= 0 && xCur < termWidth && y >= 0 && y < termHeight {
+						if lineNum == cur.Line {
+							view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyleSelected)
+						} else {
+							view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyle)
+						}
 					}
 				}
 			}
@@ -195,7 +199,9 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 
 				// todo: handle tabs colors?
 				// render text
-				view.SetContent(x, y, string(ch), textStyle)
+				if x >= 0 && x < termWidth && y >= 0 && y < termHeight {
+					view.SetContent(x, y, string(ch), textStyle)
+				}
 
 				// render cursor
 				if isActiveWin {
@@ -217,7 +223,9 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 								baseCursor = c
 							}
 						}
-						view.SetContent(x, y, string(ch[0]), baseCursor)
+						if x >= 0 && x < termWidth && y >= 0 && y < termHeight {
+							view.SetContent(x, y, string(ch[0]), baseCursor)
+						}
 					}
 				}
 
@@ -226,7 +234,9 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 
 			// render cursor after the end of the line in insert mode
 			if lineNum == cur.Line && cur.Char >= len(currentLine.Value) && isActiveWin {
-				view.SetContent(x, y, " ", wig.Color("ui.cursor"))
+				if x >= 0 && x < termWidth && y >= 0 && y < termHeight {
+					view.SetContent(x, y, " ", wig.Color("ui.cursor"))
+				}
 			}
 
 			y++
