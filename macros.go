@@ -30,10 +30,13 @@ func (m *MacrosManager) Start(reg string) {
 }
 
 func (m *MacrosManager) Stop() {
+	defer m.Reset()
+	if len(m.keys) == 0 {
+		return
+	}
 	keys := make([]tcell.EventKey, 0, len(m.keys)-1)
 	keys = append(keys, m.keys[:len(m.keys)-1]...)
 	m.registers[m.Register] = keys
-	m.Reset()
 }
 
 func (m *MacrosManager) Recording() bool {
