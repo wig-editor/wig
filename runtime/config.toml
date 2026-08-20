@@ -20,4 +20,5 @@ theme = "naysayer"
 show_line_numbers = true
 relative_line_numbers = true
 current_line_absolute = true
+indent_guides = false
 
