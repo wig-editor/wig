@@ -250,5 +250,5 @@ func CmdGitHunkPreview(ctx wig.Context) {
 
 	ui.HunkPreviewInit(ctx, header, lines, func(ctx wig.Context) {
 		revertHunk(ctx, targetHunk)
-	})
+	}, nil)
 }
