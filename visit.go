@@ -1,11 +1,39 @@
 package wig
 
+import "strings"
+
 type VisitOptions struct {
 	Movement      func(Context)
 	Center        bool
 	TargetWin     *Window
 	ParseLocation bool
 	Cursor        *Cursor
+}
+
+// findVisitSourceBuffer locates the buffer that CmdVisitNextLine / CmdVisitPrevLine
+// should use as a source when jumping between entries. It mirrors the
+// original rgcollect.visitLine design:
+// 1. Search all windows for a buffer whose FilePath starts with "[rgcollect".
+// 2. If not found, fallback to the "other" window (not active) if it exists.
+// 3. If still not found, return nil.
+func findVisitSourceBuffer(e *Editor) *Buffer {
+	for _, win := range e.Windows {
+		if win.Buffer() != nil && strings.HasPrefix(win.Buffer().FilePath, "[rgcollect") {
+			return win.Buffer()
+		}
+	}
+
+	e.EchoMessage("rgcollect buffer not visible. using other window.")
+	if len(e.Windows) > 1 {
+		for _, win := range e.Windows {
+			if win == e.ActiveWindow() {
+				continue
+			}
+			return win.Buffer()
+		}
+	}
+
+	return nil
 }
 
 func VisitAtLine(ctx Context, sourceBuf *Buffer, opts VisitOptions) error {
@@ -90,15 +118,27 @@ func VisitAtLine(ctx Context, sourceBuf *Buffer, opts VisitOptions) error {
 }
 
 func CmdVisitNextLine(ctx Context) {
-	VisitAtLine(ctx, ctx.Buf, VisitOptions{
+	sourceBuf := findVisitSourceBuffer(ctx.Editor)
+	if sourceBuf == nil {
+		return
+	}
+
+	VisitAtLine(ctx, sourceBuf, VisitOptions{
 		Movement:      CmdCursorLineDown,
 		ParseLocation: true,
+		TargetWin:     ctx.Editor.ActiveWindow(),
 	})
 }
 
 func CmdVisitPrevLine(ctx Context) {
-	VisitAtLine(ctx, ctx.Buf, VisitOptions{
+	sourceBuf := findVisitSourceBuffer(ctx.Editor)
+	if sourceBuf == nil {
+		return
+	}
+
+	VisitAtLine(ctx, sourceBuf, VisitOptions{
 		Movement:      CmdCursorLineUp,
 		ParseLocation: true,
+		TargetWin:     ctx.Editor.ActiveWindow(),
 	})
 }
