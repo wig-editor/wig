@@ -2,16 +2,16 @@ package commands
 
 import (
 	"fmt"
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/drivers/pipe"
+	"github.com/firstrow/wig/ui"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"github.com/firstrow/wig"
-	"github.com/firstrow/wig/drivers/pipe"
-	"github.com/firstrow/wig/ui"
+	"time"
 )
 
 func CmdThemeSelect(ctx wig.Context) {
@@ -52,6 +52,7 @@ func CmdThemeSelect(ctx wig.Context) {
 		action,
 		items,
 	)
+	picker.SetTitle("Themes")
 
 	picker.OnSelect(func(item *ui.PickerItem[string]) {
 		wig.ApplyTheme(item.Value)
@@ -84,6 +85,7 @@ func CmdBufferPicker(ctx wig.Context) {
 		action,
 		items,
 	)
+	picker.SetTitle("Buffers")
 	picker.OnKey("ctrl+o", func(ctx wig.Context) {
 		wig.CmdWindowVSplit(ctx)
 		wig.CmdWindowNext(ctx)
@@ -93,28 +95,46 @@ func CmdBufferPicker(ctx wig.Context) {
 
 func CmdMRUBufferPicker(ctx wig.Context) {
 	posCache := wig.LoadPositionCache()
+	sortByRecent := true
 
 	type kv struct {
 		Key string
 		Val wig.PositionEntry
 	}
-	var entries []kv
-	for k, v := range posCache.Files {
-		if _, err := os.Stat(k); err == nil {
-			entries = append(entries, kv{k, v})
+
+	buildItems := func() []ui.PickerItem[string] {
+		var entries []kv
+		for k, v := range posCache.Files {
+			if _, err := os.Stat(k); err == nil {
+				entries = append(entries, kv{k, v})
+			}
 		}
-	}
 
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Val.OpenCount > entries[j].Val.OpenCount
-	})
-
-	items := make([]ui.PickerItem[string], 0, len(entries))
-	for _, e := range entries {
-		items = append(items, ui.PickerItem[string]{
-			Name:  e.Key,
-			Value: e.Key,
+		sort.Slice(entries, func(i, j int) bool {
+			if sortByRecent {
+				return entries[i].Val.Timestamp > entries[j].Val.Timestamp
+			}
+			return entries[i].Val.OpenCount > entries[j].Val.OpenCount
 		})
+
+		res := make([]ui.PickerItem[string], 0, len(entries))
+		for _, e := range entries {
+			var prefix string
+			if sortByRecent {
+				if e.Val.Timestamp > 0 {
+					prefix = time.Unix(e.Val.Timestamp, 0).Format("01-02 15:04")
+				} else {
+					prefix = "--------"
+				}
+			} else {
+				prefix = fmt.Sprintf("%d", e.Val.OpenCount)
+			}
+			res = append(res, ui.PickerItem[string]{
+				Name:  fmt.Sprintf("[%s] %s", prefix, e.Key),
+				Value: e.Key,
+			})
+		}
+		return res
 	}
 
 	action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
@@ -153,11 +173,41 @@ func CmdMRUBufferPicker(ctx wig.Context) {
 		}
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
-		items,
+		buildItems(),
 	)
+
+	updateTitle := func() {
+		if sortByRecent {
+			picker.SetTitle("MRU Buffers (Most Recent) [Ins: Most Used]")
+		} else {
+			picker.SetTitle("MRU Buffers (Most Used) [Ins: Most Recent]")
+		}
+	}
+	updateTitle()
+
+	picker.OnKey("Insert", func(ctx wig.Context) {
+		sortByRecent = !sortByRecent
+		updateTitle()
+		picker.SetItems(buildItems())
+		ctx.Editor.Redraw()
+	})
+
+	picker.OnKey("Delete", func(ctx wig.Context) {
+		item := picker.GetActiveItem()
+		if item == nil {
+			return
+		}
+		filePath := item.Value
+
+		delete(posCache.Files, filePath)
+		posCache.Save()
+
+		picker.SetItems(buildItems())
+		ctx.Editor.Redraw()
+	})
 }
 
 func CmdCommandPalettePicker(ctx wig.Context) {
@@ -184,11 +234,12 @@ func CmdCommandPalettePicker(ctx wig.Context) {
 		}
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
 		items,
 	)
+	picker.SetTitle("Command Palette")
 }
 
 func CmdExecute(ctx wig.Context) {
@@ -265,29 +316,29 @@ func CmdCurrentBufferDirFilePicker(ctx wig.Context) {
 		ctx.Editor.PopUi()
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
 		getItems(rootDir),
 	)
+	picker.SetTitle("Files")
 }
 
 func CmdFormatBuffer(ctx wig.Context) {
 	if strings.HasSuffix(ctx.Buf.FilePath, ".go") {
-		formatcmd := fmt.Sprintf("cat %s | goimports", ctx.Buf.FilePath)
-		cmd := exec.Command("bash", "-c", formatcmd)
-		stdout, err := cmd.Output()
+		var cmd *exec.Cmd
+		if _, err := exec.LookPath("goimports"); err == nil {
+			cmd = exec.Command("goimports", "-w", ctx.Buf.FilePath)
+		} else {
+			cmd = exec.Command("go", "fmt", ctx.Buf.FilePath)
+		}
+		stdout, err := cmd.CombinedOutput()
 		if err != nil {
-			ctx.Editor.LogMessage(err.Error())
+			ctx.Editor.LogError(err)
 			ctx.Editor.LogMessage(string(stdout))
 			return
 		}
-		// TODO: update only changed lines
-		ctx.Buf.ResetLines()
-		lines := strings.Split(string(stdout), "\n")
-		for _, line := range lines {
-			ctx.Buf.Append(line)
-		}
+		CmdReloadBuffer(ctx)
 	}
 
 	if strings.HasSuffix(ctx.Buf.FilePath, ".odin") {
@@ -407,11 +458,12 @@ func CmdSearchLine(ctx wig.Context) {
 		wig.CmdCursorCenter(ctx)
 	}
 
-	ui.PickerInit(
+	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
 		items,
 	)
+	picker.SetTitle("Search Line")
 }
 
 func CmdGotoDefinition(ctx wig.Context) {
@@ -464,7 +516,7 @@ func CmdLspHover(ctx wig.Context) {
 	cur := wig.ContextCursorGet(ctx)
 	sign := ctx.Editor.Lsp.Hover(ctx.Buf, *cur)
 	if sign != "" {
-		ctx.Editor.EchoMessage(sign)
+		ui.HoverInit(ctx, sign)
 	}
 }
 

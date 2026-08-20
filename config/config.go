@@ -6,7 +6,6 @@ import (
 
 	"github.com/firstrow/wig"
 	"github.com/firstrow/wig/commands"
-	"github.com/firstrow/wig/rgcollect"
 	"github.com/firstrow/wig/ui"
 	"github.com/pelletier/go-toml/v2"
 )
@@ -21,6 +20,9 @@ type EditorSettings struct {
 	ShowLineNumbers     *bool   `toml:"show_line_numbers"`
 	RelativeLineNumbers *bool   `toml:"relative_line_numbers"`
 	CurrentLineAbsolute *bool   `toml:"current_line_absolute"`
+	FormatOnSave        *bool   `toml:"format_on_save"`
+	GitStatusView       *string `toml:"git_status_view"`
+	GitBlameView        *string `toml:"git_blame_view"`
 }
 
 type UserKeysConfig struct {
@@ -38,6 +40,9 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 		ShowLineNumbers:     true,
 		RelativeLineNumbers: true,
 		CurrentLineAbsolute: true,
+		FormatOnSave:        false,
+		GitStatusView:       "full",
+		GitBlameView:        "split",
 	}
 	userMap := wig.ModeKeyMap{
 		wig.MODE_NORMAL:       wig.KeyMap{},
@@ -72,6 +77,15 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 	}
 	if cfg.Editor.CurrentLineAbsolute != nil {
 		editorCfg.CurrentLineAbsolute = *cfg.Editor.CurrentLineAbsolute
+	}
+	if cfg.Editor.FormatOnSave != nil {
+		editorCfg.FormatOnSave = *cfg.Editor.FormatOnSave
+	}
+	if cfg.Editor.GitStatusView != nil {
+		editorCfg.GitStatusView = *cfg.Editor.GitStatusView
+	}
+	if cfg.Editor.GitBlameView != nil {
+		editorCfg.GitBlameView = *cfg.Editor.GitBlameView
 	}
 
 	resolve := func(name string) any {
@@ -113,6 +127,7 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 func DefaultKeyMap() wig.ModeKeyMap {
 	return wig.ModeKeyMap{
 		wig.MODE_NORMAL: wig.KeyMap{
+			"F1":     commands.CmdGitView,
 			"F2":     commands.CmdFormatBufferAndSave,
 			"F3":     commands.CmdMakeTest,
 			"F5":     commands.CmdMakeBuild,
@@ -235,8 +250,8 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"F": commands.CmdCurrentBufferDirFilePicker,
 				"s": wig.KeyMap{
 					"s": commands.CmdSearchLine,
-					"n": rgcollect.CmdVisitNextLine,
-					"p": rgcollect.CmdVisitPrevLine,
+					"n": wig.CmdVisitNextLine,
+					"p": wig.CmdVisitPrevLine,
 				},
 				"t": commands.CmdThemeSelect,
 				"y": commands.CmdClipboardCopy,
@@ -244,6 +259,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"g": wig.KeyMap{
 					"r": commands.CmdGitHunkRevert,
 					"p": commands.CmdGitHunkPreview,
+					"d": commands.CmdGitBlameCommit,
 				},
 			},
 		},
@@ -356,4 +372,3 @@ func DefaultKeyMap() wig.ModeKeyMap {
 		},
 	}
 }
-

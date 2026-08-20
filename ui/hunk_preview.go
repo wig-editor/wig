@@ -9,9 +9,9 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// HunkPreviewWidget is a lightweight, filter-less popup for previewing a
-// single git hunk. Unlike UiPicker it captures no text input, so every key
-// is available as a one-key shortcut (e.g. "r" to revert).
+// HunkPreviewWidget is a lightweight, filter-less popup for previewing text
+// blocks (like git hunks or LSP hover). Unlike UiPicker it captures no text
+// input, so every key is available as a one-key shortcut (e.g. "r" to revert).
 type HunkPreviewWidget struct {
 	e            *wig.Editor
 	keymap       *wig.KeyHandler
@@ -19,6 +19,7 @@ type HunkPreviewWidget struct {
 	lines        []string
 	scrollOffset int
 	onRevert     func(wig.Context)
+	lineStyler   func(string) tcell.Style
 }
 
 func (u *HunkPreviewWidget) Plane() wig.RenderPlane {
@@ -35,19 +36,25 @@ func expandTabs(s string) string {
 }
 
 // HunkPreviewInit opens a read-only popup showing header+lines (as produced
-// by a unified diff hunk). onRevert, if non-nil, is invoked (with the
-// popup's own context) when the user presses "r"; the popup then closes.
-func HunkPreviewInit(ctx wig.Context, header string, lines []string, onRevert func(wig.Context)) *HunkPreviewWidget {
+// by a unified diff hunk or LSP hover). onRevert, if non-nil, is invoked
+// (with the popup's own context) when the user presses "r"; the popup then closes.
+// lineStyler allows customizing the color of each line (e.g. diff colors).
+func HunkPreviewInit(ctx wig.Context, header string, lines []string, onRevert func(wig.Context), lineStyler func(string) tcell.Style) *HunkPreviewWidget {
 	cleanLines := make([]string, len(lines))
 	for i, l := range lines {
 		cleanLines[i] = expandTabs(strings.TrimRightFunc(l, unicode.IsSpace))
 	}
 
+	if lineStyler == nil {
+		lineStyler = lineStyle
+	}
+
 	widget := &HunkPreviewWidget{
-		e:        ctx.Editor,
-		header:   expandTabs(header),
-		lines:    cleanLines,
-		onRevert: onRevert,
+		e:          ctx.Editor,
+		header:     expandTabs(header),
+		lines:      cleanLines,
+		onRevert:   onRevert,
+		lineStyler: lineStyler,
 	}
 
 	km := wig.KeyMap{
@@ -133,15 +140,18 @@ func (u *HunkPreviewWidget) Render(view wig.View) {
 
 	drawBox(view, x, y, w, h, wig.Color("default"))
 
-	// header
-	view.SetContent(x+2, y+1, truncate(u.header, w-x-4), wig.Color("ui.linenr"))
+	// header as title on the border
+	if u.header != "" {
+		titleStr := " " + truncate(u.header, w-x-4) + " "
+		view.SetContent(x+2, y, titleStr, wig.Color("ui.linenr"))
+	}
 
 	// separator
 	sep := strings.Repeat(string('─'), w-x-3)
-	view.SetContent(x+2, y+2, sep, wig.Color("default"))
+	view.SetContent(x+2, y+1, sep, wig.Color("default"))
 
 	// body (scrollable)
-	pageSize := h - y - 4 // rows available below header/separator, above hint line
+	pageSize := h - y - 3 // rows available below separator, above hint line
 	if pageSize < 1 {
 		pageSize = 1
 	}
@@ -156,7 +166,7 @@ func (u *HunkPreviewWidget) Render(view wig.View) {
 	}
 
 	for i, line := range u.lines[start:end] {
-		view.SetContent(x+2, y+3+i, truncate(line, w-x-4), lineStyle(line))
+		view.SetContent(x+2, y+2+i, truncate(line, w-x-4), u.lineStyler(line))
 	}
 
 	// hint line

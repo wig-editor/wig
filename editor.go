@@ -14,6 +14,9 @@ type EditorConfig struct {
 	ShowLineNumbers     bool
 	RelativeLineNumbers bool
 	CurrentLineAbsolute bool // If true, shows absolute line number on current line when relative is on
+	FormatOnSave        bool
+	GitStatusView       string // "full" or "split"
+	GitBlameView        string // "full" or "split"
 }
 
 type View interface {
@@ -110,6 +113,9 @@ func (e *Editor) ReadConfigFile() {
 		ShowLineNumbers:     true,
 		RelativeLineNumbers: true,
 		CurrentLineAbsolute: true,
+		FormatOnSave:        false,
+		GitStatusView:       "full",
+		GitBlameView:        "split",
 	}
 }
 
@@ -135,6 +141,9 @@ func (e *Editor) OpenFile(path string) (*Buffer, error) {
 	if hl != nil {
 		buf.Highlighter = hl
 	}
+
+	// Broadcast event so GitGutterManager calculates signs for newly opened file
+	e.Events.Broadcast(EventBufferReloaded{Buf: buf})
 
 	return buf, nil
 }

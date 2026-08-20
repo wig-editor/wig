@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/firstrow/wig"
@@ -53,6 +54,7 @@ func CmdFindProjectFilePicker(ctx wig.Context) {
 		},
 		items,
 	)
+	picker.SetTitle("Find File")
 
 	picker.OnKey("ctrl+o", func(ctx wig.Context) {
 		wig.CmdWindowVSplit(ctx)
@@ -121,15 +123,22 @@ func rgDoSearch(ctx wig.Context, pat string) {
 			}
 			trim := strings.TrimSpace
 
-			fname := fmt.Sprintf("%s:%d %s", trim(match.Data.Path.Text), match.Data.LineNumber, trim(match.Data.Lines.Text))
+			char := 0
+			if len(match.Data.Submatches) > 0 {
+				char = match.Data.Submatches[0].Start
+			}
+
+			relPath := trim(match.Data.Path.Text)
+			fullPath := filepath.Join(rootDir, relPath)
+			fname := fmt.Sprintf("%s:%d %s", relPath, match.Data.LineNumber, trim(match.Data.Lines.Text))
 			items = append(items, ui.PickerItem[RgJson]{
 				Name:  fname,
 				Value: match,
 				Location: wig.Location{
 					Text:     match.Data.Lines.Text,
-					FilePath: trim(match.Data.Path.Text),
+					FilePath: fullPath,
 					Line:     match.Data.LineNumber,
-					Char:     match.Data.Submatches[0].Start,
+					Char:     char,
 				},
 			})
 		}
@@ -139,16 +148,23 @@ func rgDoSearch(ctx wig.Context, pat string) {
 
 	action := func(p *ui.UiPicker[RgJson], i *ui.PickerItem[RgJson]) {
 		defer ctx.Editor.PopUi()
-		buf, err := ctx.Editor.OpenFile(rootDir + "/" + i.Value.Data.Path.Text)
+		if i == nil {
+			return
+		}
+		buf, err := ctx.Editor.OpenFile(filepath.Join(rootDir, i.Value.Data.Path.Text))
 		if err != nil {
 			return
+		}
+		char := 0
+		if len(i.Value.Data.Submatches) > 0 {
+			char = i.Value.Data.Submatches[0].Start
 		}
 		ctx.Buf = buf
 		ctx.Editor.ActiveWindow().VisitBuffer(
 			ctx,
 			wig.Cursor{
-				Line: i.Value.Data.LineNumber - 1,
-				Char: i.Value.Data.Submatches[0].Start,
+				Line: max(i.Value.Data.LineNumber-1, 0),
+				Char: char,
 			},
 		)
 		wig.CmdCursorCenter(ctx)
@@ -161,6 +177,7 @@ func rgDoSearch(ctx wig.Context, pat string) {
 	)
 
 	p.SetInput(pat)
+	p.SetTitle("Search Project")
 
 	p.OnChange(func() {
 		p.SetItems(searchFn(p.GetInput()))
@@ -174,16 +191,31 @@ func CmdSearchProject(ctx wig.Context) {
 func CmdProjectSearchWordUnderCursor(ctx wig.Context) {
 	pat := ""
 	cur := wig.ContextCursorGet(ctx)
+	if cur == nil || ctx.Buf == nil {
+		return
+	}
 
 	if ctx.Buf.Selection != nil {
 		pat = wig.SelectionToString(ctx.Buf, ctx.Buf.Selection)
+		wig.CmdNormalMode(ctx)
 	} else {
+		line := wig.CursorLine(ctx.Buf, cur)
+		if line == nil || line.Value.IsEmpty() {
+			ctx.Editor.EchoMessage("no word under cursor")
+			return
+		}
+		if wig.CursorChClass(ctx.Buf, cur) == 0 {
+			wig.CmdBackwardWord(ctx)
+		}
 		start, end := wig.TextObjectWord(ctx, true)
 		if end+1 > start {
 			line := wig.CursorLine(ctx.Buf, cur)
-			pat = string(line.Value.Range(start, end+1))
+			if line != nil {
+				pat = string(line.Value.Range(start, end+1))
+			}
 		}
 	}
 
+	pat = strings.TrimSpace(pat)
 	rgDoSearch(ctx, pat)
 }

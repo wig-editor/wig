@@ -9,8 +9,9 @@ import (
 )
 
 type PositionEntry struct {
-	Line      int `toml:"line"`
-	OpenCount int `toml:"open_count"`
+	Line      int   `toml:"line"`
+	OpenCount int   `toml:"open_count"`
+	Timestamp int64 `toml:"timestamp"`
 }
 
 type PositionCache struct {

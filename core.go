@@ -1,9 +1,11 @@
 package wig
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 	"text/scanner"
+	"time"
 	"unicode"
 	"unicode/utf8"
 )
@@ -12,6 +14,7 @@ const minVisibleLines = 5
 const smode = scanner.ScanIdents | scanner.ScanFloats | scanner.ScanChars | scanner.ScanStrings | scanner.ScanRawStrings | scanner.ScanComments
 
 func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
+	buf.Dirty = true
 	sline := CursorNumByLine(buf, line)
 
 	event := EventTextChange{
@@ -57,6 +60,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 }
 
 func TextDelete(buf *Buffer, selection *Selection) {
+	buf.Dirty = true
 	defer func() {
 		if buf.Lines.Len == 1 && len(buf.Lines.First().Value) == 0 {
 			buf.Lines.First().Value = []rune{'\n'}
@@ -409,6 +413,23 @@ func CmdSaveFile(ctx Context) {
 	if err != nil {
 		ctx.Editor.LogMessage(err.Error())
 		ctx.Editor.EchoMessage(err.Error())
+		return
+	}
+	ctx.Buf.Dirty = false
+	// Mark the current undo history position as the "saved" state
+	ctx.Buf.UndoRedo.SavedAtPosition = ctx.Buf.UndoRedo.Position
+	if ctx.Editor.Config.FormatOnSave {
+		if def, ok := AllCommands["CmdFormatBuffer"]; ok {
+			if fn, ok := def.Fn.(func(Context)); ok {
+				fn(ctx)
+				_ = ctx.Buf.Save()
+				ctx.Editor.Lsp.DidClose(ctx.Buf)
+				ctx.Editor.Lsp.DidOpen(ctx.Buf)
+				if ctx.Buf.Highlighter != nil {
+					ctx.Buf.Highlighter.Build()
+				}
+			}
+		}
 	}
 	ctx.Editor.Lsp.DidSave(ctx.Buf)
 }
@@ -419,6 +440,19 @@ func CmdKillBuffer(ctx Context) {
 	}
 
 	buf := ctx.Buf
+
+	// Save the cursor position of the buffer being killed to position.toml
+	if buf.FilePath != "" && !strings.HasPrefix(buf.FilePath, "[") {
+		posCache := LoadPositionCache()
+		cur := WindowCursorGet(ctx.Editor.ActiveWindow(), buf)
+		posCache.Files[buf.FilePath] = PositionEntry{
+			Line:      cur.Line,
+			OpenCount: buf.OpenCount,
+			Timestamp: time.Now().Unix(),
+		}
+		posCache.Save()
+	}
+
 	ctx.Editor.Lsp.DidClose(buf)
 
 	// Switch to the next available buffer before deleting the current one
@@ -523,6 +557,39 @@ func CmdRedo(ctx Context) {
 }
 
 func CmdExit(ctx Context) {
+	checkDirtyAndExit(ctx, 0)
+}
+
+func CmdForceExit(ctx Context) {
+	ctx.Editor.ExitCh <- 1
+}
+
+func checkDirtyAndExit(ctx Context, startIndex int) {
+	buffers := ctx.Editor.Buffers
+	for i := startIndex; i < len(buffers); i++ {
+		b := buffers[i]
+		if b.FilePath != "" && !strings.HasPrefix(b.FilePath, "[") && b.Dirty {
+			// Buffer is dirty, prompt for confirmation
+			prompt := fmt.Sprintf("Save changes to \"%s\"? (y/n/c)", b.GetName())
+			ConfirmInit(ctx, prompt, func() {
+				// Yes: Save the file and continue checking the rest
+				if err := b.Save(); err != nil {
+					ctx.Editor.EchoMessage(err.Error())
+					return
+				}
+				checkDirtyAndExit(ctx, i+1)
+			}, func() {
+				// No: Discard changes and continue checking the rest
+				checkDirtyAndExit(ctx, i+1)
+			}, func() {
+				// Cancel: Abort exit
+				ctx.Editor.EchoMessage("Exit cancelled")
+			})
+			return
+		}
+	}
+
+	// No dirty buffers found, safe to exit
 	ctx.Editor.ExitCh <- 1
 }
 

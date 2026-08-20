@@ -6,6 +6,9 @@ func TextObjectWord(ctx Context, bigword bool) (start, end int) {
 	end = start
 
 	line := CursorLine(ctx.Buf, cur)
+	if line == nil {
+		return start, end
+	}
 	cls := CursorChClass(ctx.Buf, cur)
 
 	if bigword {

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 
@@ -18,6 +19,13 @@ import (
 )
 
 func main() {
+	for _, arg := range os.Args[1:] {
+		if arg == "--health" || arg == "health" {
+			commands.PrintCLIHealth()
+			return
+		}
+	}
+
 	tscreen, err := tcell.NewScreen()
 	if err != nil {
 		panic(err)
@@ -171,6 +179,7 @@ func main() {
 		posCache.Files[activeBuf.FilePath] = wig.PositionEntry{
 			Line:      cur.Line,
 			OpenCount: activeBuf.OpenCount,
+			Timestamp: time.Now().Unix(),
 		}
 		posCache.Save()
 	}

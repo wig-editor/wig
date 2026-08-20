@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/pelletier/go-toml"
@@ -27,17 +28,28 @@ type Style struct {
 
 var styles map[string]tcell.Style
 var currentTheme Theme
+var stylesMutex sync.RWMutex
 
 func init() {
 	ApplyTheme("solarized_dark")
 }
 
 func ApplyTheme(name string) {
-	currentTheme = loadColors(name)
+	t, err := loadColors(name)
+	if err != nil {
+		if EditorInst != nil {
+			EditorInst.LogError(err)
+		}
+		return
+	}
+	currentTheme = t
 	inherits := currentTheme.Colors["inherits"].Fg
 
 	for inherits != "" {
-		baseTheme := loadColors(inherits)
+		baseTheme, err := loadColors(inherits)
+		if err != nil {
+			break
+		}
 		currentTheme = mergeThemes(baseTheme, currentTheme)
 		inherits = baseTheme.Colors["inherits"].Fg
 	}
@@ -72,36 +84,47 @@ func mergeThemes(base, child Theme) Theme {
 	return result
 }
 
-func loadColors(name string) Theme {
+func loadColors(name string) (Theme, error) {
 	colorThemeFile := EditorInst.RuntimeDir("themes", fmt.Sprintf("%s.toml", name))
 	theme, err := os.ReadFile(colorThemeFile)
 	if err != nil {
-		panic(err.Error())
+		return Theme{}, fmt.Errorf("failed to read theme file %s: %w", colorThemeFile, err)
 	}
 	theme = append([]byte("[colors]"), theme...)
 	c := map[string]any{}
 	err = toml.Unmarshal(theme, &c)
 	if err != nil {
-		panic(err.Error())
+		return Theme{}, fmt.Errorf("failed to parse theme file %s: %w", colorThemeFile, err)
 	}
 
 	return Theme{
 		Colors:  parseColors(c),
 		Palette: parsePalette(c),
-	}
+	}, nil
 }
 
 // TODO: fix resolve of nested styles.
 // ui.menu.selected should be build from ui.menu
 func buildStyles() {
+	stylesMutex.Lock()
+	defer stylesMutex.Unlock()
+
 	styles = map[string]tcell.Style{}
 
 	for k := range currentTheme.Colors {
 		styles[k] = getColor(k)
 	}
 
-	defaultBg := currentTheme.Palette[currentTheme.Colors["ui.background"].Bg]
-	defaultFg := currentTheme.Palette[currentTheme.Colors["ui.text"].Fg]
+	var defaultBgStr, defaultFgStr string
+	if bg, ok := currentTheme.Colors["ui.background"]; ok {
+		defaultBgStr = bg.Bg
+	}
+	if fg, ok := currentTheme.Colors["ui.text"]; ok {
+		defaultFgStr = fg.Fg
+	}
+
+	defaultBg := currentTheme.Palette[defaultBgStr]
+	defaultFg := currentTheme.Palette[defaultFgStr]
 	styles["default"] = tcell.StyleDefault.Background(tcell.GetColor(defaultBg)).Foreground(tcell.GetColor(defaultFg))
 }
 
@@ -193,23 +216,39 @@ func parsePalette(theme map[string]any) map[string]string {
 }
 
 func Color(color string) tcell.Style {
+	stylesMutex.RLock()
 	s, ok := styles[color]
+	stylesMutex.RUnlock()
 	if ok {
 		return s
 	}
 
+	var r tcell.Style
 	parts := strings.Split(color, ".")
 	if len(parts) > 1 {
 		ns := strings.Join(parts[:len(parts)-1], ".")
-		r := Color(ns)
-		styles[color] = r
-		return r
+		r = Color(ns)
+	} else {
+		stylesMutex.RLock()
+		r = styles["default"]
+		stylesMutex.RUnlock()
 	}
 
-	return styles["default"]
+	stylesMutex.Lock()
+	if s, ok := styles[color]; ok {
+		stylesMutex.Unlock()
+		return s
+	}
+	styles[color] = r
+	stylesMutex.Unlock()
+
+	return r
 }
 
 func FindColor(color string) (s tcell.Style, found bool) {
+	stylesMutex.RLock()
+	defer stylesMutex.RUnlock()
+
 	s, ok := styles[color]
 	if ok {
 		return s, true
@@ -219,8 +258,16 @@ func FindColor(color string) (s tcell.Style, found bool) {
 }
 
 func getColor(color string) tcell.Style {
-	defaultBg := currentTheme.Palette[currentTheme.Colors["ui.background"].Bg]
-	defaultFg := currentTheme.Palette[currentTheme.Colors["ui.text"].Fg]
+	var defaultBgStr, defaultFgStr string
+	if bg, ok := currentTheme.Colors["ui.background"]; ok {
+		defaultBgStr = bg.Bg
+	}
+	if fg, ok := currentTheme.Colors["ui.text"]; ok {
+		defaultFgStr = fg.Fg
+	}
+
+	defaultBg := currentTheme.Palette[defaultBgStr]
+	defaultFg := currentTheme.Palette[defaultFgStr]
 
 	if val, ok := currentTheme.Colors[color]; ok {
 		fgColor := val.Fg

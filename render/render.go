@@ -58,10 +58,17 @@ func (r *Renderer) Render() {
 		if i > 0 {
 			st := wig.Color("ui.virtual.indent-guide")
 			for i := 0; i <= h; i++ {
-				r.SetContent(x, i, string(tcell.RuneVLine), st)
+				if x >= 0 && x < w {
+					r.SetContent(x, i, string(tcell.RuneVLine), st)
+				}
 			}
 			x += 1
 		}
+
+		if winW <= 0 || h <= 0 {
+			continue
+		}
+
 		winView = NewMView(r.screen, x, 0, winW, h)
 
 		if win == r.e.ActiveWindow() {

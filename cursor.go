@@ -1,6 +1,10 @@
 package wig
 
-import "unicode"
+import (
+	"unicode"
+
+	"github.com/mattn/go-runewidth"
+)
 
 type Cursor struct {
 	Line                 int
@@ -37,6 +41,9 @@ func restoreCharPosition(buf *Buffer, cur *Cursor) {
 
 func CursorInc(buf *Buffer, cur *Cursor) (moved bool) {
 	line := CursorLine(buf, cur)
+	if line == nil {
+		return false
+	}
 	if cur.Char < len(line.Value)-1 {
 		cur.Char++
 		cur.PreserveCharPosition = cur.Char
@@ -61,6 +68,9 @@ func CursorDec(buf *Buffer, cur *Cursor) (moved bool) {
 	}
 
 	line := CursorLine(buf, cur)
+	if line == nil {
+		return false
+	}
 	if line.Prev() != nil {
 		chLen := max(len(line.Prev().Value)-1, 0)
 		cur.Char = chLen
@@ -141,6 +151,39 @@ func WindowCursorSet(win *Window, buf *Buffer, cur *Cursor) {
 	win.cursors[buf] = cur
 }
 
+// VisualCol calculates the visual screen column of a given rune index.
+func VisualCol(line []rune, char int) int {
+	col := 0
+	for i := 0; i < char && i < len(line); i++ {
+		if line[i] == '\t' {
+			col += 4
+		} else if line[i] == '\n' {
+			// skip
+		} else {
+			col += runewidth.RuneWidth(line[i])
+		}
+	}
+	return col
+}
+
+// RuneIndexFromVisualCol finds the rune index that corresponds to a given visual screen column.
+func RuneIndexFromVisualCol(line []rune, visCol int) int {
+	col := 0
+	for i, r := range line {
+		if col >= visCol {
+			return i
+		}
+		if r == '\t' {
+			col += 4
+		} else if r == '\n' {
+			// skip
+		} else {
+			col += runewidth.RuneWidth(r)
+		}
+	}
+	return len(line)
+}
+
 // class of char under cursor
 type chClass int
 
@@ -153,7 +196,7 @@ const (
 func CursorChClass(buf *Buffer, cur *Cursor) chClass {
 	line := CursorLine(buf, cur)
 
-	if len(line.Value) == 0 {
+	if line == nil || len(line.Value) == 0 {
 		return chWhitespace
 	}
 
@@ -169,7 +212,7 @@ func CursorChClass(buf *Buffer, cur *Cursor) chClass {
 func CursorChar(buf *Buffer, cur *Cursor) rune {
 	line := CursorLine(buf, cur)
 
-	if line.Value.IsEmpty() {
+	if line == nil || line.Value.IsEmpty() {
 		return -1
 	}
 

@@ -37,6 +37,7 @@ type UiPicker[T any] struct {
 	activeItemT *PickerItem[T]
 	onChange    func()               // on user change input
 	onSelect    func(*PickerItem[T]) // when Tab pressed
+	title       string
 }
 
 func (u *UiPicker[T]) Plane() wig.RenderPlane {
@@ -129,13 +130,20 @@ func PickerInit[T any](e *wig.Editor, action PickerAction[T], items []PickerItem
 				picker.action(picker, picker.activeItemT)
 			},
 			"ctrl+r": func(ctx wig.Context) {
-				locations := make([]wig.Location, 0, len(items))
+				locations := make([]wig.Location, 0, len(picker.filtered))
 				for _, item := range picker.filtered {
 					if item.Location.FilePath != "" {
 						locations = append(locations, item.Location)
 					}
 				}
-				rgcollect.Init(ctx, string(picker.chBuf), locations)
+				title := string(picker.chBuf)
+				if title == "" {
+					title = picker.title
+				}
+				if title == "" {
+					title = "search"
+				}
+				rgcollect.Init(ctx, title, locations)
 				ctx.Editor.PopUi()
 			},
 		},
@@ -167,8 +175,19 @@ func (u *UiPicker[T]) OnSelect(callback func(*PickerItem[T])) {
 	u.onSelect = callback
 }
 
+func (u *UiPicker[T]) SetTitle(title string) {
+	u.title = title
+}
+
 func (u *UiPicker[T]) CallAction() {
 	u.action(u, u.activeItemT)
+}
+
+func (u *UiPicker[T]) GetActiveItem() *PickerItem[T] {
+	if u.activeItem >= 0 && u.activeItem < len(u.filtered) {
+		return &u.filtered[u.activeItem]
+	}
+	return nil
 }
 
 func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {
@@ -179,7 +198,15 @@ func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {
 
 	u.items = items
 	u.filtered = items
-	u.activeItem = 0
+
+	// Preserve cursor position when updating items, clamping to new bounds.
+	// This prevents the cursor from jumping to the top when an item is deleted.
+	if u.activeItem >= len(u.filtered) {
+		u.activeItem = len(u.filtered) - 1
+	}
+	if u.activeItem < 0 {
+		u.activeItem = 0
+	}
 }
 
 func (u *UiPicker[T]) ClearInput() {
@@ -269,6 +296,11 @@ func (u *UiPicker[T]) Render(view wig.View) {
 
 	// fill box
 	drawBox(view, x, y, w, h, wig.Color("default"))
+
+	if u.title != "" {
+		titleStr := " " + truncate(u.title, w-x-4) + " "
+		view.SetContent(x+2, y, titleStr, wig.Color("ui.linenr"))
+	}
 
 	// prompt
 	prompt := fmt.Sprintf(" %s%s", string(u.chBuf), string(tcell.RuneBlock))

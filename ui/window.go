@@ -47,7 +47,11 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	if e.Config.ShowLineNumbers {
 		lineNumWidth = len(fmt.Sprintf("%d", buf.CountLines())) + 1
 	}
-	leftPadding = signColWidth + lineNumWidth
+	blameColWidth := 0
+	if buf.BlameEnabled && len(buf.BlameLines) > 0 {
+		blameColWidth = buf.BlameWidth + 1
+	}
+	leftPadding = signColWidth + lineNumWidth + blameColWidth
 
 	y := 0
 
@@ -66,6 +70,19 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 		tsNodeCursor = buf.Highlighter.ForRange(uint32(startLine), startLine+uint32(termHeight))
 	}
 
+	// Precalculate visual block bounds for efficient rendering
+	var minVisCol, maxVisCol int
+	isVisualBlock := buf.Mode() == wig.MODE_VISUAL_BLOCK && buf.Selection != nil
+	if isVisualBlock {
+		sel := buf.Selection
+		startLineNode := wig.CursorLineByNum(buf, sel.Start.Line)
+		endLineNode := wig.CursorLineByNum(buf, sel.End.Line)
+		startVisCol := wig.VisualCol(startLineNode.Value, sel.Start.Char)
+		endVisCol := wig.VisualCol(endLineNode.Value, sel.End.Char)
+		minVisCol = min(startVisCol, endVisCol)
+		maxVisCol = max(startVisCol, endVisCol)
+	}
+
 	for currentLine != nil {
 		if lineNum >= offset && y <= termHeight {
 			// render each character in the line separately
@@ -79,23 +96,25 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 
 			diagnostics := e.Lsp.Diagnostics(buf, lineNum)
 
-			// Line numbers & Git Signs
-			if e.Config.ShowLineNumbers || hasGitSigns {
+			// Line numbers & Git Signs & Blame
+			if e.Config.ShowLineNumbers || hasGitSigns || buf.BlameEnabled {
 				xCur := 0
 				if hasGitSigns {
 					sign, ok := buf.GitSigns[lineNum+1] // GitSigns is 1-indexed
 					signStyle := wig.Color("default")
-					if ok {
-						if sign == '+' {
-							signStyle = wig.Color("diff.plus")
-						} else if sign == '-' {
-							signStyle = wig.Color("diff.minus")
-						} else if sign == '~' {
-							signStyle = wig.Color("diff.delta")
+					if xCur >= 0 && xCur < termWidth && y >= 0 && y < termHeight {
+						if ok {
+							if sign == '+' {
+								signStyle = wig.Color("diff.plus")
+							} else if sign == '-' {
+								signStyle = wig.Color("diff.minus")
+							} else if sign == '~' {
+								signStyle = wig.Color("diff.delta")
+							}
+							view.SetContent(xCur, y, string(sign), signStyle)
+						} else {
+							view.SetContent(xCur, y, " ", signStyle)
 						}
-						view.SetContent(xCur, y, string(sign), signStyle)
-					} else {
-						view.SetContent(xCur, y, " ", signStyle)
 					}
 					xCur += signColWidth
 				}
@@ -113,16 +132,33 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 						}
 					}
 
-					if lineNum == cur.Line {
-						view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyleSelected)
-					} else {
-						view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyle)
+					if xCur >= 0 && xCur < termWidth && y >= 0 && y < termHeight {
+						if lineNum == cur.Line {
+							view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyleSelected)
+						} else {
+							view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyle)
+						}
 					}
+				}
+				xCur += lineNumWidth
+
+				if buf.BlameEnabled && blameColWidth > 0 {
+					if info, ok := buf.BlameLines[lineNum]; ok {
+						if xCur >= 0 && xCur < termWidth && y >= 0 && y < termHeight {
+							view.SetContent(xCur, y, info.Display, wig.Color("comment"))
+						}
+					}
+					xCur += blameColWidth
 				}
 			}
 			// End Line Numbers & Git Signs
 
 			// render line
+			currVisCol := 0
+			for j := 0; j < skip; j++ {
+				currVisCol += chlen(currentLine.Value[j])
+			}
+
 			for i := skip; i < len(currentLine.Value); i++ {
 				// render selection
 				textStyle := wig.Color("default")
@@ -135,28 +171,31 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				}
 
 				// Colors and styles
+				charLen := chlen(currentLine.Value[i])
 
 				// highlight current line
 				if lineNum == cur.Line {
 					textStyle = wig.ApplyBg("ui.cursorline", textStyle)
-					bg := strings.Repeat(" ", termWidth)
-					view.SetContent(x, y, bg, textStyle)
+					fillWidth := termWidth - x
+					if fillWidth > 0 {
+						bg := strings.Repeat(" ", fillWidth)
+						view.SetContent(x, y, bg, textStyle)
+					}
 				}
 
 				// selection
 				if buf.Selection != nil {
-					if buf.Mode() == wig.MODE_VISUAL_BLOCK {
+					if isVisualBlock {
 						sel := buf.Selection
 						minLine, maxLine := sel.Start.Line, sel.End.Line
 						if minLine > maxLine {
 							minLine, maxLine = maxLine, minLine
 						}
-						minChar, maxChar := sel.Start.Char, sel.End.Char
-						if minChar > maxChar {
-							minChar, maxChar = maxChar, minChar
-						}
-						if lineNum >= minLine && lineNum <= maxLine && i >= minChar && i <= maxChar {
-							textStyle = wig.ApplyBg("ui.selection.primary", textStyle)
+						if lineNum >= minLine && lineNum <= maxLine {
+							// Highlight based on visual screen columns
+							if currVisCol < maxVisCol && currVisCol+charLen > minVisCol {
+								textStyle = wig.ApplyBg("ui.selection.primary", textStyle)
+							}
 						}
 					} else if wig.SelectionCursorInRange(buf.Selection, wig.Cursor{Line: lineNum, Char: i}) {
 						textStyle = wig.ApplyBg("ui.selection.primary", textStyle)
@@ -195,14 +234,16 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 
 				// todo: handle tabs colors?
 				// render text
-				view.SetContent(x, y, string(ch), textStyle)
+				if x >= 0 && x < termWidth && y >= 0 && y < termHeight {
+					view.SetContent(x, y, string(ch), textStyle)
+				}
 
 				// render cursor
 				if isActiveWin {
 					if lineNum == cur.Line && i == cur.Char {
-						baseCursor, found := wig.FindColor("ui.selection")
-						if !found {
-							panic("theme ui.selection not defined")
+						baseCursor := wig.Color("default")
+						if c, found := wig.FindColor("ui.selection"); found {
+							baseCursor = c
 						}
 						if c, found := wig.FindColor("ui.cursor"); found {
 							baseCursor = c
@@ -217,16 +258,21 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 								baseCursor = c
 							}
 						}
-						view.SetContent(x, y, string(ch[0]), baseCursor)
+						if x >= 0 && x < termWidth && y >= 0 && y < termHeight {
+							view.SetContent(x, y, string(ch[0]), baseCursor)
+						}
 					}
 				}
 
-				x += chlen(currentLine.Value[i])
+				x += charLen
+				currVisCol += charLen
 			}
 
 			// render cursor after the end of the line in insert mode
 			if lineNum == cur.Line && cur.Char >= len(currentLine.Value) && isActiveWin {
-				view.SetContent(x, y, " ", wig.Color("ui.cursor"))
+				if x >= 0 && x < termWidth && y >= 0 && y < termHeight {
+					view.SetContent(x, y, " ", wig.Color("ui.cursor"))
+				}
 			}
 
 			y++
@@ -256,4 +302,3 @@ func getRenderChar(c rune) string {
 	}
 	return string(c)
 }
-
