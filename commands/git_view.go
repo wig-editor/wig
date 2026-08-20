@@ -755,7 +755,7 @@ func populateGitStatusBuffer(buf *wig.Buffer) (map[int]gitStatusLine, int) {
 	lines := make([]string, 0, len(items)+2)
 
 	// Top shortcuts guide bar
-	lines = append(lines, "  [Enter] Open/Stash  [s] Stage  [d] Diff  [c] Commit [P] Push  [z] Stash  [r] Refresh  [Esc] Close")
+	lines = append(lines, "  [Enter] Open/Stash  [s] Stage  [d] Diff  [c] Commit [p] Push  [z] Stash  [r] Refresh  [Esc] Close")
 	lineMap[0] = gitStatusLine{kind: "shortcut"}
 	lines = append(lines, "")
 	lineMap[1] = gitStatusLine{kind: "none"}
