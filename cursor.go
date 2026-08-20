@@ -1,6 +1,10 @@
 package wig
 
-import "unicode"
+import (
+	"unicode"
+
+	"github.com/mattn/go-runewidth"
+)
 
 type Cursor struct {
 	Line                 int
@@ -145,6 +149,39 @@ func WindowCursorGet(win *Window, buf *Buffer) *Cursor {
 
 func WindowCursorSet(win *Window, buf *Buffer, cur *Cursor) {
 	win.cursors[buf] = cur
+}
+
+// VisualCol calculates the visual screen column of a given rune index.
+func VisualCol(line []rune, char int) int {
+	col := 0
+	for i := 0; i < char && i < len(line); i++ {
+		if line[i] == '\t' {
+			col += 4
+		} else if line[i] == '\n' {
+			// skip
+		} else {
+			col += runewidth.RuneWidth(line[i])
+		}
+	}
+	return col
+}
+
+// RuneIndexFromVisualCol finds the rune index that corresponds to a given visual screen column.
+func RuneIndexFromVisualCol(line []rune, visCol int) int {
+	col := 0
+	for i, r := range line {
+		if col >= visCol {
+			return i
+		}
+		if r == '\t' {
+			col += 4
+		} else if r == '\n' {
+			// skip
+		} else {
+			col += runewidth.RuneWidth(r)
+		}
+	}
+	return len(line)
 }
 
 // class of char under cursor

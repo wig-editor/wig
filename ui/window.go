@@ -66,6 +66,19 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 		tsNodeCursor = buf.Highlighter.ForRange(uint32(startLine), startLine+uint32(termHeight))
 	}
 
+	// Precalculate visual block bounds for efficient rendering
+	var minVisCol, maxVisCol int
+	isVisualBlock := buf.Mode() == wig.MODE_VISUAL_BLOCK && buf.Selection != nil
+	if isVisualBlock {
+		sel := buf.Selection
+		startLineNode := wig.CursorLineByNum(buf, sel.Start.Line)
+		endLineNode := wig.CursorLineByNum(buf, sel.End.Line)
+		startVisCol := wig.VisualCol(startLineNode.Value, sel.Start.Char)
+		endVisCol := wig.VisualCol(endLineNode.Value, sel.End.Char)
+		minVisCol = min(startVisCol, endVisCol)
+		maxVisCol = max(startVisCol, endVisCol)
+	}
+
 	for currentLine != nil {
 		if lineNum >= offset && y <= termHeight {
 			// render each character in the line separately
@@ -127,6 +140,11 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 			// End Line Numbers & Git Signs
 
 			// render line
+			currVisCol := 0
+			for j := 0; j < skip; j++ {
+				currVisCol += chlen(currentLine.Value[j])
+			}
+
 			for i := skip; i < len(currentLine.Value); i++ {
 				// render selection
 				textStyle := wig.Color("default")
@@ -139,28 +157,31 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 				}
 
 				// Colors and styles
+				charLen := chlen(currentLine.Value[i])
 
 				// highlight current line
 				if lineNum == cur.Line {
 					textStyle = wig.ApplyBg("ui.cursorline", textStyle)
-					bg := strings.Repeat(" ", termWidth)
-					view.SetContent(x, y, bg, textStyle)
+					fillWidth := termWidth - x
+					if fillWidth > 0 {
+						bg := strings.Repeat(" ", fillWidth)
+						view.SetContent(x, y, bg, textStyle)
+					}
 				}
 
 				// selection
 				if buf.Selection != nil {
-					if buf.Mode() == wig.MODE_VISUAL_BLOCK {
+					if isVisualBlock {
 						sel := buf.Selection
 						minLine, maxLine := sel.Start.Line, sel.End.Line
 						if minLine > maxLine {
 							minLine, maxLine = maxLine, minLine
 						}
-						minChar, maxChar := sel.Start.Char, sel.End.Char
-						if minChar > maxChar {
-							minChar, maxChar = maxChar, minChar
-						}
-						if lineNum >= minLine && lineNum <= maxLine && i >= minChar && i <= maxChar {
-							textStyle = wig.ApplyBg("ui.selection.primary", textStyle)
+						if lineNum >= minLine && lineNum <= maxLine {
+							// Highlight based on visual screen columns
+							if currVisCol < maxVisCol && currVisCol+charLen > minVisCol {
+								textStyle = wig.ApplyBg("ui.selection.primary", textStyle)
+							}
 						}
 					} else if wig.SelectionCursorInRange(buf.Selection, wig.Cursor{Line: lineNum, Char: i}) {
 						textStyle = wig.ApplyBg("ui.selection.primary", textStyle)
@@ -229,7 +250,8 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 					}
 				}
 
-				x += chlen(currentLine.Value[i])
+				x += charLen
+				currVisCol += charLen
 			}
 
 			// render cursor after the end of the line in insert mode

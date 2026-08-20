@@ -1,5 +1,7 @@
 package wig
 
+import "strings"
+
 type Selection struct {
 	Start Cursor
 	End   Cursor
@@ -78,7 +80,7 @@ func SelectionBlockBounds(sel *Selection) (minLine, maxLine, minChar, maxChar in
 	return
 }
 
-// CmdSelectionBlockDelete deletes the rectangular column range [minChar,maxChar]
+// CmdSelectionBlockDelete deletes the rectangular column range [minVisCol,maxVisCol]
 // on every line in [minLine,maxLine], independently per line (ragged lines are
 // clipped, never merged) — unlike SelectionDelete's single contiguous stream cut.
 func CmdSelectionBlockDelete(ctx Context) {
@@ -89,33 +91,101 @@ func CmdSelectionBlockDelete(ctx Context) {
 	if ctx.Buf.TxStart() {
 		defer ctx.Buf.TxEnd()
 	}
-	minLine, maxLine, minChar, maxChar := SelectionBlockBounds(ctx.Buf.Selection)
+
+	sel := ctx.Buf.Selection
+	minLine, maxLine := sel.Start.Line, sel.End.Line
+	if minLine > maxLine {
+		minLine, maxLine = maxLine, minLine
+	}
+
+	startLineNode := CursorLineByNum(ctx.Buf, sel.Start.Line)
+	endLineNode := CursorLineByNum(ctx.Buf, sel.End.Line)
+	startVisCol := VisualCol(startLineNode.Value, sel.Start.Char)
+	endVisCol := VisualCol(endLineNode.Value, sel.End.Char)
+	minVisCol := min(startVisCol, endVisCol)
+	maxVisCol := max(startVisCol, endVisCol)
+
 	for i := minLine; i <= maxLine; i++ {
 		line := CursorLineByNum(ctx.Buf, i)
 		if line == nil {
 			continue
 		}
+		startChar := RuneIndexFromVisualCol(line.Value, minVisCol)
+		endChar := RuneIndexFromVisualCol(line.Value, maxVisCol)
+
 		lineLen := len(line.Value)
-		if minChar >= lineLen-1 {
-			continue // only trailing "\n" left at/after start col
-		}
-		end := maxChar + 1
-		if end > lineLen-1 {
-			end = lineLen - 1 // never eat the trailing "\n" -> never merges lines
-		}
-		if end <= minChar {
+		if startChar >= lineLen-1 {
 			continue
 		}
+		if endChar > lineLen-1 {
+			endChar = lineLen - 1
+		}
+		if endChar <= startChar {
+			continue
+		}
+
 		TextDelete(ctx.Buf, &Selection{
-			Start: Cursor{Line: i, Char: minChar},
-			End:   Cursor{Line: i, Char: end},
+			Start: Cursor{Line: i, Char: startChar},
+			End:   Cursor{Line: i, Char: endChar},
 		})
 	}
 	cur := ContextCursorGet(ctx)
 	cur.Line = minLine
-	cur.Char = minChar
+	cur.Char = RuneIndexFromVisualCol(CursorLineByNum(ctx.Buf, minLine).Value, minVisCol)
+	cur.PreserveCharPosition = cur.Char
 	ctx.Buf.Selection = nil
 }
+
+// CmdSelectionBlockYank captures the rectangular column range [minVisCol,maxVisCol]
+// on every line in [minLine,maxLine] as a single block register entry, one
+// line per row (independent per-line clipping, no stream join).
+func CmdSelectionBlockYank(ctx Context) {
+	defer CmdNormalMode(ctx)
+	if ctx.Buf.Selection == nil {
+		return
+	}
+	cur := ContextCursorGet(ctx)
+
+	sel := ctx.Buf.Selection
+	minLine, maxLine := sel.Start.Line, sel.End.Line
+	if minLine > maxLine {
+		minLine, maxLine = maxLine, minLine
+	}
+
+	startLineNode := CursorLineByNum(ctx.Buf, sel.Start.Line)
+	endLineNode := CursorLineByNum(ctx.Buf, sel.End.Line)
+	startVisCol := VisualCol(startLineNode.Value, sel.Start.Char)
+	endVisCol := VisualCol(endLineNode.Value, sel.End.Char)
+	minVisCol := min(startVisCol, endVisCol)
+	maxVisCol := max(startVisCol, endVisCol)
+
+	lines := make([]string, 0, maxLine-minLine+1)
+	for i := minLine; i <= maxLine; i++ {
+		line := CursorLineByNum(ctx.Buf, i)
+		if line == nil {
+			lines = append(lines, "")
+			continue
+		}
+		startChar := RuneIndexFromVisualCol(line.Value, minVisCol)
+		endChar := RuneIndexFromVisualCol(line.Value, maxVisCol)
+
+		lineLen := len(line.Value) - 1 // exclude trailing "\n"
+		start := min(startChar, lineLen)
+		end := min(endChar, lineLen)
+		if end < start {
+			end = start
+		}
+		lines = append(lines, string(line.Value[start:end]))
+	}
+	y := yank{val: strings.Join(lines, "\n"), isBlock: true}
+	if ctx.Editor.Yanks.Len == 0 || ctx.Editor.Yanks.Last().Value != y {
+		ctx.Editor.Yanks.PushBack(y)
+	}
+	cur.Line = minLine
+	cur.Char = RuneIndexFromVisualCol(CursorLineByNum(ctx.Buf, minLine).Value, minVisCol)
+	ctx.Buf.Selection = nil
+}
+
 func SelectionNormalize(sel *Selection) Selection {
 	if sel == nil {
 		return Selection{}

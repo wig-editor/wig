@@ -56,39 +56,6 @@ func CmdYankBeforeChar(ctx Context) func(Context) {
 	}
 }
 
-// CmdSelectionBlockYank captures the rectangular column range [minChar,maxChar]
-// on every line in [minLine,maxLine] as a single block register entry, one
-// line per row (independent per-line clipping, no stream join).
-func CmdSelectionBlockYank(ctx Context) {
-	defer CmdNormalMode(ctx)
-	if ctx.Buf.Selection == nil {
-		return
-	}
-	cur := ContextCursorGet(ctx)
-	minLine, maxLine, minChar, maxChar := SelectionBlockBounds(ctx.Buf.Selection)
-	lines := make([]string, 0, maxLine-minLine+1)
-	for i := minLine; i <= maxLine; i++ {
-		line := CursorLineByNum(ctx.Buf, i)
-		if line == nil {
-			lines = append(lines, "")
-			continue
-		}
-		lineLen := len(line.Value) - 1 // exclude trailing "\n"
-		start := min(minChar, lineLen)
-		end := min(maxChar+1, lineLen)
-		if end < start {
-			end = start
-		}
-		lines = append(lines, string(line.Value[start:end]))
-	}
-	y := yank{val: strings.Join(lines, "\n"), isBlock: true}
-	if ctx.Editor.Yanks.Len == 0 || ctx.Editor.Yanks.Last().Value != y {
-		ctx.Editor.Yanks.PushBack(y)
-	}
-	cur.Line = minLine
-	cur.Char = minChar
-	ctx.Buf.Selection = nil
-}
 func CmdYankToChar(_ Context) func(Context) {
 	return func(ctx Context) {
 		startCur := *ContextCursorGet(ctx)
