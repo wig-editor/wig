@@ -140,6 +140,37 @@ func BufferReloadFile(buf *Buffer) error {
 	return nil
 }
 
+// ReloadBufferContent replaces the buffer's contents with the given text,
+// recorded as a single undo/redo transaction. Use this instead of
+// BufferReloadFile whenever the caller wants undo to work across the reload.
+func ReloadBufferContent(ctx Context, content string) {
+	buf := ctx.Buf
+
+	if buf.TxStart() {
+		defer buf.TxEnd()
+	}
+
+	// Delete everything: from (0,0) to the end of the last line (incl. its '\n').
+	if buf.Lines.Len > 0 {
+		lastLine := buf.Lines.Last()
+		TextDelete(buf, &Selection{
+			Start: Cursor{Line: 0, Char: 0},
+			End:   Cursor{Line: buf.Lines.Len - 1, Char: len(lastLine.Value)},
+		})
+	}
+
+	// Insert new content. Newline handling: TextInsert splits on '\n'.
+	firstLine := buf.Lines.First()
+	if firstLine == nil {
+		// Buffer is empty — seed with an empty line first.
+		buf.Lines.PushBack([]rune("\n"))
+		firstLine = buf.Lines.First()
+	}
+	if content != "" {
+		TextInsert(buf, firstLine, 0, content)
+	}
+}
+
 func (buf *Buffer) SetMode(m Mode) {
 	buf.mode = m
 }
