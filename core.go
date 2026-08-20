@@ -457,8 +457,8 @@ func CmdKillBuffer(ctx Context) {
 
 	ctx.Editor.Lsp.DidClose(buf)
 
-	// Switch to the next available buffer before deleting the current one
-	CmdBufferNext(ctx)
+	// Jump back in history
+	CmdJumpBack(ctx)
 
 	// If we are still on the buffer we are trying to delete (e.g. only internal buffers left)
 	if ctx.Editor.ActiveWindow().Buffer() == buf {
