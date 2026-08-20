@@ -38,11 +38,8 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	lineNumTextStyle := wig.Color("ui.linenr")
 	lineNumTextStyleSelected := wig.Color("ui.linenr.selected")
 	hasGitSigns := true
-	leftPadding := 0
-	signColWidth := 0
-	if hasGitSigns {
-		signColWidth = 2
-	}
+	leftPadding := WindowTextPadding(e, buf)
+	signColWidth := 2
 	lineNumWidth := 0
 	if e.Config.ShowLineNumbers {
 		lineNumWidth = len(fmt.Sprintf("%d", buf.CountLines())) + 1
@@ -51,7 +48,6 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	if buf.BlameEnabled && len(buf.BlameLines) > 0 {
 		blameColWidth = buf.BlameWidth + 1
 	}
-	leftPadding = signColWidth + lineNumWidth + blameColWidth
 
 	y := 0
 
@@ -301,4 +297,33 @@ func getRenderChar(c rune) string {
 		return " "
 	}
 	return string(c)
+}
+
+// WindowTextPadding returns the X offset at which buffer text begins inside
+// a window's viewport, accounting for the git sign column, line-number
+// gutter, and optional blame column.
+//
+// Every renderer (text in WindowRender, indent guides in
+// render.RenderIndentGuides, future overlays like diagnostics / virtual
+// text) MUST use this function. Hardcoding the layout in two places is
+// what previously caused indent guides to drift when the git-sign column
+// was always reserved by WindowRender (hasGitSigns := true) but
+// RenderIndentGuides still used len(buf.GitSigns) > 0.
+func WindowTextPadding(e *wig.Editor, buf *wig.Buffer) int {
+	// Always reserve the sign column so the gutter width is stable
+	// whether or not the current buffer currently has git signs. This
+	// matches WindowRender's hasGitSigns := true behaviour.
+	signColWidth := 2
+
+	lineNumWidth := 0
+	if e.Config.ShowLineNumbers {
+		lineNumWidth = len(fmt.Sprintf("%d", buf.CountLines())) + 1
+	}
+
+	blameColWidth := 0
+	if buf.BlameEnabled && len(buf.BlameLines) > 0 {
+		blameColWidth = buf.BlameWidth + 1
+	}
+
+	return signColWidth + lineNumWidth + blameColWidth
 }

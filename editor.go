@@ -17,6 +17,7 @@ type EditorConfig struct {
 	FormatOnSave        bool
 	GitStatusView       string // "full" or "split"
 	GitBlameView        string // "full" or "split"
+	IndentGuides        bool
 }
 
 type View interface {
@@ -116,6 +117,7 @@ func (e *Editor) ReadConfigFile() {
 		FormatOnSave:        false,
 		GitStatusView:       "full",
 		GitBlameView:        "split",
+		IndentGuides:        true,
 	}
 }
 
