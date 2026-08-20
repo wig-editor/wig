@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/pelletier/go-toml"
@@ -27,6 +28,7 @@ type Style struct {
 
 var styles map[string]tcell.Style
 var currentTheme Theme
+var stylesMutex sync.RWMutex
 
 func init() {
 	ApplyTheme("solarized_dark")
@@ -104,6 +106,9 @@ func loadColors(name string) (Theme, error) {
 // TODO: fix resolve of nested styles.
 // ui.menu.selected should be build from ui.menu
 func buildStyles() {
+	stylesMutex.Lock()
+	defer stylesMutex.Unlock()
+
 	styles = map[string]tcell.Style{}
 
 	for k := range currentTheme.Colors {
@@ -211,23 +216,39 @@ func parsePalette(theme map[string]any) map[string]string {
 }
 
 func Color(color string) tcell.Style {
+	stylesMutex.RLock()
 	s, ok := styles[color]
+	stylesMutex.RUnlock()
 	if ok {
 		return s
 	}
 
+	var r tcell.Style
 	parts := strings.Split(color, ".")
 	if len(parts) > 1 {
 		ns := strings.Join(parts[:len(parts)-1], ".")
-		r := Color(ns)
-		styles[color] = r
-		return r
+		r = Color(ns)
+	} else {
+		stylesMutex.RLock()
+		r = styles["default"]
+		stylesMutex.RUnlock()
 	}
 
-	return styles["default"]
+	stylesMutex.Lock()
+	if s, ok := styles[color]; ok {
+		stylesMutex.Unlock()
+		return s
+	}
+	styles[color] = r
+	stylesMutex.Unlock()
+
+	return r
 }
 
 func FindColor(color string) (s tcell.Style, found bool) {
+	stylesMutex.RLock()
+	defer stylesMutex.RUnlock()
+
 	s, ok := styles[color]
 	if ok {
 		return s, true
