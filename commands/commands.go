@@ -338,7 +338,7 @@ func CmdFormatBuffer(ctx wig.Context) {
 			ctx.Editor.LogMessage(string(stdout))
 			return
 		}
-		CmdReloadBuffer(ctx)
+		reloadBufferPostFormat(ctx)
 	}
 
 	if strings.HasSuffix(ctx.Buf.FilePath, ".odin") {
@@ -350,6 +350,26 @@ func CmdFormatBuffer(ctx wig.Context) {
 			ctx.Editor.LogMessage(string(stdout))
 			return
 		}
+		reloadBufferPostFormat(ctx)
+	}
+}
+
+// reloadBufferPostFormat reloads the buffer after formatting. If FormatOnSave
+// is enabled, it uses a transactional reload so undo/redo history is preserved.
+// Otherwise, it falls back to a standard hard reload.
+func reloadBufferPostFormat(ctx wig.Context) {
+	if ctx.Editor.Config.FormatOnSave {
+		data, err := os.ReadFile(ctx.Buf.FilePath)
+		if err != nil {
+			ctx.Editor.EchoMessage(err.Error())
+			return
+		}
+		wig.ReloadBufferContent(ctx, string(data))
+		if ctx.Buf.Highlighter != nil {
+			ctx.Buf.Highlighter.Build()
+		}
+		ctx.Editor.Events.Broadcast(wig.EventBufferReloaded{Buf: ctx.Buf})
+	} else {
 		CmdReloadBuffer(ctx)
 	}
 }
@@ -380,9 +400,14 @@ func CmdSearchWordUnderCursor(ctx wig.Context) {
 }
 
 func CmdFormatBufferAndSave(ctx wig.Context) {
+	// Temporarily disable FormatOnSave to avoid double formatting inside CmdSaveFile
+	origFormatOnSave := ctx.Editor.Config.FormatOnSave
+	ctx.Editor.Config.FormatOnSave = false
 	wig.CmdSaveFile(ctx)
-	CmdFormatBuffer(ctx)
-	wig.CmdSaveFile(ctx)
+	ctx.Editor.Config.FormatOnSave = origFormatOnSave
+
+	CmdFormatBuffer(ctx) // Writes formatted content to disk + reloads buffer transactionally
+	wig.CmdSaveFile(ctx) // Marks dirty=false and sets SavedAtPosition
 
 	ctx.Editor.Lsp.DidClose(ctx.Buf)
 	ctx.Editor.Lsp.DidOpen(ctx.Buf)

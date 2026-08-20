@@ -416,8 +416,7 @@ func CmdSaveFile(ctx Context) {
 		return
 	}
 	ctx.Buf.Dirty = false
-	// Mark the current undo history position as the "saved" state
-	ctx.Buf.UndoRedo.SavedAtPosition = ctx.Buf.UndoRedo.Position
+
 	if ctx.Editor.Config.FormatOnSave {
 		if def, ok := AllCommands["CmdFormatBuffer"]; ok {
 			if fn, ok := def.Fn.(func(Context)); ok {
@@ -431,6 +430,9 @@ func CmdSaveFile(ctx Context) {
 			}
 		}
 	}
+
+	// Mark saved state *after* any format-on-save transaction has been pushed.
+	ctx.Buf.UndoRedo.SavedAtPosition = ctx.Buf.UndoRedo.Position
 	ctx.Editor.Lsp.DidSave(ctx.Buf)
 }
 
@@ -538,21 +540,11 @@ func CmdChangeInsideBlock(ctx Context) {
 
 func CmdUndo(ctx Context) {
 	ctx.Buf.UndoRedo.Undo()
-	// TODO: undo/redo does not support lsp change text events.
-	// so we simply reload how buffer for now.
-	{
-		ctx.Editor.Lsp.DidClose(ctx.Buf)
-		ctx.Editor.Lsp.DidOpen(ctx.Buf)
-	}
 	EditorInst.Events.Broadcast(EventBufferReloaded{Buf: ctx.Buf})
 }
 
 func CmdRedo(ctx Context) {
 	ctx.Buf.UndoRedo.Redo()
-	{
-		ctx.Editor.Lsp.DidClose(ctx.Buf)
-		ctx.Editor.Lsp.DidOpen(ctx.Buf)
-	}
 	EditorInst.Events.Broadcast(EventBufferReloaded{Buf: ctx.Buf})
 }
 
