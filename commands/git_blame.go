@@ -154,79 +154,21 @@ func (h *DiffHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCu
 	return &wig.HighlighterCursor{Cursor: nodes.First()}
 }
 
-// BlameHighlighter provides syntax highlighting for the git blame panel.
-type BlameHighlighter struct {
-	Buf         *wig.Buffer
-	TimeWidth   int
-	AuthorWidth int
-	HashWidth   int
-}
-
-func (h *BlameHighlighter) Build()                          {}
-func (h *BlameHighlighter) TextChanged(wig.EventTextChange) {}
-
-func (h *BlameHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCursor {
-	if h.Buf == nil {
-		return nil
-	}
-
-	nodes := wig.List[wig.HighlighterNode]{}
-
-	timeStart := uint32(0)
-	timeEnd := uint32(h.TimeWidth)
-	authorStart := timeEnd + 2
-	authorEnd := authorStart + uint32(h.AuthorWidth)
-	hashStart := authorEnd + 2
-	hashEnd := hashStart + uint32(h.HashWidth)
-
-	line := wig.CursorLineByNum(h.Buf, int(startLine))
-	for lineNum := startLine; line != nil && lineNum <= endLine; lineNum++ {
-		text := line.Value.String()
-		runes := []rune(text)
-		lineLen := uint32(len(runes))
-
-		if lineLen >= hashEnd {
-			// Relative time
-			nodes.PushBack(wig.HighlighterNode{
-				NodeName:  "comment",
-				StartLine: lineNum,
-				StartChar: timeStart,
-				EndLine:   lineNum,
-				EndChar:   min(timeEnd, lineLen),
-			})
-			// Author
-			nodes.PushBack(wig.HighlighterNode{
-				NodeName:  "ui.text",
-				StartLine: lineNum,
-				StartChar: authorStart,
-				EndLine:   lineNum,
-				EndChar:   min(authorEnd, lineLen),
-			})
-			// Hash
-			nodes.PushBack(wig.HighlighterNode{
-				NodeName:  "constant",
-				StartLine: lineNum,
-				StartChar: hashStart,
-				EndLine:   lineNum,
-				EndChar:   min(hashEnd, lineLen),
-			})
-		}
-
-		line = line.Next()
-	}
-
-	if nodes.First() == nil {
-		return nil
-	}
-
-	return &wig.HighlighterCursor{Cursor: nodes.First()}
-}
-
-// CmdGitBlame runs git blame for the current buffer's file and opens the blame
-// output in a split window with group-collapsed metadata and relative timestamps.
+// CmdGitBlame toggles inline git blame annotations for the current buffer.
+// When enabled, blame metadata (relative time, author, short hash) is shown
+// in a virtual column to the left of the code, preserving syntax highlighting.
 func CmdGitBlame(ctx wig.Context) {
 	if ctx.Buf == nil || ctx.Buf.FilePath == "" || strings.HasPrefix(ctx.Buf.FilePath, "[") {
 		ctx.Editor.EchoMessage("No file to blame")
+		return
+	}
+
+	// Toggle off
+	if ctx.Buf.BlameEnabled {
+		ctx.Buf.BlameEnabled = false
+		ctx.Buf.BlameLines = nil
+		ctx.Buf.BlameWidth = 0
+		ctx.Editor.Redraw()
 		return
 	}
 
@@ -268,29 +210,9 @@ func CmdGitBlame(ctx wig.Context) {
 		}
 	}
 
-	cur := wig.ContextCursorGet(ctx)
-	targetLine := 0
-	if cur != nil {
-		targetLine = cur.Line
-	}
-	if targetLine >= len(entries) {
-		targetLine = len(entries) - 1
-	}
-	if targetLine < 0 {
-		targetLine = 0
-	}
-
-	bufName := fmt.Sprintf("[blame: %s]", base)
-	blameBuf := ctx.Editor.BufferFindByFilePath(bufName, false)
-	if blameBuf == nil {
-		blameBuf = wig.NewBuffer()
-		blameBuf.FilePath = bufName
-		ctx.Editor.Buffers = append(ctx.Editor.Buffers, blameBuf)
-	}
-	blameBuf.ResetLines()
-
+	blameLines := make(map[int]wig.BlameInfo, len(entries))
 	var lastHash string
-	for _, e := range entries {
+	for i, e := range entries {
 		shortHash := e.hash
 		if len(shortHash) > hashWidth {
 			shortHash = shortHash[:hashWidth]
@@ -302,129 +224,24 @@ func CmdGitBlame(ctx wig.Context) {
 		}
 		authorDisplay := string(authorRunes)
 
-		var lineText string
+		var display string
 		if e.hash != lastHash {
 			timeStr := formatRelativeTime(time.Unix(e.authorTime, 0), now)
-			lineText = fmt.Sprintf("%-*s  %-*s  %s  %s",
-				timeWidth, timeStr,
-				authorWidth, authorDisplay,
-				shortHash,
-				e.content)
+			display = fmt.Sprintf("%-*s  %-*s  %s", timeWidth, timeStr, authorWidth, authorDisplay, shortHash)
 			lastHash = e.hash
 		} else {
-			lineText = fmt.Sprintf("%-*s  %-*s  %s  %s",
-				timeWidth, "",
-				authorWidth, "",
-				strings.Repeat(" ", hashWidth),
-				e.content)
+			display = fmt.Sprintf("%-*s  %-*s  %s", timeWidth, "", authorWidth, "", strings.Repeat(" ", hashWidth))
 		}
-		blameBuf.Append(lineText)
-	}
 
-	blameBuf.Highlighter = &BlameHighlighter{
-		Buf:         blameBuf,
-		TimeWidth:   timeWidth,
-		AuthorWidth: authorWidth,
-		HashWidth:   hashWidth,
-	}
-
-	blameBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
-		wig.MODE_NORMAL: wig.KeyMap{
-			"Enter": func(c wig.Context) {
-				bCur := wig.ContextCursorGet(c)
-				lineIdx := 0
-				if bCur != nil {
-					lineIdx = bCur.Line
-				}
-				origBuf, err := c.Editor.OpenFile(targetFilePath)
-				if err != nil {
-					c.Editor.EchoMessage("Cannot open: " + err.Error())
-					return
-				}
-				c.Buf = origBuf
-				wig.VisitAtLine(c, blameBuf, wig.VisitOptions{
-					Center: true,
-					Cursor: &wig.Cursor{Line: lineIdx, Char: 0},
-				})
-			},
-			"c": func(c wig.Context) {
-				bCur := wig.ContextCursorGet(c)
-				if bCur == nil || bCur.Line < 0 || bCur.Line >= len(entries) {
-					return
-				}
-				hash := entries[bCur.Line].hash
-				if strings.Trim(hash, "0") == "" {
-					c.Editor.EchoMessage("Not committed yet")
-					return
-				}
-
-				showCmd := exec.Command("git", "show", "--stat", "-p", hash)
-				showCmd.Dir = dir
-				out, err := showCmd.CombinedOutput()
-				if err != nil {
-					c.Editor.EchoMessage("Error: " + err.Error())
-					return
-				}
-
-				shortHash := hash
-				if len(shortHash) > 7 {
-					shortHash = shortHash[:7]
-				}
-				commitBufName := fmt.Sprintf("[commit: %s]", shortHash)
-				cBuf := c.Editor.BufferFindByFilePath(commitBufName, true)
-				cBuf.ResetLines()
-				for _, l := range strings.Split(string(out), "\n") {
-					cBuf.Append(l)
-				}
-				cBuf.Highlighter = &DiffHighlighter{Buf: cBuf}
-
-				savedCur := *bCur
-				backToBlame := func(ctx wig.Context) {
-					ctx.Buf = blameBuf
-					ctx.Editor.ActiveWindow().VisitBuffer(ctx, savedCur)
-					wig.CmdCursorCenter(ctx)
-				}
-
-				cBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
-					wig.MODE_NORMAL: wig.KeyMap{
-						"c":   backToBlame,
-						"q":   backToBlame,
-						"Esc": backToBlame,
-					},
-				})
-
-				c.Buf = cBuf
-				c.Editor.ActiveWindow().VisitBuffer(c, wig.Cursor{Line: 0, Char: 0})
-			},
-			"q": func(c wig.Context) {
-				if len(c.Editor.Windows) > 1 {
-					wig.CmdWindowClose(c)
-				} else {
-					wig.CmdBufferCycle(c)
-				}
-			},
-			"Esc": func(c wig.Context) {
-				if len(c.Editor.Windows) > 1 {
-					wig.CmdWindowClose(c)
-				} else {
-					wig.CmdBufferCycle(c)
-				}
-			},
-		},
-	})
-
-	if ctx.Editor.Config.GitBlameView == "full" {
-		if len(ctx.Editor.Windows) > 1 {
-			wig.CmdWindowCloseOther(ctx)
-		}
-	} else {
-		if len(ctx.Editor.Windows) == 1 {
-			wig.CmdWindowVSplit(ctx)
-			wig.CmdWindowNext(ctx)
+		blameLines[i] = wig.BlameInfo{
+			Hash:    e.hash,
+			Author:  e.author,
+			Display: display,
 		}
 	}
 
-	ctx.Buf = blameBuf
-	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{Line: targetLine, Char: 0})
-	wig.CmdCursorCenter(ctx)
+	ctx.Buf.BlameLines = blameLines
+	ctx.Buf.BlameWidth = timeWidth + 2 + authorWidth + 2 + hashWidth
+	ctx.Buf.BlameEnabled = true
+	ctx.Editor.Redraw()
 }

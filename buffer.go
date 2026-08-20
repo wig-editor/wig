@@ -48,6 +48,12 @@ type VisualBlockInsertState struct {
 	Char      int
 }
 
+type BlameInfo struct {
+	Hash    string
+	Author  string
+	Display string
+}
+
 type Buffer struct {
 	mode              Mode
 	FilePath          string
@@ -60,6 +66,9 @@ type Buffer struct {
 	Highlighter       Highlighter
 	KeyHandler        *KeyHandler
 	GitSigns          map[int]rune
+	BlameEnabled      bool
+	BlameLines        map[int]BlameInfo
+	BlameWidth        int
 	VisualBlockInsert *VisualBlockInsertState
 
 	OpenCount int
@@ -117,6 +126,9 @@ func BufferReloadFile(buf *Buffer) error {
 	defer file.Close()
 
 	buf.Selection = nil
+	buf.BlameEnabled = false
+	buf.BlameLines = nil
+	buf.BlameWidth = 0
 	buf.Lines = List[Line]{}
 
 	newLine := "\n"

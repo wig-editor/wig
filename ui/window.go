@@ -47,7 +47,11 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	if e.Config.ShowLineNumbers {
 		lineNumWidth = len(fmt.Sprintf("%d", buf.CountLines())) + 1
 	}
-	leftPadding = signColWidth + lineNumWidth
+	blameColWidth := 0
+	if buf.BlameEnabled && len(buf.BlameLines) > 0 {
+		blameColWidth = buf.BlameWidth + 1
+	}
+	leftPadding = signColWidth + lineNumWidth + blameColWidth
 
 	y := 0
 
@@ -92,8 +96,8 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 
 			diagnostics := e.Lsp.Diagnostics(buf, lineNum)
 
-			// Line numbers & Git Signs
-			if e.Config.ShowLineNumbers || hasGitSigns {
+			// Line numbers & Git Signs & Blame
+			if e.Config.ShowLineNumbers || hasGitSigns || buf.BlameEnabled {
 				xCur := 0
 				if hasGitSigns {
 					sign, ok := buf.GitSigns[lineNum+1] // GitSigns is 1-indexed
@@ -135,6 +139,15 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 							view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyle)
 						}
 					}
+				}
+
+				if buf.BlameEnabled && blameColWidth > 0 {
+					if info, ok := buf.BlameLines[lineNum]; ok {
+						if xCur >= 0 && xCur < termWidth && y >= 0 && y < termHeight {
+							view.SetContent(xCur, y, info.Display, wig.Color("comment"))
+						}
+					}
+					xCur += blameColWidth
 				}
 			}
 			// End Line Numbers & Git Signs
