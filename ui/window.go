@@ -37,7 +37,7 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	lineNum := 0
 	lineNumTextStyle := wig.Color("ui.linenr")
 	lineNumTextStyleSelected := wig.Color("ui.linenr.selected")
-	hasGitSigns := len(buf.GitSigns) > 0
+	hasGitSigns := true
 	leftPadding := 0
 	signColWidth := 0
 	if hasGitSigns {
