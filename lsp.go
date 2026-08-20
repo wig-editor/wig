@@ -7,7 +7,6 @@ import (
 	"io"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -308,9 +307,7 @@ func (l *LspManager) Hover(buf *Buffer, cursor Cursor) (sign string) {
 		l.e.LogError(err)
 	}
 
-	result := strings.ReplaceAll(hover.Contents.Value, "\n", "")
-
-	return result
+	return hover.Contents.Value
 }
 
 func (l *LspManager) Definition(buf *Buffer, cursor Cursor) (filePath string, cur Cursor) {

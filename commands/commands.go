@@ -469,7 +469,7 @@ func CmdLspHover(ctx wig.Context) {
 	cur := wig.ContextCursorGet(ctx)
 	sign := ctx.Editor.Lsp.Hover(ctx.Buf, *cur)
 	if sign != "" {
-		ctx.Editor.EchoMessage(sign)
+		ui.HoverInit(ctx, sign)
 	}
 }
 
