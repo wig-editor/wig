@@ -2,16 +2,16 @@ package commands
 
 import (
 	"fmt"
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/drivers/pipe"
+	"github.com/firstrow/wig/ui"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"github.com/firstrow/wig"
-	"github.com/firstrow/wig/drivers/pipe"
-	"github.com/firstrow/wig/ui"
+	"time"
 )
 
 func CmdThemeSelect(ctx wig.Context) {
@@ -95,28 +95,46 @@ func CmdBufferPicker(ctx wig.Context) {
 
 func CmdMRUBufferPicker(ctx wig.Context) {
 	posCache := wig.LoadPositionCache()
+	sortByRecent := true
 
 	type kv struct {
 		Key string
 		Val wig.PositionEntry
 	}
-	var entries []kv
-	for k, v := range posCache.Files {
-		if _, err := os.Stat(k); err == nil {
-			entries = append(entries, kv{k, v})
+
+	buildItems := func() []ui.PickerItem[string] {
+		var entries []kv
+		for k, v := range posCache.Files {
+			if _, err := os.Stat(k); err == nil {
+				entries = append(entries, kv{k, v})
+			}
 		}
-	}
 
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Val.OpenCount > entries[j].Val.OpenCount
-	})
-
-	items := make([]ui.PickerItem[string], 0, len(entries))
-	for _, e := range entries {
-		items = append(items, ui.PickerItem[string]{
-			Name:  e.Key,
-			Value: e.Key,
+		sort.Slice(entries, func(i, j int) bool {
+			if sortByRecent {
+				return entries[i].Val.Timestamp > entries[j].Val.Timestamp
+			}
+			return entries[i].Val.OpenCount > entries[j].Val.OpenCount
 		})
+
+		res := make([]ui.PickerItem[string], 0, len(entries))
+		for _, e := range entries {
+			var prefix string
+			if sortByRecent {
+				if e.Val.Timestamp > 0 {
+					prefix = time.Unix(e.Val.Timestamp, 0).Format("01-02 15:04")
+				} else {
+					prefix = "--------"
+				}
+			} else {
+				prefix = fmt.Sprintf("%d", e.Val.OpenCount)
+			}
+			res = append(res, ui.PickerItem[string]{
+				Name:  fmt.Sprintf("[%s] %s", prefix, e.Key),
+				Value: e.Key,
+			})
+		}
+		return res
 	}
 
 	action := func(p *ui.UiPicker[string], i *ui.PickerItem[string]) {
@@ -158,9 +176,38 @@ func CmdMRUBufferPicker(ctx wig.Context) {
 	picker := ui.PickerInit(
 		ctx.Editor,
 		action,
-		items,
+		buildItems(),
 	)
-	picker.SetTitle("MRU Buffers")
+
+	updateTitle := func() {
+		if sortByRecent {
+			picker.SetTitle("MRU Buffers (Most Recent) [Ins: Most Used]")
+		} else {
+			picker.SetTitle("MRU Buffers (Most Used) [Ins: Most Recent]")
+		}
+	}
+	updateTitle()
+
+	picker.OnKey("Insert", func(ctx wig.Context) {
+		sortByRecent = !sortByRecent
+		updateTitle()
+		picker.SetItems(buildItems())
+		ctx.Editor.Redraw()
+	})
+
+	picker.OnKey("Delete", func(ctx wig.Context) {
+		item := picker.GetActiveItem()
+		if item == nil {
+			return
+		}
+		filePath := item.Value
+
+		delete(posCache.Files, filePath)
+		posCache.Save()
+
+		picker.SetItems(buildItems())
+		ctx.Editor.Redraw()
+	})
 }
 
 func CmdCommandPalettePicker(ctx wig.Context) {

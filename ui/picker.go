@@ -183,6 +183,13 @@ func (u *UiPicker[T]) CallAction() {
 	u.action(u, u.activeItemT)
 }
 
+func (u *UiPicker[T]) GetActiveItem() *PickerItem[T] {
+	if u.activeItem >= 0 && u.activeItem < len(u.filtered) {
+		return &u.filtered[u.activeItem]
+	}
+	return nil
+}
+
 func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {
 	for i := range items {
 		name := strings.TrimRightFunc(items[i].Name, unicode.IsSpace)
@@ -191,7 +198,15 @@ func (u *UiPicker[T]) SetItems(items []PickerItem[T]) {
 
 	u.items = items
 	u.filtered = items
-	u.activeItem = 0
+
+	// Preserve cursor position when updating items, clamping to new bounds.
+	// This prevents the cursor from jumping to the top when an item is deleted.
+	if u.activeItem >= len(u.filtered) {
+		u.activeItem = len(u.filtered) - 1
+	}
+	if u.activeItem < 0 {
+		u.activeItem = 0
+	}
 }
 
 func (u *UiPicker[T]) ClearInput() {

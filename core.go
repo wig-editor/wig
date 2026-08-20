@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strings"
 	"text/scanner"
+	"time"
 	"unicode"
 	"unicode/utf8"
 )
@@ -432,6 +433,19 @@ func CmdKillBuffer(ctx Context) {
 	}
 
 	buf := ctx.Buf
+
+	// Save the cursor position of the buffer being killed to position.toml
+	if buf.FilePath != "" && !strings.HasPrefix(buf.FilePath, "[") {
+		posCache := LoadPositionCache()
+		cur := WindowCursorGet(ctx.Editor.ActiveWindow(), buf)
+		posCache.Files[buf.FilePath] = PositionEntry{
+			Line:      cur.Line,
+			OpenCount: buf.OpenCount,
+			Timestamp: time.Now().Unix(),
+		}
+		posCache.Save()
+	}
+
 	ctx.Editor.Lsp.DidClose(buf)
 
 	// Switch to the next available buffer before deleting the current one
