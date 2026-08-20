@@ -16,7 +16,7 @@ import (
 
 const gitViewMaxBranches = 20
 
-// ── helpers ──────────────────────────────────────────────
+// helpers
 
 func gitRun(args ...string) string {
 	cmd := exec.Command("git", args...)
@@ -39,7 +39,7 @@ func gitUnquotePath(path string) string {
 	return path
 }
 
-// ── data: git status panel ───────────────────────────────
+// data: git status panel
 
 // GetGitStatusItems builds the full git status panel data.
 func GetGitStatusItems() []wig.GitViewItem {
@@ -1013,23 +1013,16 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 					diffBufName := fmt.Sprintf("[diff: %s]", entry.item.StashRef)
 					dBuf := ctx.Editor.BufferFindByFilePath(diffBufName, true)
 					dBuf.ResetLines()
-					for _, l := range strings.Split(diffOut, "\n") {
+					for l := range strings.SplitSeq(diffOut, "\n") {
 						dBuf.Append(l)
 					}
 					dBuf.Highlighter = &DiffHighlighter{Buf: dBuf}
 
-					savedCur := *cur
-					backToGit := func(c wig.Context) {
-						c.Buf = gitBuf
-						c.Editor.ActiveWindow().VisitBuffer(c, savedCur)
-						wig.CmdCursorCenter(c)
-					}
-
 					dBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
 						wig.MODE_NORMAL: wig.KeyMap{
-							"d":   backToGit,
-							"q":   backToGit,
-							"Esc": backToGit,
+							"d":   wig.CmdKillBuffer,
+							"q":   wig.CmdKillBuffer,
+							"Esc": wig.CmdKillBuffer,
 						},
 					})
 
@@ -1056,18 +1049,11 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 				}
 				dBuf.Highlighter = &DiffHighlighter{Buf: dBuf}
 
-				savedCur := *cur
-				backToGit := func(c wig.Context) {
-					c.Buf = gitBuf
-					c.Editor.ActiveWindow().VisitBuffer(c, savedCur)
-					wig.CmdCursorCenter(c)
-				}
-
 				dBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
 					wig.MODE_NORMAL: wig.KeyMap{
-						"d":   backToGit,
-						"q":   backToGit,
-						"Esc": backToGit,
+						"d":   wig.CmdKillBuffer,
+						"q":   wig.CmdKillBuffer,
+						"Esc": wig.CmdKillBuffer,
 					},
 				})
 
@@ -1086,12 +1072,10 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 				ctx.Editor.EchoMessage("Git status refreshed")
 			},
 			"q": func(ctx wig.Context) {
-				pendingStash = nil
-				if len(ctx.Editor.Windows) > 1 {
-					wig.CmdWindowClose(ctx)
-				} else {
-					wig.CmdBufferCycle(ctx)
-				}
+				wig.CmdKillBuffer(ctx)
+			},
+			"ctrl+c": func(ctx wig.Context) {
+				GitShowCommitBuffer(ctx)
 			},
 			"Esc": func(ctx wig.Context) {
 				if pendingStash != nil {
@@ -1103,6 +1087,46 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 			},
 		},
 	})
+}
+
+func exitModeOrClose(ctx wig.Context) {
+	if ctx.Buf.Mode() != wig.MODE_NORMAL {
+		wig.CmdNormalMode(ctx)
+		return
+	}
+
+	wig.CmdKillBuffer(ctx)
+}
+
+func GitShowCommitBuffer(ctx wig.Context) {
+	contents := gitRun("commit", "-v")
+	diffBufName := "[git: edit commit message]"
+	dBuf := ctx.Editor.BufferFindByFilePath(diffBufName, true)
+	dBuf.ResetLines()
+	for l := range strings.SplitSeq(contents, "\n") {
+		dBuf.Append(l)
+	}
+	dBuf.Highlighter = &DiffHighlighter{Buf: dBuf}
+
+	dBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
+		wig.MODE_NORMAL: wig.KeyMap{
+			"Esc":    exitModeOrClose,
+			"q":      exitModeOrClose,
+			"ctrl+c": gitCommitFinish,
+		},
+		wig.MODE_INSERT: wig.KeyMap{
+			"Esc":    exitModeOrClose,
+			"q":      exitModeOrClose,
+			"ctrl+q": gitCommitFinish,
+		},
+	})
+
+	ctx.Buf = dBuf
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{Line: 0, Char: 0})
+}
+
+func gitCommitFinish(ctx wig.Context) {
+	wig.CmdKillBuffer(ctx)
 }
 
 // GitStageItem stages or unstages a file.
