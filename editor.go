@@ -285,3 +285,11 @@ func (e *Editor) Redraw() {
 func (e *Editor) ScreenSync() {
 	e.ScreenSyncCh <- 1
 }
+
+// CmdToggleIndentGuides flips the IndentGuides config flag at runtime so
+// you can show/hide virtual indent guides without restarting. The initial
+// value comes from the "indent_guides" key in config.toml (default: true).
+func CmdToggleIndentGuides(ctx Context) {
+	ctx.Editor.Config.IndentGuides = !ctx.Editor.Config.IndentGuides
+	ctx.Editor.Redraw()
+}

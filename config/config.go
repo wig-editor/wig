@@ -259,6 +259,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 					"p": wig.CmdVisitPrevLine,
 				},
 				"t": commands.CmdThemeSelect,
+				"i": wig.CmdToggleIndentGuides,
 				"y": commands.CmdClipboardCopy,
 				"p": commands.CmdClipboardPaste,
 				"g": wig.KeyMap{
