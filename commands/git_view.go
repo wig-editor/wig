@@ -1084,7 +1084,7 @@ func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
 					ctx.Editor.EchoMessage("Cancelled")
 					return
 				}
-				ctx.Editor.EchoMessage("")
+				wig.CmdKillBuffer(ctx)
 			},
 		},
 	})
