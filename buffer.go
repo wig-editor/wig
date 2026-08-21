@@ -245,7 +245,14 @@ func (b *Buffer) Save() error {
 
 func (b *Buffer) Append(s string) {
 	// TODO: rewrite. use TextInsert as this messes up lsp and treesitter
-	for line := range strings.SplitSeq(s, "\n") {
+	lines := strings.Split(s, "\n")
+	// If the string ends with a newline, strings.Split produces a trailing empty string.
+	// This would add a bogus empty line at the end of the buffer, which breaks git diff
+	// and causes undo/redo to accumulate blank lines at the end of the file.
+	if len(s) > 0 && s[len(s)-1] == '\n' {
+		lines = lines[:len(lines)-1]
+	}
+	for _, line := range lines {
 		b.Lines.PushBack([]rune(line + "\n"))
 	}
 }
