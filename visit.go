@@ -17,15 +17,15 @@ type VisitOptions struct {
 // 2. If not found, fallback to the "other" window (not active) if it exists.
 // 3. If still not found, return nil.
 func findVisitSourceBuffer(e *Editor) *Buffer {
-	for _, win := range e.Windows {
+	for _, win := range e.Windows() {
 		if win.Buffer() != nil && strings.HasPrefix(win.Buffer().FilePath, "[rgcollect") {
 			return win.Buffer()
 		}
 	}
 
 	e.EchoMessage("rgcollect buffer not visible. using other window.")
-	if len(e.Windows) > 1 {
-		for _, win := range e.Windows {
+	if len(e.Windows()) > 1 {
+		for _, win := range e.Windows() {
 			if win == e.ActiveWindow() {
 				continue
 			}
