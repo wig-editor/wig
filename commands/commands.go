@@ -2,9 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"github.com/firstrow/wig"
-	"github.com/firstrow/wig/drivers/pipe"
-	"github.com/firstrow/wig/ui"
 	"os"
 	"os/exec"
 	"path"
@@ -12,6 +9,10 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/drivers/pipe"
+	"github.com/firstrow/wig/ui"
 )
 
 func CmdThemeSelect(ctx wig.Context) {
@@ -517,7 +518,7 @@ func CmdViewDefinitionOtherWindow(ctx wig.Context) {
 	curWin := ctx.Editor.ActiveWindow()
 	cur := wig.ContextCursorGet(ctx)
 
-	if len(ctx.Editor.Windows) == 1 {
+	if len(ctx.Editor.Windows()) == 1 {
 		wig.CmdWindowVSplit(ctx)
 	}
 

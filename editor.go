@@ -59,12 +59,16 @@ const (
 	LayoutVertical   Layout = 1
 )
 
+type Workspace struct {
+	Num          int
+	Windows      []*Window
+	ActiveWindow *Window
+}
+
 type Editor struct {
 	View                View
 	Keys                *KeyHandler
 	Buffers             []*Buffer
-	Windows             []*Window
-	activeWindow        *Window
 	UiComponents        []UiComponent
 	ExitCh              chan int
 	RedrawCh            chan int
@@ -78,6 +82,8 @@ type Editor struct {
 	AutocompleteTrigger AutocompleteFn
 	Snippets            *SnippetsManager
 	Config              EditorConfig
+	Workspaces          []Workspace
+	ActiveWorkspace     int
 }
 
 func NewEditor(
@@ -85,27 +91,39 @@ func NewEditor(
 	keys *KeyHandler,
 ) *Editor {
 	windows := []*Window{CreateWindow(nil)}
+	workspaces := make([]Workspace, 10)
+	workspaces[1].Windows = windows
 
 	EditorInst = &Editor{
-		View:         view,
-		Keys:         keys,
-		Buffers:      make([]*Buffer, 0, 32),
-		Yanks:        List[yank]{},
-		Windows:      windows,
-		activeWindow: windows[0],
-		Layout:       LayoutVertical,
-		Projects:     NewProjectManager(),
-		ExitCh:       make(chan int),
-		RedrawCh:     make(chan int, 10),
-		ScreenSyncCh: make(chan int),
-		Events:       NewEventsManager(),
-		Snippets:     NewSnippetsManager(),
+		View:            view,
+		Keys:            keys,
+		Buffers:         make([]*Buffer, 0, 32),
+		Yanks:           List[yank]{},
+		Layout:          LayoutVertical,
+		Projects:        NewProjectManager(),
+		ExitCh:          make(chan int),
+		RedrawCh:        make(chan int, 10),
+		ScreenSyncCh:    make(chan int),
+		Events:          NewEventsManager(),
+		Snippets:        NewSnippetsManager(),
+		Workspaces:      workspaces,
+		ActiveWorkspace: 1,
 	}
 
 	EditorInst.Lsp = NewLspManager(EditorInst)
 	TreeSitterHighlighterGo(EditorInst)
+	EditorInst.SetWindows(windows)
+	EditorInst.SetActiveWindow(windows[0])
 
 	return EditorInst
+}
+
+func (e *Editor) Windows() []*Window {
+	return e.Workspaces[e.ActiveWorkspace].Windows
+}
+
+func (e *Editor) SetWindows(w []*Window) {
+	e.Workspaces[e.ActiveWorkspace].Windows = w
 }
 
 func (e *Editor) ReadConfigFile() {
@@ -183,12 +201,20 @@ func (e *Editor) ActiveBuffer() *Buffer {
 	return e.ActiveWindow().Buffer()
 }
 
+func (e *Editor) GetActiveWorkspace() *Workspace {
+	return &e.Workspaces[e.ActiveWorkspace]
+}
+
+func (e *Editor) GetWorkspace(num int) *Workspace {
+	return &e.Workspaces[num]
+}
+
 func (e *Editor) ActiveWindow() *Window {
-	return e.activeWindow
+	return e.GetActiveWorkspace().ActiveWindow
 }
 
 func (e *Editor) SetActiveWindow(w *Window) {
-	e.activeWindow = w
+	e.Workspaces[e.ActiveWorkspace].ActiveWindow = w
 }
 
 func (e *Editor) PushUi(c UiComponent) {
@@ -216,18 +242,19 @@ func (e *Editor) PopUiComponent(c UiComponent) {
 }
 
 func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
-	for _, win := range e.Windows {
+	for _, win := range e.Windows() {
 		if win.Buffer() == b {
 			return
 		}
 	}
-	if len(e.Windows) > 1 {
-		e.Windows[len(e.Windows)-1].ShowBuffer(b)
+	if len(e.Windows()) > 1 {
+		e.Windows()[len(e.Windows())-1].ShowBuffer(b)
 		return
 	}
 	win := CreateWindow(nil)
 	win.buf = b
-	e.Windows = append(e.Windows, win)
+	windows := e.Windows()
+	windows = append(windows, win)
 }
 
 func (e *Editor) HandleInput(ev *tcell.EventKey) {

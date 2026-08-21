@@ -51,7 +51,7 @@ func StatuslineRender(
 	}
 
 	cur := wig.CursorGet(e, buf)
-	rightSide := fmt.Sprintf("%d:%d", cur.Line+1, cur.Char)
+	rightSide := fmt.Sprintf("[workspace: %d] %d:%d", e.ActiveWorkspace, cur.Line+1, cur.Char)
 
 	if e.Keys.GetCount() > 1 {
 		rightSide = fmt.Sprintf("%d   %s", e.Keys.GetCount(), rightSide)

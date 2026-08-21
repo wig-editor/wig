@@ -3,8 +3,7 @@ package wig
 type Window struct {
 	buf     *Buffer // active buffer
 	cursors map[*Buffer]*Cursor
-
-	Jumps *Jumps
+	Jumps   *Jumps
 }
 
 // Jump to buffer and location. Records jump history.
@@ -47,6 +46,12 @@ func (win *Window) Buffer() *Buffer {
 // Specify parent window to inherit cursors
 func CreateWindow(parent *Window) *Window {
 	cursors := map[*Buffer]*Cursor{}
+	w := &Window{
+		Jumps: &Jumps{
+			List: List[Jump]{},
+		},
+		cursors: cursors,
+	}
 	if parent != nil {
 		for k, v := range parent.cursors {
 			cursors[k] = &Cursor{
@@ -56,14 +61,10 @@ func CreateWindow(parent *Window) *Window {
 				ScrollOffset:         v.ScrollOffset,
 			}
 		}
+		w.buf = parent.buf
+		w.cursors = cursors
 	}
-
-	return &Window{
-		Jumps: &Jumps{
-			List: List[Jump]{},
-		},
-		cursors: cursors,
-	}
+	return w
 }
 
 // Jumps

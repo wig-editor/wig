@@ -2,6 +2,7 @@
 package wig
 
 import (
+	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -158,7 +159,7 @@ func CmdGotoFileOtherWindow(ctx Context) {
 		return
 	}
 
-	if len(ctx.Editor.Windows) == 1 {
+	if len(ctx.Editor.Windows()) == 1 {
 		CmdWindowVSplit(ctx)
 	}
 	CmdWindowNext(ctx)
@@ -399,24 +400,26 @@ func CmdWindowVSplit(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	nwin := CreateWindow(ctx.Editor.ActiveWindow())
 	nwin.VisitBuffer(ctx, *cur)
-	ctx.Editor.Windows = append(ctx.Editor.Windows, nwin)
+	windows := ctx.Editor.Windows()
+	windows = append(windows, nwin)
+	ctx.Editor.SetWindows(windows)
 }
 
 func CmdWindowNext(ctx Context) {
-	curWin := ctx.Editor.activeWindow
+	curWin := ctx.Editor.ActiveWindow()
 	idx := 0
-	for i, w := range ctx.Editor.Windows {
+	for i, w := range ctx.Editor.Windows() {
 		if w == curWin {
 			idx = i + 1
 			break
 		}
 	}
 
-	if idx >= len(ctx.Editor.Windows) {
+	if idx >= len(ctx.Editor.Windows()) {
 		idx = 0
 	}
 
-	ctx.Editor.activeWindow = ctx.Editor.Windows[idx]
+	ctx.Editor.SetActiveWindow(ctx.Editor.Windows()[idx])
 }
 
 func CmdWindowToggleLayout(ctx Context) {
@@ -428,32 +431,36 @@ func CmdWindowToggleLayout(ctx Context) {
 }
 
 func CmdWindowClose(ctx Context) {
-	if len(ctx.Editor.Windows) == 1 {
+	if len(ctx.Editor.Windows()) == 1 {
 		return
 	}
 
-	curWin := ctx.Editor.activeWindow
+	curWin := ctx.Editor.ActiveWindow()
 	CmdWindowNext(ctx)
-	ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
+	windows := ctx.Editor.Windows()
+	windows = slices.DeleteFunc(windows, func(win *Window) bool {
 		if win == curWin {
 			return true
 		}
 		return false
 	})
+	ctx.Editor.SetWindows(windows)
 }
 
 func CmdWindowCloseOther(ctx Context) {
-	if len(ctx.Editor.Windows) == 1 {
+	if len(ctx.Editor.Windows()) == 1 {
 		return
 	}
 
 	curWin := ctx.Editor.ActiveWindow()
-	ctx.Editor.Windows = slices.DeleteFunc(ctx.Editor.Windows, func(win *Window) bool {
+	windows := ctx.Editor.Windows()
+	windows = slices.DeleteFunc(windows, func(win *Window) bool {
 		if curWin == win {
 			return false
 		}
 		return true
 	})
+	ctx.Editor.SetWindows(windows)
 }
 
 func CmdWindowCloseAndKillBuffer(ctx Context) {
@@ -602,4 +609,104 @@ func CmdBufferCycle(ctx Context) {
 	}
 
 	ctx.Editor.ActiveWindow().ShowBuffer(b)
+}
+
+func moveWindowToWorkspace(ctx Context, num int) {
+	nwin := CreateWindow(ctx.Editor.ActiveWindow())
+	ctx.Editor.Workspaces[num].Windows = append(ctx.Editor.Workspaces[num].Windows, nwin)
+	CmdWindowClose(ctx)
+	ctx.Editor.EchoMessage(fmt.Sprintf("Window moved to workspace %d.", num))
+}
+
+func workspaceSwitch(ctx Context, num int) {
+	workspace := ctx.Editor.GetWorkspace(num)
+	if len(workspace.Windows) == 0 {
+		ctx.Editor.EchoMessage(fmt.Sprintf("Workspace %d has no windows.", num))
+		return
+	}
+	ctx.Editor.ActiveWorkspace = num
+	if workspace.ActiveWindow == nil {
+		ctx.Editor.SetActiveWindow(ctx.Editor.GetActiveWorkspace().Windows[0])
+	}
+	ctx.Editor.EchoMessage(fmt.Sprintf("Workspace %d active.", num))
+}
+
+func CmdWindowMoveToWorkspace_1(ctx Context) {
+	moveWindowToWorkspace(ctx, 1)
+}
+
+func CmdWindowMoveToWorkspace_2(ctx Context) {
+	moveWindowToWorkspace(ctx, 2)
+}
+
+func CmdWindowMoveToWorkspace_3(ctx Context) {
+	moveWindowToWorkspace(ctx, 3)
+}
+
+func CmdWindowMoveToWorkspace_4(ctx Context) {
+	moveWindowToWorkspace(ctx, 4)
+}
+
+func CmdWindowMoveToWorkspace_5(ctx Context) {
+	moveWindowToWorkspace(ctx, 5)
+}
+
+func CmdWindowMoveToWorkspace_6(ctx Context) {
+	moveWindowToWorkspace(ctx, 6)
+}
+
+func CmdWindowMoveToWorkspace_7(ctx Context) {
+	moveWindowToWorkspace(ctx, 7)
+}
+
+func CmdWindowMoveToWorkspace_8(ctx Context) {
+	moveWindowToWorkspace(ctx, 8)
+}
+
+func CmdWindowMoveToWorkspace_9(ctx Context) {
+	moveWindowToWorkspace(ctx, 9)
+}
+
+func CmdWindowMoveToWorkspace_0(ctx Context) {
+	moveWindowToWorkspace(ctx, 0)
+}
+
+func CmdWorkspaceSwitch_1(ctx Context) {
+	workspaceSwitch(ctx, 1)
+}
+
+func CmdWorkspaceSwitch_2(ctx Context) {
+	workspaceSwitch(ctx, 2)
+}
+
+func CmdWorkspaceSwitch_3(ctx Context) {
+	workspaceSwitch(ctx, 3)
+}
+
+func CmdWorkspaceSwitch_4(ctx Context) {
+	workspaceSwitch(ctx, 4)
+}
+
+func CmdWorkspaceSwitch_5(ctx Context) {
+	workspaceSwitch(ctx, 5)
+}
+
+func CmdWorkspaceSwitch_6(ctx Context) {
+	workspaceSwitch(ctx, 6)
+}
+
+func CmdWorkspaceSwitch_7(ctx Context) {
+	workspaceSwitch(ctx, 7)
+}
+
+func CmdWorkspaceSwitch_8(ctx Context) {
+	workspaceSwitch(ctx, 8)
+}
+
+func CmdWorkspaceSwitch_9(ctx Context) {
+	workspaceSwitch(ctx, 9)
+}
+
+func CmdWorkspaceSwitch_0(ctx Context) {
+	workspaceSwitch(ctx, 0)
 }

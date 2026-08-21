@@ -831,7 +831,7 @@ func CmdGitView(ctx wig.Context) {
 	gitBuf := ctx.Editor.BufferFindByFilePath("[git]", false)
 	if gitBuf != nil && ctx.Editor.ActiveBuffer() == gitBuf {
 		// Toggle off: close split or cycle buffer
-		if len(ctx.Editor.Windows) > 1 {
+		if len(ctx.Editor.Windows()) > 1 {
 			wig.CmdWindowClose(ctx)
 		} else {
 			wig.CmdBufferCycle(ctx)
@@ -850,7 +850,7 @@ func CmdGitView(ctx wig.Context) {
 
 	useSplit := ctx.Editor.Config.GitStatusView != "full"
 
-	if useSplit && len(ctx.Editor.Windows) == 1 {
+	if useSplit && len(ctx.Editor.Windows()) == 1 {
 		wig.CmdWindowVSplit(ctx)
 		wig.CmdWindowNext(ctx)
 	}

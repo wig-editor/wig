@@ -38,16 +38,20 @@ func (r *Renderer) Render() {
 
 	w, h := r.screen.Size()
 
+	if len(r.e.Windows()) == 0 {
+		return
+	}
+
 	var winW int
 	if r.e.Layout == wig.LayoutVertical {
-		winW = w / len(r.e.Windows)
+		winW = w / len(r.e.Windows())
 	} else {
 		winW = w
 	}
 
 	var winView *mview
 	var activeWinView *mview
-	for i, win := range r.e.Windows {
+	for i, win := range r.e.Windows() {
 		x := winW * i
 		if i > 0 {
 			st := wig.Color("ui.virtual.indent-guide")

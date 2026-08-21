@@ -38,7 +38,7 @@ func findVisitSourceBuffer(e *Editor) *Buffer {
 
 func VisitAtLine(ctx Context, sourceBuf *Buffer, opts VisitOptions) error {
 	var sourceWin *Window
-	for _, win := range ctx.Editor.Windows {
+	for _, win := range ctx.Editor.Windows() {
 		if win.Buffer() == sourceBuf {
 			sourceWin = win
 			break
@@ -85,16 +85,16 @@ func VisitAtLine(ctx Context, sourceBuf *Buffer, opts VisitOptions) error {
 
 	targetWin := opts.TargetWin
 	if targetWin == nil {
-		if len(ctx.Editor.Windows) > 1 {
+		if len(ctx.Editor.Windows()) > 1 {
 			curIdx := 0
-			for i, w := range ctx.Editor.Windows {
+			for i, w := range ctx.Editor.Windows() {
 				if w == sourceWin {
 					curIdx = i
 					break
 				}
 			}
-			nextIdx := (curIdx + 1) % len(ctx.Editor.Windows)
-			targetWin = ctx.Editor.Windows[nextIdx]
+			nextIdx := (curIdx + 1) % len(ctx.Editor.Windows())
+			targetWin = ctx.Editor.Windows()[nextIdx]
 		} else {
 			targetWin = ctx.Editor.ActiveWindow()
 		}

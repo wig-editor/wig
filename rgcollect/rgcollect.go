@@ -12,7 +12,7 @@ func Init(ctx wig.Context, title string, items []wig.Location) {
 		ctx.Editor.EchoMessage("no items found")
 		return
 	}
-	if len(ctx.Editor.Windows) == 1 {
+	if len(ctx.Editor.Windows()) == 1 {
 		wig.CmdWindowVSplit(ctx)
 	}
 	wig.CmdWindowNext(ctx)
