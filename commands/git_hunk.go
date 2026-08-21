@@ -19,7 +19,7 @@ type GitHunk struct {
 }
 
 func getGitHunks(ctx wig.Context) ([]GitHunk, error) {
-	stdout, err := getBufferDiff(ctx.Editor, ctx.Buf)
+	stdout, err := getBufferDiff(ctx.Editor, ctx.Buf, ctx.Buf.String())
 	if err != nil {
 		return nil, err
 	}
@@ -85,10 +85,28 @@ func hunkFirstChangeLine(hunk GitHunk) int {
 		case '+':
 			return currentNewLine
 		case '-':
-			if i+1 < len(hunk.Lines) && len(hunk.Lines[i+1]) > 0 && hunk.Lines[i+1][0] == '+' {
+			// Count the contiguous run of '-' lines, then the contiguous
+			// run of '+' lines that follows, mirroring ComputeGitSigns.
+			for i < len(hunk.Lines) && len(hunk.Lines[i]) > 0 && hunk.Lines[i][0] == '-' {
+				i++
+			}
+			addedStart := i
+			for i < len(hunk.Lines) && len(hunk.Lines[i]) > 0 && hunk.Lines[i][0] == '+' {
+				i++
+			}
+			if i > addedStart {
+				// There's a following '+' block: first change is the '~'
+				// (or leftover '+') line at currentNewLine.
 				return currentNewLine
 			}
-			if currentNewLine == 1 {
+			// Pure deletion: mirrors ComputeGitSigns — the marker
+			// attaches to the line immediately following the deletion
+			// (currentNewLine), falling back to the preceding line only
+			// when nothing follows in the hunk.
+			if i < len(hunk.Lines) && len(hunk.Lines[i]) > 0 {
+				return currentNewLine
+			}
+			if currentNewLine == hunk.NewStart {
 				return currentNewLine
 			}
 			return currentNewLine - 1
