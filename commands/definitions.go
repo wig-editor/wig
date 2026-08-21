@@ -54,7 +54,6 @@ func init() {
 	wig.AllCommands["close"] = wig.CmdDefinition{Desc: "Close window", Fn: wig.CmdWindowClose}
 
 	// Additional commands used in default keymap
-	wig.AllCommands["CmdExecute"] = wig.CmdDefinition{Desc: "Execute buffer", Fn: CmdExecute}
 	wig.AllCommands["CmdCurrentBufferDirFilePicker"] = wig.CmdDefinition{Desc: "Find file in current dir", Fn: CmdCurrentBufferDirFilePicker}
 	wig.AllCommands["CmdGotoDefinition"] = wig.CmdDefinition{Desc: "Go to definition", Fn: CmdGotoDefinition}
 	wig.AllCommands["CmdGotoDefinitionOtherWindow"] = wig.CmdDefinition{Desc: "Go to definition in other window", Fn: CmdGotoDefinitionOtherWindow}

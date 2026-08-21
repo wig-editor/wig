@@ -6,6 +6,7 @@ import (
 
 	"github.com/firstrow/wig"
 	"github.com/firstrow/wig/commands"
+	"github.com/firstrow/wig/rgcollect"
 	"github.com/firstrow/wig/ui"
 	"github.com/pelletier/go-toml/v2"
 )
@@ -220,7 +221,6 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"c": wig.CmdToggleComment,
 			},
 			"ctrl+c": wig.KeyMap{
-				"ctrl+c": commands.CmdExecute,
 				"ctrl+x": wig.CmdExit,
 			},
 			"ctrl+w": wig.KeyMap{
@@ -255,8 +255,8 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"F": commands.CmdCurrentBufferDirFilePicker,
 				"s": wig.KeyMap{
 					"s": commands.CmdSearchLine,
-					"n": wig.CmdVisitNextLine,
-					"p": wig.CmdVisitPrevLine,
+					"n": rgcollect.CmdVisitNextLine,
+					"p": rgcollect.CmdVisitPrevLine,
 				},
 				"t": commands.CmdThemeSelect,
 				"i": wig.CmdToggleIndentGuides,

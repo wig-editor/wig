@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/firstrow/wig"
-	"github.com/firstrow/wig/drivers/pipe"
 	"github.com/firstrow/wig/ui"
 )
 
@@ -241,14 +240,6 @@ func CmdCommandPalettePicker(ctx wig.Context) {
 		items,
 	)
 	picker.SetTitle("Command Palette")
-}
-
-func CmdExecute(ctx wig.Context) {
-	if ctx.Buf.Driver == nil {
-		ctx.Buf.Driver = pipe.New(ctx.Editor)
-	}
-	cur := wig.ContextCursorGet(ctx)
-	ctx.Buf.Driver.Exec(ctx.Editor, ctx.Buf, wig.CursorLine(ctx.Buf, cur))
 }
 
 func CmdCurrentBufferDirFilePicker(ctx wig.Context) {

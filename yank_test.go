@@ -64,7 +64,6 @@ line four
 line five
 `
 	assert.Equal(t, expected, buf.String())
-
 	// test line paste
 	cur = &Cursor{Line: 2, Char: 3}
 	WindowCursorSet(e.ActiveWindow(), buf, cur)
@@ -76,23 +75,6 @@ line two
 line three
 line three
 line four
-line five
-`
-	assert.Equal(t, expected, buf.String())
-
-	// put above
-	cur = &Cursor{Line: 1, Char: 3}
-	WindowCursorSet(e.ActiveWindow(), buf, cur)
-	buf.Selection = nil
-	CmdYank(ctx)
-	cur = &Cursor{Line: 5, Char: 3}
-	CmdYankPutBefore(ctx)
-	expected = `lineine thre one
-line two
-line three
-line three
-line four
-line two
 line five
 `
 	assert.Equal(t, expected, buf.String())

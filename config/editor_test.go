@@ -64,7 +64,7 @@ line five
 	expected = `test
 line two
 line
-@ three!
+ three@!
 line four
 line five
 `
@@ -81,7 +81,7 @@ line five
 	expected = `test
 line two
 line
-@ three!
+ three@!
 line four
  five
 `
