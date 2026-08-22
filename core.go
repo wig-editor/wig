@@ -787,3 +787,41 @@ func CmdBufferLast(ctx Context) {
 func CmdPaste(ctx Context) {
 	panic(1)
 }
+
+// CmdSetMark waits for a character input and sets a mark at the current cursor position.
+func CmdSetMark(ctx Context) func(Context) {
+	return func(ctx Context) {
+		charStr := ctx.Char
+		if strings.HasPrefix(charStr, "shift+") {
+			charStr = strings.TrimPrefix(charStr, "shift+")
+		}
+		if len(charStr) == 0 {
+			return
+		}
+		r := []rune(charStr)[0]
+		win := ctx.Win
+		if win == nil {
+			win = ctx.Editor.ActiveWindow()
+		}
+		if win == nil {
+			return
+		}
+		if win.Marks == nil {
+			win.Marks = make(map[rune]Cursor)
+		}
+		cur := ContextCursorGet(ctx)
+		win.Marks[r] = *cur
+		ctx.Editor.EchoMessage("Mark '" + string(r) + "' set")
+	}
+}
+
+// CmdGotoMark opens the marks popup legend.
+func CmdGotoMark(ctx Context) {
+	win := ctx.Win
+	if win == nil {
+		win = ctx.Editor.ActiveWindow()
+	}
+	if MarksPopupFactory != nil && win != nil {
+		MarksPopupFactory(ctx, win.Marks)
+	}
+}
