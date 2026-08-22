@@ -75,6 +75,15 @@ func getBufferDiff(e *wig.Editor, buf *wig.Buffer, content string) (string, erro
 	if relPath == "" || relPath == buf.FilePath {
 		return "", nil
 	}
+
+	// If the file is untracked, we don't want to diff it against an empty file
+	// (which would mark the entire file as one giant addition). Return empty.
+	lsCmd := exec.Command("git", "ls-files", "--error-unmatch", relPath)
+	lsCmd.Dir = rootDir
+	if err := lsCmd.Run(); err != nil {
+		return "", nil
+	}
+
 	// 1. Get HEAD content
 	headCmd := exec.Command("git", "show", fmt.Sprintf("HEAD:%s", relPath))
 	headCmd.Dir = rootDir
@@ -87,6 +96,7 @@ func getBufferDiff(e *wig.Editor, buf *wig.Buffer, content string) (string, erro
 	defer os.Remove(tmpFile.Name())
 	tmpFile.WriteString(content)
 	tmpFile.Close()
+
 	// 3. Write HEAD content to temp file
 	headTmpFile, err := os.CreateTemp("", "wig-head-*")
 	if err != nil {
