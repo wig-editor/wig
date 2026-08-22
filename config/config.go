@@ -179,6 +179,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"%":      wig.CmdMatchPair,
 			"u":      wig.CmdUndo,
 			"ctrl+r": wig.CmdRedo,
+			"ctrl+j": ui.CmdEasyMotion,
 			":":      ui.CmdLineInit,
 			"/":      ui.CmdSearchPromptInit,
 			";":      commands.CmdBufferPicker,

@@ -20,7 +20,9 @@ type KeyHandler struct {
 
 	// KeyMap or func(Context)
 	waitingForInput any
-	times           []string
+	// enable suppor for repeat counter.
+	EnableTimes bool
+	times       []string
 
 	Macros   *MacrosManager
 	whichKey *WhichKey
@@ -96,14 +98,13 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 	case KeyMap:
 		keySet = v
 	default:
-		if mode != MODE_INSERT {
+		if mode != MODE_INSERT && k.EnableTimes {
 			kv := isNumeric(key)
 			if kv {
 				k.times = append(k.times, key)
 				return
 			}
 		}
-
 		keySet = k.keymap[mode]
 	}
 

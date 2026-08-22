@@ -44,6 +44,7 @@ func main() {
 	editorCfg, userKeys := config.LoadUserConfig()
 
 	keys := wig.NewKeyHandler(config.DefaultKeyMap())
+	keys.EnableTimes = true
 	for mode, kmap := range userKeys {
 		if len(kmap) > 0 {
 			keys.Map(mode, kmap)
