@@ -14,6 +14,7 @@ func init() {
 	wig.AllCommands["CmdCommandPalettePicker"] = wig.CmdDefinition{Desc: "Command palette", Fn: CmdCommandPalettePicker}
 	wig.AllCommands["CmdFindProjectFilePicker"] = wig.CmdDefinition{Desc: "Find file", Fn: CmdFindProjectFilePicker}
 	wig.AllCommands["CmdBufferPicker"] = wig.CmdDefinition{Desc: "Buffer picker", Fn: CmdBufferPicker}
+	wig.AllCommands["wslist"] = wig.CmdDefinition{Desc: "List and switch workspaces", Fn: CmdWorkspaceListPicker}
 	wig.AllCommands["CmdBufferNext"] = wig.CmdDefinition{Desc: "Next buffer", Fn: wig.CmdBufferNext}
 	wig.AllCommands["CmdBufferPrev"] = wig.CmdDefinition{Desc: "Previous buffer", Fn: wig.CmdBufferPrev}
 	wig.AllCommands["CmdBufferLast"] = wig.CmdDefinition{Desc: "Last buffer", Fn: wig.CmdBufferLast}
@@ -84,4 +85,6 @@ func init() {
 	wig.AllCommands["CmdFormatBufferAndSave"] = wig.CmdDefinition{Desc: "Format buffer and save", Fn: CmdFormatBufferAndSave}
 	wig.AllCommands["CmdMakeBuild"] = wig.CmdDefinition{Desc: "Make build", Fn: CmdMakeBuild}
 	wig.AllCommands["CmdMakeTest"] = wig.CmdDefinition{Desc: "Make test", Fn: CmdMakeTest}
+	wig.AllCommands["CmdOpenFloatingBuffer"] = wig.CmdDefinition{Desc: "Open buffer in floating window", Fn: CmdOpenFloatingBuffer}
+	wig.AllCommands["CmdOpenMessagesFloating"] = wig.CmdDefinition{Desc: "Open messages in floating window", Fn: CmdOpenMessagesFloating}
 }

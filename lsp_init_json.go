@@ -1,6 +1,9 @@
 package wig
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 type CompletionTextEdit struct {
 	NewText string `json:"newText"`
@@ -52,6 +55,7 @@ type CompletionItems struct {
 			} `json:"range"`
 			NewText string `json:"newText"`
 		} `json:"additionalTextEdits,omitempty"`
+		Data interface{} `json:"data,omitempty"`
 	} `json:"items"`
 }
 
@@ -69,7 +73,36 @@ func (d *Documentation) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// Otherwise, try parsing as a structured object
+	// Try to parse as an array of MarkedString
+	var arr []struct {
+		Language string `json:"language"`
+		Value    string `json:"value"`
+	}
+	if err := json.Unmarshal(data, &arr); err == nil {
+		var sb strings.Builder
+		for i, ms := range arr {
+			if i > 0 {
+				sb.WriteString("\n\n")
+			}
+			sb.WriteString(ms.Value)
+		}
+		d.Kind = "markdown"
+		d.Value = sb.String()
+		return nil
+	}
+
+	// Try to parse as a single MarkedString object
+	var ms struct {
+		Language string `json:"language"`
+		Value    string `json:"value"`
+	}
+	if err := json.Unmarshal(data, &ms); err == nil && ms.Value != "" {
+		d.Kind = "markdown"
+		d.Value = ms.Value
+		return nil
+	}
+
+	// Otherwise, try parsing as a structured object (MarkupContent)
 	type Alias Documentation
 	var tmp Alias
 	if err := json.Unmarshal(data, &tmp); err != nil {

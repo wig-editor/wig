@@ -10,14 +10,16 @@ import (
 )
 
 type EditorConfig struct {
-	Theme               string
-	ShowLineNumbers     bool
-	RelativeLineNumbers bool
-	CurrentLineAbsolute bool // If true, shows absolute line number on current line when relative is on
-	FormatOnSave        bool
-	GitStatusView       string // "full" or "split"
-	GitBlameView        string // "full" or "split"
-	IndentGuides        bool
+	Theme                string
+	ShowLineNumbers      bool
+	RelativeLineNumbers  bool
+	CurrentLineAbsolute  bool // If true, shows absolute line number on current line when relative is on
+	FormatOnSave         bool
+	GitStatusView        string // "full" or "split"
+	GitBlameView         string // "full" or "split"
+	IndentGuides         bool
+	FloatingWindowWidth  float64
+	FloatingWindowHeight float64
 }
 
 type View interface {
@@ -132,14 +134,16 @@ func (e *Editor) SetWindows(w []*Window) {
 
 func (e *Editor) ReadConfigFile() {
 	e.Config = EditorConfig{
-		Theme:               "naysayer",
-		ShowLineNumbers:     true,
-		RelativeLineNumbers: true,
-		CurrentLineAbsolute: true,
-		FormatOnSave:        false,
-		GitStatusView:       "full",
-		GitBlameView:        "split",
-		IndentGuides:        true,
+		Theme:                "naysayer",
+		ShowLineNumbers:      true,
+		RelativeLineNumbers:  true,
+		CurrentLineAbsolute:  true,
+		FormatOnSave:         false,
+		GitStatusView:        "full",
+		GitBlameView:         "split",
+		IndentGuides:         true,
+		FloatingWindowWidth:  0.8,
+		FloatingWindowHeight: 0.8,
 	}
 }
 

@@ -93,6 +93,94 @@ func CmdBufferPicker(ctx wig.Context) {
 	})
 }
 
+// CmdWorkspaceListPicker opens a fuzzy picker listing every workspace
+// alongside the files it contains. Selecting a workspace captures the
+// current workspace state into the persistence cache, switches to the
+// target workspace, and restores its files from cache if it is empty.
+//
+// The picker also supports pressing Delete to clear a workspace's
+// cached entry.
+func CmdWorkspaceListPicker(ctx wig.Context) {
+	cache := LoadWorkspaceCache()
+	cache.CaptureAll(ctx.Editor)
+
+	buildItems := func() []ui.PickerItem[int] {
+		items := make([]ui.PickerItem[int], 0, len(ctx.Editor.Workspaces))
+		for i := 0; i < len(ctx.Editor.Workspaces); i++ {
+			var label string
+			if i == ctx.Editor.ActiveWorkspace {
+				label = fmt.Sprintf("ws%d *", i)
+			} else {
+				label = fmt.Sprintf("ws%d", i)
+			}
+
+			entry := cache.Workspaces[i]
+			var filesStr string
+			if len(entry.Files) == 0 {
+				filesStr = "(empty)"
+			} else {
+				names := make([]string, 0, len(entry.Files))
+				for _, f := range entry.Files {
+					names = append(names, filepath.Base(f))
+				}
+				filesStr = strings.Join(names, " ")
+			}
+
+			items = append(items, ui.PickerItem[int]{
+				Name:   fmt.Sprintf("%s: %s", label, filesStr),
+				Value:  i,
+				Active: i == ctx.Editor.ActiveWorkspace,
+			})
+		}
+		return items
+	}
+
+	action := func(p *ui.UiPicker[int], i *ui.PickerItem[int]) {
+		defer ctx.Editor.PopUi()
+		if i == nil {
+			return
+		}
+
+		target := i.Value
+		if target == ctx.Editor.ActiveWorkspace {
+			return
+		}
+
+		// Capture current workspace before switching
+		cache.CaptureWorkspace(ctx.Editor.ActiveWorkspace, ctx.Editor.GetActiveWorkspace())
+		cache.Save()
+
+		// Ensure target workspace has at least one window
+		ws := ctx.Editor.GetWorkspace(target)
+		if len(ws.Windows) == 0 {
+			win := wig.CreateWindow(nil)
+			ws.Windows = []*wig.Window{win}
+			ws.Num = target
+			ws.ActiveWindow = win
+		}
+
+		ctx.Editor.ActiveWorkspace = target
+
+		// Restore files from cache if workspace is empty
+		cache.RestoreWorkspace(ctx.Editor, target)
+		ctx.Editor.Redraw()
+	}
+
+	picker := ui.PickerInit(ctx.Editor, action, buildItems())
+	picker.SetTitle("Workspaces [Enter: Switch  Del: Clear cache]")
+
+	picker.OnKey("Delete", func(ctx wig.Context) {
+		item := picker.GetActiveItem()
+		if item == nil {
+			return
+		}
+		delete(cache.Workspaces, item.Value)
+		cache.Save()
+		picker.SetItems(buildItems())
+		ctx.Editor.Redraw()
+	})
+}
+
 func CmdMRUBufferPicker(ctx wig.Context) {
 	posCache := wig.LoadPositionCache()
 	sortByRecent := true
@@ -559,4 +647,34 @@ func CmdReloadBuffer(ctx wig.Context) {
 	}
 	ctx.Buf.Highlighter.Build()
 	ctx.Editor.Events.Broadcast(wig.EventBufferReloaded{Buf: ctx.Buf})
+}
+
+// CmdOpenFloatingBuffer opens the current buffer in a centered floating
+// window. The window dimensions come from the editor config
+// (floating_window_width / floating_window_height).
+func CmdOpenFloatingBuffer(ctx wig.Context) {
+	opts := ui.FloatingWindowOpts{
+		Width:  ctx.Editor.Config.FloatingWindowWidth,
+		Height: ctx.Editor.Config.FloatingWindowHeight,
+		Title:  ctx.Buf.GetName(),
+	}
+	fw := ui.NewFloatingWindow(ctx.Editor, ctx.Buf, opts)
+	ctx.Editor.PushUi(fw)
+	ctx.Editor.Redraw()
+}
+
+// CmdOpenMessagesFloating opens the [Messages] buffer in a floating
+// window, positioning the cursor at the end so the latest log lines
+// are visible. Bound to Space+m in the default keymap.
+func CmdOpenMessagesFloating(ctx wig.Context) {
+	buf := ctx.Editor.BufferFindByFilePath("[Messages]", true)
+	opts := ui.FloatingWindowOpts{
+		Width:  ctx.Editor.Config.FloatingWindowWidth,
+		Height: ctx.Editor.Config.FloatingWindowHeight,
+		Title:  "Messages",
+	}
+	fw := ui.NewFloatingWindow(ctx.Editor, buf, opts)
+	fw.SetCursorToEnd()
+	ctx.Editor.PushUi(fw)
+	ctx.Editor.Redraw()
 }

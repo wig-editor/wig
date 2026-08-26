@@ -8,7 +8,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-// HoverInit displays LSP hover responses in a temporary centered popup box.
+// HoverInit displays LSP hover responses in a popup box positioned under the cursor.
 // It leverages HunkPreviewWidget to share scrolling and rendering logic.
 func HoverInit(ctx wig.Context, text string) *HunkPreviewWidget {
 	cleanLines := make([]string, 0, 16)
@@ -16,10 +16,17 @@ func HoverInit(ctx wig.Context, text string) *HunkPreviewWidget {
 		cleanLines = append(cleanLines, strings.TrimRightFunc(l, unicode.IsSpace))
 	}
 
-	// Use a plain styler so hover text isn't colored like a diff
+	// Use a styler that matches the popup's background for better visual integration
 	plainStyler := func(line string) tcell.Style {
-		return wig.Color("default")
+		return wig.ApplyBg("ui.menu", wig.Color("default"))
 	}
 
-	return HunkPreviewInit(ctx, "Hover", cleanLines, nil, plainStyler)
+	// Calculate cursor screen position for popup placement
+	cur := wig.ContextCursorGet(ctx)
+	line := wig.CursorLine(ctx.Buf, cur)
+	visCol := wig.VisualCol(line.Value, cur.Char)
+	posX := visCol + WindowTextPadding(ctx.Editor, ctx.Buf)
+	posY := cur.Line - cur.ScrollOffset
+
+	return HunkPreviewInit(ctx, "Hover", cleanLines, nil, plainStyler, posX, posY)
 }

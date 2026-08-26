@@ -26,6 +26,10 @@ type KeyHandler struct {
 
 	Macros   *MacrosManager
 	whichKey *WhichKey
+
+	// contextFn overrides the default context creation in HandleKey.
+	// Used by floating windows to provide their own buffer/window context.
+	contextFn func(editor *Editor) Context
 }
 
 func DefaultKeyHandler(mergeKeys ModeKeyMap) *KeyHandler {
@@ -65,7 +69,12 @@ func (k *KeyHandler) HandleKey(editor *Editor, ev *tcell.EventKey, mode Mode) {
 
 	k.Macros.Push(ev)
 
-	ctx := editor.NewContext()
+	var ctx Context
+	if k.contextFn != nil {
+		ctx = k.contextFn(editor)
+	} else {
+		ctx = editor.NewContext()
+	}
 	ctx.Count = uint32(k.GetCount())
 
 	// macro-repeat
@@ -171,6 +180,10 @@ func (k *KeyHandler) Fallback(fn func(ctx Context, ev *tcell.EventKey)) {
 
 func (k *KeyHandler) GetFallback() KeyFallbackFn {
 	return k.fallback
+}
+
+func (k *KeyHandler) SetContextFn(fn func(editor *Editor) Context) {
+	k.contextFn = fn
 }
 
 func (k *KeyHandler) normalizeKeyName(ev *tcell.EventKey) string {

@@ -301,7 +301,12 @@ func (l *LspManager) Hover(buf *Buffer, cursor Cursor) (sign string) {
 	l.ctxCancel = cancel
 	defer cancel()
 
-	var hover protocol.Hover
+	// Use a custom struct with Documentation type because protocol.Hover
+	// expects MarkupContent, which fails to unmarshal if the server
+	// returns a plain string or MarkedString.
+	var hover struct {
+		Contents Documentation `json:"contents"`
+	}
 	_, err := client.rpcConn.Call(ctx, protocol.MethodTextDocumentHover, srReq, &hover)
 	if err != nil {
 		l.e.LogError(err)
@@ -412,6 +417,44 @@ func (l *LspManager) Completion(buf *Buffer) (res CompletionItems) {
 		l.e.LogMessage("lsp completion error:", err.Error())
 	}
 
+	return
+}
+
+// CompletionItemResolve requests the full documentation/detail for a
+// completion item by calling completionItem/resolve on the language server.
+// The item parameter should be the raw completion item (or a map containing
+// at least label, kind, and data) received from a prior Completion call.
+func (l *LspManager) CompletionItemResolve(buf *Buffer, item any) (doc string, err error) {
+	root, _ := l.e.Projects.FindRoot(buf)
+
+	_, ignore := l.ignore[root]
+	if ignore {
+		return
+	}
+
+	client, ok := l.conns[root]
+	if !ok {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), l.timeout)
+	l.ctxCancel = cancel
+	defer cancel()
+
+	var resp struct {
+		Documentation Documentation `json:"documentation"`
+		Detail        string        `json:"detail"`
+	}
+	_, err = client.rpcConn.Call(ctx, "completionItem/resolve", item, &resp)
+	if err != nil {
+		return
+	}
+
+	if resp.Documentation.Value != "" {
+		doc = resp.Documentation.Value
+	} else {
+		doc = resp.Detail
+	}
 	return
 }
 

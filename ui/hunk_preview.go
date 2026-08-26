@@ -20,6 +20,8 @@ type HunkPreviewWidget struct {
 	scrollOffset int
 	onRevert     func(wig.Context)
 	lineStyler   func(string) tcell.Style
+	posX         int
+	posY         int
 }
 
 func (u *HunkPreviewWidget) Plane() wig.RenderPlane {
@@ -39,7 +41,7 @@ func expandTabs(s string) string {
 // by a unified diff hunk or LSP hover). onRevert, if non-nil, is invoked
 // (with the popup's own context) when the user presses "r"; the popup then closes.
 // lineStyler allows customizing the color of each line (e.g. diff colors).
-func HunkPreviewInit(ctx wig.Context, header string, lines []string, onRevert func(wig.Context), lineStyler func(string) tcell.Style) *HunkPreviewWidget {
+func HunkPreviewInit(ctx wig.Context, header string, lines []string, onRevert func(wig.Context), lineStyler func(string) tcell.Style, pos ...int) *HunkPreviewWidget {
 	cleanLines := make([]string, len(lines))
 	for i, l := range lines {
 		cleanLines[i] = expandTabs(strings.TrimRightFunc(l, unicode.IsSpace))
@@ -49,12 +51,20 @@ func HunkPreviewInit(ctx wig.Context, header string, lines []string, onRevert fu
 		lineStyler = lineStyle
 	}
 
+	var posX, posY int = -1, -1
+	if len(pos) >= 2 {
+		posX = pos[0]
+		posY = pos[1]
+	}
+
 	widget := &HunkPreviewWidget{
 		e:          ctx.Editor,
 		header:     expandTabs(header),
 		lines:      cleanLines,
 		onRevert:   onRevert,
 		lineStyler: lineStyler,
+		posX:       posX,
+		posY:       posY,
 	}
 
 	km := wig.KeyMap{
@@ -133,25 +143,83 @@ func lineStyle(line string) tcell.Style {
 func (u *HunkPreviewWidget) Render(view wig.View) {
 	vw, vh := view.Size()
 
-	w := int(float32(vw) * 0.76)
-	h := vh - 5
-	x := vw/2 - w/2
-	y := 3
+	// Calculate dynamic width based on content
+	maxLineWidth := 0
+	for _, l := range u.lines {
+		w := len([]rune(l))
+		if w > maxLineWidth {
+			maxLineWidth = w
+		}
+	}
 
-	drawBox(view, x, y, w, h, wig.Color("default"))
+	w := maxLineWidth + 4
+	h := len(u.lines) + 4
+
+	// Clamp dimensions to screen
+	if w > int(float32(vw)*0.8) {
+		w = int(float32(vw) * 0.8)
+	}
+	if h > vh-4 {
+		h = vh - 4
+	}
+	if w < 20 {
+		w = 20
+	}
+	if h < 5 {
+		h = 5
+	}
+
+	var x, y int
+	if u.posX >= 0 || u.posY >= 0 {
+		// Follow cursor position
+		x = u.posX
+		// Place popup below the cursor line
+		y = u.posY + 1
+
+		// Adjust if overflowing right edge
+		if x+w > vw {
+			x = vw - w
+		}
+		if x < 0 {
+			x = 0
+		}
+
+		// If overflowing bottom edge, try placing exactly above the cursor
+		if y+h > vh {
+			y = u.posY - h
+		}
+
+		// Clamp to screen bounds
+		if y < 0 {
+			y = 0
+		}
+		if y+h > vh {
+			y = vh - h
+			if y < 0 {
+				y = 0
+			}
+		}
+	} else {
+		// Centered layout
+		x = vw/2 - w/2
+		y = 3
+	}
+
+	boxStyle := wig.Color("ui.menu")
+	drawBox2(view, x, y, w, h, boxStyle)
 
 	// header as title on the border
 	if u.header != "" {
-		titleStr := " " + truncate(u.header, w-x-4) + " "
+		titleStr := " " + truncate(u.header, w-4) + " "
 		view.SetContent(x+2, y, titleStr, wig.Color("ui.linenr"))
 	}
 
 	// separator
-	sep := strings.Repeat(string('─'), w-x-3)
-	view.SetContent(x+2, y+1, sep, wig.Color("default"))
+	sep := strings.Repeat(string('─'), w-3)
+	view.SetContent(x+2, y+1, sep, boxStyle)
 
 	// body (scrollable)
-	pageSize := h - y - 3 // rows available below separator, above hint line
+	pageSize := h - 4 // rows available below separator, above hint line
 	if pageSize < 1 {
 		pageSize = 1
 	}
@@ -166,7 +234,7 @@ func (u *HunkPreviewWidget) Render(view wig.View) {
 	}
 
 	for i, line := range u.lines[start:end] {
-		view.SetContent(x+2, y+2+i, truncate(line, w-x-4), u.lineStyler(line))
+		view.SetContent(x+2, y+2+i, truncate(line, w-4), u.lineStyler(line))
 	}
 
 	// hint line
@@ -174,5 +242,5 @@ func (u *HunkPreviewWidget) Render(view wig.View) {
 	if u.onRevert == nil {
 		hint = "[Esc/q] close"
 	}
-	view.SetContent(x+2, h-1, fmt.Sprintf("%s", hint), wig.Color("ui.linenr"))
+	view.SetContent(x+2, y+h-1, fmt.Sprintf("%s", hint), wig.Color("ui.linenr"))
 }

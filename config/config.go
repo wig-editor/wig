@@ -16,14 +16,16 @@ type UserConfig struct {
 }
 
 type EditorSettings struct {
-	Theme               *string `toml:"theme"`
-	ShowLineNumbers     *bool   `toml:"show_line_numbers"`
-	RelativeLineNumbers *bool   `toml:"relative_line_numbers"`
-	CurrentLineAbsolute *bool   `toml:"current_line_absolute"`
-	FormatOnSave        *bool   `toml:"format_on_save"`
-	GitStatusView       *string `toml:"git_status_view"`
-	GitBlameView        *string `toml:"git_blame_view"`
-	IndentGuides        *bool   `toml:"indent_guides"`
+	Theme                *string  `toml:"theme"`
+	ShowLineNumbers      *bool    `toml:"show_line_numbers"`
+	RelativeLineNumbers  *bool    `toml:"relative_line_numbers"`
+	CurrentLineAbsolute  *bool    `toml:"current_line_absolute"`
+	FormatOnSave         *bool    `toml:"format_on_save"`
+	GitStatusView        *string  `toml:"git_status_view"`
+	GitBlameView         *string  `toml:"git_blame_view"`
+	IndentGuides         *bool    `toml:"indent_guides"`
+	FloatingWindowWidth  *float64 `toml:"floating_window_width"`
+	FloatingWindowHeight *float64 `toml:"floating_window_height"`
 }
 
 type UserKeysConfig struct {
@@ -37,14 +39,16 @@ type UserKeysConfig struct {
 // LoadUserConfig reads ~/.config/wig/config.toml for editor settings and keymaps
 func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 	editorCfg := wig.EditorConfig{
-		Theme:               "naysayer",
-		ShowLineNumbers:     true,
-		RelativeLineNumbers: true,
-		CurrentLineAbsolute: true,
-		FormatOnSave:        false,
-		GitStatusView:       "full",
-		GitBlameView:        "split",
-		IndentGuides:        true,
+		Theme:                "naysayer",
+		ShowLineNumbers:      true,
+		RelativeLineNumbers:  true,
+		CurrentLineAbsolute:  true,
+		FormatOnSave:         false,
+		GitStatusView:        "full",
+		GitBlameView:         "split",
+		IndentGuides:         true,
+		FloatingWindowWidth:  0.8,
+		FloatingWindowHeight: 0.8,
 	}
 	userMap := wig.ModeKeyMap{
 		wig.MODE_NORMAL:       wig.KeyMap{},
@@ -91,6 +95,12 @@ func LoadUserConfig() (wig.EditorConfig, wig.ModeKeyMap) {
 	}
 	if cfg.Editor.IndentGuides != nil {
 		editorCfg.IndentGuides = *cfg.Editor.IndentGuides
+	}
+	if cfg.Editor.FloatingWindowWidth != nil {
+		editorCfg.FloatingWindowWidth = *cfg.Editor.FloatingWindowWidth
+	}
+	if cfg.Editor.FloatingWindowHeight != nil {
+		editorCfg.FloatingWindowHeight = *cfg.Editor.FloatingWindowHeight
 	}
 
 	resolve := func(name string) any {
@@ -248,6 +258,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"?": commands.CmdCommandPalettePicker,
 				"`": wig.CmdBufferCycle,
 				"*": commands.CmdProjectSearchWordUnderCursor,
+				"+": commands.CmdWorkspaceListPicker,
 				"h": commands.CmdLspHover,
 				"e": commands.CmdLspShowDiagnostics,
 				"b": wig.KeyMap{
@@ -263,6 +274,7 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				},
 				"t": commands.CmdThemeSelect,
 				"i": wig.CmdToggleIndentGuides,
+				"m": commands.CmdOpenMessagesFloating,
 				"y": commands.CmdClipboardCopy,
 				"p": commands.CmdClipboardPaste,
 				"g": wig.KeyMap{
