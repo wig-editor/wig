@@ -11,6 +11,7 @@ import (
 type AutocompleteWidget struct {
 	ctx            wig.Context
 	triggerPos     wig.Cursor
+	triggerCol     int
 	keymap         *wig.KeyHandler
 	pos            wig.Position
 	items          wig.CompletionItems
@@ -35,9 +36,15 @@ func AutocompleteInit(
 		return nil
 	}
 
+	curScreenX := 0
+	if line := wig.CursorLine(ctx.Buf, &wig.Cursor{Line: pos.Line, Char: pos.Char}); line != nil {
+		curScreenX = wig.VisualCol(line.Value, pos.Char) + WindowTextPadding(ctx.Editor, ctx.Buf)
+	}
+
 	widget := &AutocompleteWidget{
 		ctx:        ctx,
 		pos:        pos,
+		triggerCol: curScreenX,
 		items:      items,
 		activeItem: 0,
 	}
@@ -243,7 +250,7 @@ func (w *AutocompleteWidget) selectItem(ctx wig.Context) {
 
 func (w *AutocompleteWidget) Render(view wig.View) {
 	cur := wig.ContextCursorGet(w.ctx)
-	x := w.pos.Char + 2
+	x := w.triggerCol + 1
 	y := w.pos.Line - cur.ScrollOffset + 1
 
 	maxItems := min(10, len(w.items.Items))
@@ -254,7 +261,7 @@ func (w *AutocompleteWidget) Render(view wig.View) {
 	}
 
 	listWidth := 50
-	listX := w.pos.Char
+	listX := w.triggerCol
 	listY := y
 	drawBoxNoBorder(view, listX, listY, listWidth, maxItems, wig.Color("ui.menu"))
 
