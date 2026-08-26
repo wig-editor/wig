@@ -3,6 +3,7 @@ package wig
 type Window struct {
 	buf     *Buffer // active buffer
 	cursors map[*Buffer]*Cursor
+	Marks   map[rune]Cursor
 	Jumps   *Jumps
 }
 
@@ -12,21 +13,24 @@ func (win *Window) VisitBuffer(ctx Context, cursor ...Cursor) {
 		return
 	}
 
-	cur := WindowCursorGet(win, win.buf)
+	// 1. Record position before jumping away
 	if win.buf != nil {
+		cur := WindowCursorGet(win, win.buf)
 		win.Jumps.Push(win.buf, cur)
 	}
 
+	// 2. Set new buffer and target cursor
 	if len(cursor) > 0 {
-		newCur := &Cursor{}
-		newCur.Line = cursor[0].Line
-		newCur.Char = cursor[0].Char
-		newCur.ScrollOffset = cursor[0].ScrollOffset
-		win.cursors[ctx.Buf] = newCur
+		target := WindowCursorGet(win, ctx.Buf)
+		target.Line = cursor[0].Line
+		target.Char = cursor[0].Char
+		target.ScrollOffset = cursor[0].ScrollOffset
+		win.cursors[ctx.Buf] = target
 	}
 
-	win.Jumps.Push(ctx.Buf, cur)
 	win.buf = ctx.Buf
+	targetCur := WindowCursorGet(win, ctx.Buf)
+	win.Jumps.Push(ctx.Buf, targetCur)
 
 	ctx.Win = win
 	CmdCursorCenter(ctx)
@@ -46,11 +50,13 @@ func (win *Window) Buffer() *Buffer {
 // Specify parent window to inherit cursors
 func CreateWindow(parent *Window) *Window {
 	cursors := map[*Buffer]*Cursor{}
+	marks := make(map[rune]Cursor)
 	w := &Window{
 		Jumps: &Jumps{
 			List: List[Jump]{},
 		},
 		cursors: cursors,
+		Marks:   marks,
 	}
 	if parent != nil {
 		for k, v := range parent.cursors {
@@ -60,6 +66,9 @@ func CreateWindow(parent *Window) *Window {
 				PreserveCharPosition: v.PreserveCharPosition,
 				ScrollOffset:         v.ScrollOffset,
 			}
+		}
+		for k, v := range parent.Marks {
+			marks[k] = v
 		}
 		w.buf = parent.buf
 		w.cursors = cursors

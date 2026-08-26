@@ -42,7 +42,7 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 	signColWidth := 2
 	lineNumWidth := 0
 	if e.Config.ShowLineNumbers {
-		lineNumWidth = len(fmt.Sprintf("%d", buf.CountLines())) + 1
+		lineNumWidth = len(fmt.Sprintf("%d", buf.CountLines())) + 2
 	}
 	blameColWidth := 0
 	if buf.BlameEnabled && len(buf.BlameLines) > 0 {
@@ -64,6 +64,13 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 		// TODO: query new highlights only if visible are have changed.
 		// Now it reloads colors on j,k,l, basically on any key movement.
 		tsNodeCursor = buf.Highlighter.ForRange(uint32(startLine), startLine+uint32(termHeight))
+	}
+
+	lineMarks := make(map[int]rune)
+	if win != nil && win.Marks != nil {
+		for r, mCur := range win.Marks {
+			lineMarks[mCur.Line] = r
+		}
 	}
 
 	// Precalculate visual block bounds for efficient rendering
@@ -129,10 +136,24 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 					}
 
 					if xCur >= 0 && xCur < termWidth && y >= 0 && y < termHeight {
+						style := lineNumTextStyle
 						if lineNum == cur.Line {
-							view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyleSelected)
+							style = lineNumTextStyleSelected
+						}
+						markRune, hasMark := lineMarks[lineNum]
+						if hasMark {
+							markStyle := wig.Color("ui.mark")
+							if markStyle == wig.Color("default") {
+								markStyle = wig.Color("diff.plus")
+							}
+							if lineNum == cur.Line {
+								markStyle = wig.ApplyBg("ui.cursorline", markStyle)
+							}
+							view.SetContent(xCur, y, string(markRune), markStyle)
+							view.SetContent(xCur+1, y, fmt.Sprintf("%d", lnNum), style)
 						} else {
-							view.SetContent(xCur, y, fmt.Sprintf("%d", lnNum), lineNumTextStyle)
+							view.SetContent(xCur, y, " ", style)
+							view.SetContent(xCur+1, y, fmt.Sprintf("%d", lnNum), style)
 						}
 					}
 				}
@@ -317,7 +338,7 @@ func WindowTextPadding(e *wig.Editor, buf *wig.Buffer) int {
 
 	lineNumWidth := 0
 	if e.Config.ShowLineNumbers {
-		lineNumWidth = len(fmt.Sprintf("%d", buf.CountLines())) + 1
+		lineNumWidth = len(fmt.Sprintf("%d", buf.CountLines())) + 2
 	}
 
 	blameColWidth := 0

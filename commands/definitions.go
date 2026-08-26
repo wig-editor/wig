@@ -26,6 +26,9 @@ func init() {
 	wig.AllCommands["CmdDeleteLine"] = wig.CmdDefinition{Desc: "Delete line", Fn: wig.CmdDeleteLine}
 	wig.AllCommands["CmdGitHunkPreview"] = wig.CmdDefinition{Desc: "Preview git hunk", Fn: CmdGitHunkPreview}
 	wig.AllCommands["CmdMRUBufferPicker"] = wig.CmdDefinition{Desc: "MRU Buffer Picker", Fn: CmdMRUBufferPicker}
+	wig.AllCommands["CmdSetMark"] = wig.CmdDefinition{Desc: "Set mark", Fn: wig.CmdSetMark}
+	wig.AllCommands["CmdGotoMark"] = wig.CmdDefinition{Desc: "Go to mark", Fn: wig.CmdGotoMark}
+	wig.AllCommands["CmdJumpToggle"] = wig.CmdDefinition{Desc: "Toggle jump", Fn: wig.CmdJumpToggle}
 	wig.AllCommands["CmdCheckHealth"] = wig.CmdDefinition{Desc: "Check health of dependencies", Fn: CmdCheckHealth}
 	wig.AllCommands["checkhealth"] = wig.CmdDefinition{Desc: "Check health of dependencies", Fn: CmdCheckHealth}
 

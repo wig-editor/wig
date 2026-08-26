@@ -16,6 +16,7 @@ import (
 	"github.com/firstrow/wig/config"
 	"github.com/firstrow/wig/metrics"
 	"github.com/firstrow/wig/render"
+	"github.com/firstrow/wig/ui"
 )
 
 func main() {
@@ -49,6 +50,10 @@ func main() {
 		if len(kmap) > 0 {
 			keys.Map(mode, kmap)
 		}
+	}
+
+	wig.MarksPopupFactory = func(ctx wig.Context, marks map[rune]wig.Cursor) {
+		ui.MarksPopupInit(ctx, marks)
 	}
 
 	editor := wig.NewEditor(

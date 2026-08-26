@@ -131,6 +131,7 @@ func CmdGotoLine0(ctx Context) {
 	count := max(ctx.Count, 1)
 	cur := ContextCursorGet(ctx)
 	defer CmdEnsureCursorVisible(ctx)
+	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf, cur)
 	cur.Line = min(int(count)-1, ctx.Buf.Lines.Len-1)
 	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf, cur)
 }
@@ -251,6 +252,7 @@ func ParseFileLocation(text string, cursor int) (filename string, line, ch int) 
 func CmdGotoLineEndOfFile(ctx Context) {
 	cur := ContextCursorGet(ctx)
 	defer CmdEnsureCursorVisible(ctx)
+	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf, cur)
 	cur.Line = ctx.Buf.Lines.Len - 1
 	ctx.Editor.ActiveWindow().Jumps.Push(ctx.Buf, cur)
 }
@@ -577,6 +579,31 @@ func CmdJumpBack(ctx Context) {
 
 func CmdJumpForward(ctx Context) {
 	ctx.Editor.ActiveWindow().Jumps.JumpForward()
+	CmdCursorCenter(ctx)
+}
+
+// CmdJumpToggle toggles between the previous and current jump locations (pingpong).
+func CmdJumpToggle(ctx Context) {
+	win := ctx.Editor.ActiveWindow()
+	if win == nil || win.Jumps == nil {
+		return
+	}
+
+	// If the user moved around on the current jump point, push the position before toggling
+	if win.buf != nil {
+		cur := WindowCursorGet(win, win.buf)
+		if win.Jumps.List.Last() != nil && win.Jumps.current == win.Jumps.List.Last() {
+			if win.Jumps.List.Last().Value.Cursor.Line != cur.Line {
+				win.Jumps.Push(win.buf, cur)
+			}
+		}
+	}
+
+	if win.Jumps.current != nil && win.Jumps.current != win.Jumps.List.Last() {
+		win.Jumps.JumpForward()
+	} else {
+		win.Jumps.JumpBack()
+	}
 	CmdCursorCenter(ctx)
 }
 
