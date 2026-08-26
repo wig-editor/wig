@@ -66,7 +66,9 @@ func (em *EasyMotion) Close() {
 	em.e.Redraw()
 }
 
-func (em *EasyMotion) Plane() wig.RenderPlane  { return wig.PlaneEditor }
+// PlaneWin so marks are drawn on the active window's viewport, not at
+// screen origin (which would land on the leftmost window in split view).
+func (em *EasyMotion) Plane() wig.RenderPlane  { return wig.PlaneWin }
 func (em *EasyMotion) Mode() wig.Mode          { return em.mode }
 func (em *EasyMotion) Keymap() *wig.KeyHandler { return em.keymap }
 
