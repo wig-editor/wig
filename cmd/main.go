@@ -52,7 +52,7 @@ func main() {
 		}
 	}
 
-	wig.MarksPopupFactory = func(ctx wig.Context, marks map[rune]wig.Cursor) {
+	wig.MarksPopupFactory = func(ctx wig.Context, marks map[rune]wig.Mark) {
 		ui.MarksPopupInit(ctx, marks)
 	}
 

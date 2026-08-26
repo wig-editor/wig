@@ -25,7 +25,7 @@ func (u *MarksPopupWidget) Plane() wig.RenderPlane  { return wig.PlaneEditor }
 func (u *MarksPopupWidget) Mode() wig.Mode          { return wig.MODE_NORMAL }
 func (u *MarksPopupWidget) Keymap() *wig.KeyHandler { return u.keymap }
 
-func MarksPopupInit(ctx wig.Context, marks map[rune]wig.Cursor) {
+func MarksPopupInit(ctx wig.Context, marks map[rune]wig.Mark) {
 	widget := &MarksPopupWidget{
 		e: ctx.Editor,
 	}
@@ -52,9 +52,13 @@ func MarksPopupInit(ctx wig.Context, marks map[rune]wig.Cursor) {
 	}
 
 	for _, k := range keys {
-		cur := marks[k]
-		line := wig.CursorLineByNum(ctx.Buf, cur.Line)
+		mark := marks[k]
+		cur := mark.Cursor
 		text := ""
+		var line *wig.Element[wig.Line]
+		if mark.Buf != nil {
+			line = wig.CursorLineByNum(mark.Buf, cur.Line)
+		}
 		if line != nil {
 			text = strings.TrimRight(line.Value.String(), "\n")
 			text = strings.TrimSpace(text)
@@ -63,16 +67,18 @@ func MarksPopupInit(ctx wig.Context, marks map[rune]wig.Cursor) {
 			}
 		}
 
-		mark := k
-		targetCur := cur
 		widget.items = append(widget.items, markItem{
-			Mark: mark,
+			Mark: k,
 			Line: cur.Line + 1,
 			Text: text,
 		})
 
+		targetCur := cur
 		jumpFn := func(ctx wig.Context) {
 			ctx.Editor.PopUi()
+			if mark.Buf != nil {
+				ctx.Buf = mark.Buf
+			}
 			win := ctx.Win
 			if win == nil {
 				win = ctx.Editor.ActiveWindow()
@@ -81,7 +87,7 @@ func MarksPopupInit(ctx wig.Context, marks map[rune]wig.Cursor) {
 			wig.CmdEnsureCursorVisible(ctx)
 		}
 
-		markStr := string(mark)
+		markStr := string(k)
 		km[markStr] = jumpFn
 		km["shift+"+markStr] = jumpFn
 	}

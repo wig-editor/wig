@@ -17,19 +17,20 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 	buf.Dirty = true
 	sline := CursorNumByLine(buf, line)
 
-	event := EventTextChange{
-		Buf:    buf,
-		Start:  Position{Line: sline, Char: pos},
-		End:    Position{Line: sline, Char: pos},
-		NewEnd: Position{Line: sline, Char: pos},
-		Text:   text,
-	}
 	if pos < 0 {
 		pos = 0
 	}
 	size := utf8.RuneCountInString(line.Value.String())
 	if pos >= size {
 		pos = size - 1
+	}
+
+	event := EventTextChange{
+		Buf:    buf,
+		Start:  Position{Line: sline, Char: pos},
+		End:    Position{Line: sline, Char: pos},
+		NewEnd: Position{Line: sline, Char: pos},
+		Text:   text,
 	}
 
 	s := scanner.Scanner{}
@@ -56,6 +57,7 @@ func TextInsert(buf *Buffer, line *Element[Line], pos int, text string) {
 		}
 	}
 
+	adjustMarksForInsertion(event)
 	EditorInst.Events.Broadcast(event)
 }
 
@@ -108,6 +110,7 @@ func TextDelete(buf *Buffer, selection *Selection) {
 		OldText: oldText,
 	}
 
+	adjustMarksForDeletion(event)
 	EditorInst.Events.Broadcast(event)
 }
 
@@ -807,10 +810,10 @@ func CmdSetMark(ctx Context) func(Context) {
 			return
 		}
 		if win.Marks == nil {
-			win.Marks = make(map[rune]Cursor)
+			win.Marks = make(map[rune]Mark)
 		}
 		cur := ContextCursorGet(ctx)
-		win.Marks[r] = *cur
+		win.Marks[r] = Mark{Buf: ctx.Buf, Cursor: *cur}
 		ctx.Editor.EchoMessage("Mark '" + string(r) + "' set")
 	}
 }

@@ -3,7 +3,7 @@ package wig
 type Window struct {
 	buf     *Buffer // active buffer
 	cursors map[*Buffer]*Cursor
-	Marks   map[rune]Cursor
+	Marks   map[rune]Mark
 	Jumps   *Jumps
 }
 
@@ -50,7 +50,7 @@ func (win *Window) Buffer() *Buffer {
 // Specify parent window to inherit cursors
 func CreateWindow(parent *Window) *Window {
 	cursors := map[*Buffer]*Cursor{}
-	marks := make(map[rune]Cursor)
+	marks := make(map[rune]Mark)
 	w := &Window{
 		Jumps: &Jumps{
 			List: List[Jump]{},
