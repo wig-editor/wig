@@ -50,6 +50,16 @@ func init() {
 	wig.AllCommands["CmdGitBlame"] = wig.CmdDefinition{Desc: "Git blame", Fn: CmdGitBlame}
 	wig.AllCommands["blame"] = wig.CmdDefinition{Desc: "Git blame", Fn: CmdGitBlame}
 	wig.AllCommands["CmdGitBlameCommit"] = wig.CmdDefinition{Desc: "Git blame commit detail", Fn: CmdGitBlameCommit}
+	wig.AllCommands["CmdWorkspaceSwitch_1"] = wig.CmdDefinition{Desc: "Switch to workspace 1", Fn: wig.CmdWorkspaceSwitch_1}
+	wig.AllCommands["CmdWorkspaceSwitch_2"] = wig.CmdDefinition{Desc: "Switch to workspace 2", Fn: wig.CmdWorkspaceSwitch_2}
+	wig.AllCommands["CmdWorkspaceSwitch_3"] = wig.CmdDefinition{Desc: "Switch to workspace 3", Fn: wig.CmdWorkspaceSwitch_3}
+	wig.AllCommands["CmdWorkspaceSwitch_4"] = wig.CmdDefinition{Desc: "Switch to workspace 4", Fn: wig.CmdWorkspaceSwitch_4}
+	wig.AllCommands["CmdWorkspaceSwitch_5"] = wig.CmdDefinition{Desc: "Switch to workspace 5", Fn: wig.CmdWorkspaceSwitch_5}
+	wig.AllCommands["CmdWorkspaceSwitch_6"] = wig.CmdDefinition{Desc: "Switch to workspace 6", Fn: wig.CmdWorkspaceSwitch_6}
+	wig.AllCommands["CmdWorkspaceSwitch_7"] = wig.CmdDefinition{Desc: "Switch to workspace 7", Fn: wig.CmdWorkspaceSwitch_7}
+	wig.AllCommands["CmdWorkspaceSwitch_8"] = wig.CmdDefinition{Desc: "Switch to workspace 8", Fn: wig.CmdWorkspaceSwitch_8}
+	wig.AllCommands["CmdWorkspaceSwitch_9"] = wig.CmdDefinition{Desc: "Switch to workspace 9", Fn: wig.CmdWorkspaceSwitch_9}
+	wig.AllCommands["CmdWorkspaceSwitch_0"] = wig.CmdDefinition{Desc: "Switch to workspace 0", Fn: wig.CmdWorkspaceSwitch_0}
 
 	// Window management commands
 	wig.AllCommands["vs"] = wig.CmdDefinition{Desc: "Vertical split", Fn: wig.CmdWindowVSplit}

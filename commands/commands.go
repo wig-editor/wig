@@ -101,7 +101,7 @@ func CmdBufferPicker(ctx wig.Context) {
 // The picker also supports pressing Delete to clear a workspace's
 // cached entry.
 func CmdWorkspaceListPicker(ctx wig.Context) {
-	cache := LoadWorkspaceCache()
+	cache := wig.LoadWorkspaceCache()
 	cache.CaptureAll(ctx.Editor)
 
 	buildItems := func() []ui.PickerItem[int] {

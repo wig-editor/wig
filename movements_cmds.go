@@ -639,23 +639,49 @@ func CmdBufferCycle(ctx Context) {
 }
 
 func moveWindowToWorkspace(ctx Context, num int) {
+	if num < 0 || num >= len(ctx.Editor.Workspaces) {
+		return
+	}
+	ws := ctx.Editor.GetWorkspace(num)
 	nwin := CreateWindow(ctx.Editor.ActiveWindow())
-	ctx.Editor.Workspaces[num].Windows = append(ctx.Editor.Workspaces[num].Windows, nwin)
+	ws.Windows = append(ws.Windows, nwin)
+	if ws.ActiveWindow == nil {
+		ws.ActiveWindow = nwin
+	}
 	CmdWindowClose(ctx)
 	ctx.Editor.EchoMessage(fmt.Sprintf("Window moved to workspace %d.", num))
 }
 
 func workspaceSwitch(ctx Context, num int) {
-	workspace := ctx.Editor.GetWorkspace(num)
-	if len(workspace.Windows) == 0 {
-		ctx.Editor.EchoMessage(fmt.Sprintf("Workspace %d has no windows.", num))
+	if num < 0 || num >= len(ctx.Editor.Workspaces) {
 		return
 	}
-	ctx.Editor.ActiveWorkspace = num
-	if workspace.ActiveWindow == nil {
-		ctx.Editor.SetActiveWindow(ctx.Editor.GetActiveWorkspace().Windows[0])
+
+	if num == ctx.Editor.ActiveWorkspace {
+		return
 	}
+
+	cache := LoadWorkspaceCache()
+	cache.CaptureWorkspace(ctx.Editor.ActiveWorkspace, ctx.Editor.GetActiveWorkspace())
+	cache.Save()
+
+	ws := ctx.Editor.GetWorkspace(num)
+	if len(ws.Windows) == 0 {
+		win := CreateWindow(nil)
+		ws.Windows = []*Window{win}
+		ws.Num = num
+		ws.ActiveWindow = win
+	}
+
+	ctx.Editor.ActiveWorkspace = num
+	cache.RestoreWorkspace(ctx.Editor, num)
+
+	if ws.ActiveWindow == nil && len(ws.Windows) > 0 {
+		ctx.Editor.SetActiveWindow(ws.Windows[0])
+	}
+
 	ctx.Editor.EchoMessage(fmt.Sprintf("Workspace %d active.", num))
+	ctx.Editor.Redraw()
 }
 
 func CmdWindowMoveToWorkspace_1(ctx Context) {
