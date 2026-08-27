@@ -1,12 +1,10 @@
-package commands
+package wig
 
 import (
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/firstrow/wig"
 )
 
 // WorkspaceCacheEntry stores the file paths and active file for a single
@@ -59,7 +57,7 @@ func (c *WorkspaceCache) Save() {
 // CaptureWorkspace records the file paths open in a workspace into the
 // cache. Only real file-backed buffers are stored; special buffers
 // like [Messages] or [git] are skipped. Duplicate paths are deduplicated.
-func (c *WorkspaceCache) CaptureWorkspace(num int, ws *wig.Workspace) {
+func (c *WorkspaceCache) CaptureWorkspace(num int, ws *Workspace) {
 	if ws == nil {
 		return
 	}
@@ -108,7 +106,7 @@ func (c *WorkspaceCache) CaptureWorkspace(num int, ws *wig.Workspace) {
 // one window. Workspaces that were never used in this session are
 // skipped so that their cached entries from a previous session are
 // preserved.
-func (c *WorkspaceCache) CaptureAll(editor *wig.Editor) {
+func (c *WorkspaceCache) CaptureAll(editor *Editor) {
 	for i := range editor.Workspaces {
 		ws := &editor.Workspaces[i]
 		if len(ws.Windows) == 0 {
@@ -124,7 +122,7 @@ func (c *WorkspaceCache) CaptureAll(editor *wig.Editor) {
 // its own window so the previous split layout is recreated. If the
 // workspace already has file buffers, the cache is skipped to avoid
 // duplicates.
-func (c *WorkspaceCache) RestoreWorkspace(editor *wig.Editor, num int) {
+func (c *WorkspaceCache) RestoreWorkspace(editor *Editor, num int) {
 	entry, ok := c.Workspaces[num]
 	if !ok || len(entry.Files) == 0 {
 		c.ensureWorkspaceBuffer(editor, num)
@@ -155,7 +153,7 @@ func (c *WorkspaceCache) RestoreWorkspace(editor *wig.Editor, num int) {
 	// invisible on screen ("dismissed").
 	type restoredWin struct {
 		fp  string
-		win *wig.Window
+		win *Window
 	}
 	var restored []restoredWin
 	for _, fp := range entry.Files {
@@ -168,7 +166,7 @@ func (c *WorkspaceCache) RestoreWorkspace(editor *wig.Editor, num int) {
 		if buf == nil {
 			continue
 		}
-		win := wig.CreateWindow(nil)
+		win := CreateWindow(nil)
 		ctx := editor.NewContext()
 		ctx.Buf = buf
 		win.VisitBuffer(ctx)
@@ -182,7 +180,7 @@ func (c *WorkspaceCache) RestoreWorkspace(editor *wig.Editor, num int) {
 		return
 	}
 
-	ws.Windows = make([]*wig.Window, 0, len(restored))
+	ws.Windows = make([]*Window, 0, len(restored))
 	for _, r := range restored {
 		ws.Windows = append(ws.Windows, r.win)
 	}
@@ -201,12 +199,12 @@ func (c *WorkspaceCache) RestoreWorkspace(editor *wig.Editor, num int) {
 // active window if it currently has none. Without this, restoring a
 // workspace whose cached files were deleted from disk leaves a window with
 // a nil buffer, which panics on the next input or render tick.
-func (c *WorkspaceCache) ensureWorkspaceBuffer(editor *wig.Editor, num int) {
+func (c *WorkspaceCache) ensureWorkspaceBuffer(editor *Editor, num int) {
 	ws := editor.GetWorkspace(num)
 	if ws.ActiveWindow == nil || ws.ActiveWindow.Buffer() != nil {
 		return
 	}
 	ctx := editor.NewContext()
-	ctx.Buf = wig.NewBuffer()
+	ctx.Buf = NewBuffer()
 	ws.ActiveWindow.VisitBuffer(ctx)
 }

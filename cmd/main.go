@@ -114,7 +114,7 @@ func main() {
 		wig.CmdNewBuffer(editor.NewContext())
 
 		// Try restoring last session's active workspace from cache
-		wsCache := commands.LoadWorkspaceCache()
+		wsCache := wig.LoadWorkspaceCache()
 		if target := wsCache.ActiveWorkspace; target >= 0 && target < len(editor.Workspaces) {
 			if entry, ok := wsCache.Workspaces[target]; ok && len(entry.Files) > 0 {
 				ws := editor.GetWorkspace(target)
@@ -224,7 +224,7 @@ func main() {
 	}
 
 	// Save workspace state (files per workspace) for session persistence
-	wsCache := commands.LoadWorkspaceCache()
+	wsCache := wig.LoadWorkspaceCache()
 	wsCache.CaptureAll(editor)
 	wsCache.Save()
 

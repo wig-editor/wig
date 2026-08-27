@@ -82,10 +82,21 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 		sel := buf.Selection
 		startLineNode := wig.CursorLineByNum(buf, sel.Start.Line)
 		endLineNode := wig.CursorLineByNum(buf, sel.End.Line)
-		startVisCol := wig.VisualCol(startLineNode.Value, sel.Start.Char)
-		endVisCol := wig.VisualCol(endLineNode.Value, sel.End.Char)
-		minVisCol = min(startVisCol, endVisCol)
-		maxVisCol = max(startVisCol, endVisCol)
+		// A stale visual-block selection can reference lines that no
+		// longer exist (text deleted while the selection stayed active).
+		// CursorLineByNum then returns nil and .Value below is a nil
+		// dereference that kills the render goroutine mid-frame. Drop
+		// the block highlight for such frames instead of crashing;
+		// leaving minVisCol/maxVisCol at their zero values degrades
+		// gracefully to the ordinary selection styling path.
+		if startLineNode == nil || endLineNode == nil {
+			isVisualBlock = false
+		} else {
+			startVisCol := wig.VisualCol(startLineNode.Value, sel.Start.Char)
+			endVisCol := wig.VisualCol(endLineNode.Value, sel.End.Char)
+			minVisCol = min(startVisCol, endVisCol)
+			maxVisCol = max(startVisCol, endVisCol)
+		}
 	}
 
 	for currentLine != nil {
@@ -173,12 +184,43 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 			// End Line Numbers & Git Signs
 
 			// render line
+			//
+			// The panic at ui/window.go:176 ("index out of range") came
+			// from this prefix-sum loop. skip is derived ONCE from the
+			// cursor's rune column on ITS OWN line (skip = cur.Char -
+			// termWidth), but it is then applied horizontally to every
+			// termWidth), but it is then applied horizontally to every
+			// rendered row. Resting the cursor far to the right on a
+			// LONG line produced a skip larger than the total length of
+			// the SHORTER sibling lines visible above/below it, so the
+			// very next frame indexed past the end of one of those short
+			// slices and crashed the input/render goroutine. A single
+			// very long line anywhere in the file was enough to arm the
+			// trap; merely scrolling it half off-screen fired it.
+			//
+			// Fix: clamp the skip per rendered line so both loops stay
+			// strictly inside [0, len(Value)). Clamping to len-1 (not 0)
+			// keeps the final rune — usually the trailing '\n' — visible,
+			// preserving row occupancy so the y/lineNum bookkeeping
+			// between screen rows and buffer rows stays perfectly
+			// aligned. This also covers the degenerate case of an
+			// insert-mode cursor sitting at/past end-of-line on a narrow
+			// terminal, where skip could exceed even the cursor's own
+			// line length.
+			lineSkip := skip
+			if lineSkip > len(currentLine.Value)-1 {
+				lineSkip = len(currentLine.Value) - 1
+			}
+			if lineSkip < 0 {
+				lineSkip = 0
+			}
+
 			currVisCol := 0
-			for j := 0; j < skip; j++ {
+			for j := 0; j < lineSkip; j++ {
 				currVisCol += chlen(currentLine.Value[j])
 			}
 
-			for i := skip; i < len(currentLine.Value); i++ {
+			for i := lineSkip; i < len(currentLine.Value); i++ {
 				// render selection
 				textStyle := wig.Color("default")
 
