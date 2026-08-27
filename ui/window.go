@@ -68,8 +68,10 @@ func WindowRender(e *wig.Editor, view wig.View, win *wig.Window) {
 
 	lineMarks := make(map[int]rune)
 	if win != nil && win.Marks != nil {
-		for r, mCur := range win.Marks {
-			lineMarks[mCur.Line] = r
+		for r, m := range win.Marks {
+			if m.Buf == buf {
+				lineMarks[m.Cursor.Line] = r
+			}
 		}
 	}
 
