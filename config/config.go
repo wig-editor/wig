@@ -218,6 +218,12 @@ func DefaultKeyMap() wig.ModeKeyMap {
 				"t": wig.CmdDeleteBefore,
 				"$": wig.CmdDeleteEndOfLine,
 			},
+			">": wig.KeyMap{
+				">": wig.CmdIndentLine,
+			},
+			"<": wig.KeyMap{
+				"<": wig.CmdUnindentLine,
+			},
 			"y": wig.KeyMap{
 				"y": wig.CmdYank,
 				"$": wig.CmdYankEol,
@@ -334,6 +340,8 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"d":      wig.CmdSelectionDelete,
 			"y":      wig.CmdYank,
 			"p":      wig.CmdYankPut,
+			">":      wig.CmdSelectionIndent,
+			"<":      wig.CmdSelectionUnindent,
 			"c":      wig.CmdSelectionChange,
 			"*":      commands.CmdSearchWordUnderCursor,
 			"%":      wig.WithSelection(wig.CmdMatchPair),
@@ -365,6 +373,8 @@ func DefaultKeyMap() wig.ModeKeyMap {
 			"x":      wig.CmdSelectionDelete,
 			"d":      wig.CmdSelectionDelete,
 			"y":      wig.CmdYank,
+			">":      wig.CmdSelectionIndent,
+			"<":      wig.CmdSelectionUnindent,
 			"p":      wig.CmdYankPut,
 			"%":      wig.WithSelection(wig.CmdMatchPair),
 			"g": wig.KeyMap{

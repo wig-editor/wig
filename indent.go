@@ -57,6 +57,100 @@ func indent(ctx Context) {
 
 // Get number if "indents" in provided line
 // Indent unit can be \t, or any number of spaces. eg. 2 or 4.
+func CmdIndentLine(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	CmdIndentLines(ctx, cur.Line, cur.Line)
+}
+
+func CmdUnindentLine(ctx Context) {
+	cur := ContextCursorGet(ctx)
+	CmdUnindentLines(ctx, cur.Line, cur.Line)
+}
+
+func CmdSelectionIndent(ctx Context) {
+	if ctx.Buf.Selection == nil {
+		return
+	}
+	defer CmdNormalMode(ctx)
+	sel := SelectionNormalize(ctx.Buf.Selection)
+	CmdIndentLines(ctx, sel.Start.Line, sel.End.Line)
+	ctx.Buf.Selection = nil
+}
+
+func CmdSelectionUnindent(ctx Context) {
+	if ctx.Buf.Selection == nil {
+		return
+	}
+	defer CmdNormalMode(ctx)
+	sel := SelectionNormalize(ctx.Buf.Selection)
+	CmdUnindentLines(ctx, sel.Start.Line, sel.End.Line)
+	ctx.Buf.Selection = nil
+}
+
+func CmdIndentLines(ctx Context, startLine, endLine int) {
+	if ctx.Buf.TxStart() {
+		defer ctx.Buf.TxEnd()
+	}
+
+	lspFileConfig, found := LspConfigByFileName(ctx.Buf.FilePath)
+	indentUnit := "\t"
+	if found && lspFileConfig.Language.Indent.Unit != "" {
+		indentUnit = lspFileConfig.Language.Indent.Unit
+	}
+
+	for i := startLine; i <= endLine; i++ {
+		line := CursorLineByNum(ctx.Buf, i)
+		if line != nil {
+			TextInsert(ctx.Buf, line, 0, indentUnit)
+		}
+	}
+
+	cur := ContextCursorGet(ctx)
+	cur.Line = startLine
+	CmdCursorFirstNonBlank(ctx)
+}
+
+func CmdUnindentLines(ctx Context, startLine, endLine int) {
+	if ctx.Buf.TxStart() {
+		defer ctx.Buf.TxEnd()
+	}
+
+	lspFileConfig, found := LspConfigByFileName(ctx.Buf.FilePath)
+	indentUnit := "\t"
+	if found && lspFileConfig.Language.Indent.Unit != "" {
+		indentUnit = lspFileConfig.Language.Indent.Unit
+	}
+
+	for i := startLine; i <= endLine; i++ {
+		line := CursorLineByNum(ctx.Buf, i)
+		if line != nil {
+			lineStr := string(line.Value)
+			deleteCount := 0
+			if strings.HasPrefix(lineStr, indentUnit) {
+				deleteCount = len(indentUnit)
+			} else {
+				for deleteCount < len(indentUnit) && deleteCount < len(lineStr) {
+					if lineStr[deleteCount] == ' ' || lineStr[deleteCount] == '\t' {
+						deleteCount++
+					} else {
+						break
+					}
+				}
+			}
+			if deleteCount > 0 {
+				TextDelete(ctx.Buf, &Selection{
+					Start: Cursor{Line: i, Char: 0},
+					End:   Cursor{Line: i, Char: deleteCount},
+				})
+			}
+		}
+	}
+
+	cur := ContextCursorGet(ctx)
+	cur.Line = startLine
+	CmdCursorFirstNonBlank(ctx)
+}
+
 func IndentGetNumber(line []rune, indentUnit []rune) int {
 	fullStep := len(indentUnit)
 	if fullStep == 0 || len(line) == 0 {
