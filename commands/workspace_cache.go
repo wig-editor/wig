@@ -77,6 +77,11 @@ func (c *WorkspaceCache) CaptureWorkspace(num int, ws *wig.Workspace) {
 		if fp == "" || strings.HasPrefix(fp, "[") || seen[fp] {
 			continue
 		}
+		// Drop files that no longer exist on disk so deleted files never
+		// poison future session restores.
+		if _, err := os.Stat(fp); err != nil {
+			continue
+		}
 		seen[fp] = true
 		entry.Files = append(entry.Files, fp)
 	}
@@ -85,6 +90,16 @@ func (c *WorkspaceCache) CaptureWorkspace(num int, ws *wig.Workspace) {
 		if buf != nil {
 			entry.ActiveFile = buf.FilePath
 		}
+	}
+
+	// A workspace can end a session holding only blank scratch buffers:
+	// no-args startups seed ws1 via CmdNewBuffer, and switching through
+	// the workspace picker seeds empty windows elsewhere. Overwriting the
+	// cached entry with an empty one here silently erases the previous
+	// session's file list. Keep the existing cached entry instead;
+	// clearing a workspace is done explicitly with Delete in the picker.
+	if len(entry.Files) == 0 {
+		return
 	}
 	c.Workspaces[num] = entry
 }
@@ -104,12 +119,15 @@ func (c *WorkspaceCache) CaptureAll(editor *wig.Editor) {
 	c.ActiveWorkspace = editor.ActiveWorkspace
 }
 
-// RestoreWorkspace opens cached files into the target workspace if it
-// is currently empty (no real file-backed buffers). If the workspace
-// already has file buffers, the cache is skipped to avoid duplicates.
+// RestoreWorkspace rebuilds the target workspace from cache if it is
+// currently empty (no real file-backed buffers): every cached file gets
+// its own window so the previous split layout is recreated. If the
+// workspace already has file buffers, the cache is skipped to avoid
+// duplicates.
 func (c *WorkspaceCache) RestoreWorkspace(editor *wig.Editor, num int) {
 	entry, ok := c.Workspaces[num]
 	if !ok || len(entry.Files) == 0 {
+		c.ensureWorkspaceBuffer(editor, num)
 		return
 	}
 
@@ -131,26 +149,64 @@ func (c *WorkspaceCache) RestoreWorkspace(editor *wig.Editor, num int) {
 		return
 	}
 
-	var activeBuf *wig.Buffer
+	// Recreate one window per restored file so the previous split layout
+	// reappears. Opening a file alone only adds a hidden buffer to
+	// editor.Buffers; without a window displaying it, the file stays
+	// invisible on screen ("dismissed").
+	type restoredWin struct {
+		fp  string
+		win *wig.Window
+	}
+	var restored []restoredWin
 	for _, fp := range entry.Files {
+		// Files can vanish from disk between capture and restore. Skip
+		// them instead of ending up with a nil-buffer window.
+		if _, err := os.Stat(fp); err != nil {
+			continue
+		}
 		buf, _ := editor.OpenFile(fp)
-		if buf != nil && fp == entry.ActiveFile {
-			activeBuf = buf
+		if buf == nil {
+			continue
 		}
-	}
-
-	if activeBuf == nil && len(entry.Files) > 0 {
-		for _, b := range editor.Buffers {
-			if b.FilePath == entry.Files[0] {
-				activeBuf = b
-				break
-			}
-		}
-	}
-
-	if activeBuf != nil && ws.ActiveWindow != nil {
+		win := wig.CreateWindow(nil)
 		ctx := editor.NewContext()
-		ctx.Buf = activeBuf
-		ws.ActiveWindow.VisitBuffer(ctx)
+		ctx.Buf = buf
+		win.VisitBuffer(ctx)
+		restored = append(restored, restoredWin{fp: fp, win: win})
 	}
+
+	if len(restored) == 0 {
+		// Every cached file was deleted from disk: still give the
+		// workspace's active window a valid buffer.
+		c.ensureWorkspaceBuffer(editor, num)
+		return
+	}
+
+	ws.Windows = make([]*wig.Window, 0, len(restored))
+	for _, r := range restored {
+		ws.Windows = append(ws.Windows, r.win)
+	}
+	// Focus the window showing the previously active file; fall back to
+	// the first surviving window.
+	ws.ActiveWindow = restored[0].win
+	for _, r := range restored {
+		if r.fp == entry.ActiveFile {
+			ws.ActiveWindow = r.win
+			break
+		}
+	}
+}
+
+// ensureWorkspaceBuffer attaches a fresh empty buffer to the workspace's
+// active window if it currently has none. Without this, restoring a
+// workspace whose cached files were deleted from disk leaves a window with
+// a nil buffer, which panics on the next input or render tick.
+func (c *WorkspaceCache) ensureWorkspaceBuffer(editor *wig.Editor, num int) {
+	ws := editor.GetWorkspace(num)
+	if ws.ActiveWindow == nil || ws.ActiveWindow.Buffer() != nil {
+		return
+	}
+	ctx := editor.NewContext()
+	ctx.Buf = wig.NewBuffer()
+	ws.ActiveWindow.VisitBuffer(ctx)
 }

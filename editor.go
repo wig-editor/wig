@@ -204,9 +204,15 @@ func (e *Editor) BufferFindByFilePath(fp string, create bool) *Buffer {
 	return b
 }
 
-// Returns active window buffer
+// Returns active window buffer.
+// May return nil when the active workspace has no active window/buffer,
+// e.g. transiently after ":q" closed the last window.
 func (e *Editor) ActiveBuffer() *Buffer {
-	return e.ActiveWindow().Buffer()
+	win := e.ActiveWindow()
+	if win == nil {
+		return nil
+	}
+	return win.Buffer()
 }
 
 func (e *Editor) GetActiveWorkspace() *Workspace {
@@ -267,11 +273,22 @@ func (e *Editor) EnsureBufferIsVisible(b *Buffer) {
 
 func (e *Editor) HandleInput(ev *tcell.EventKey) {
 	var k *KeyHandler
-	mode := e.ActiveBuffer().Mode()
+
+	win := e.ActiveWindow()
+	if win == nil {
+		// Workspace teardown in progress (e.g. right after ":q"): drop event.
+		return
+	}
+	buf := win.Buffer()
+	if buf == nil {
+		// No active buffer yet: drop event instead of nil-deref in buf.Mode().
+		return
+	}
+	mode := buf.Mode()
 	e.Message = ""
 
-	if e.ActiveWindow().Buffer().KeyHandler != nil {
-		k = e.ActiveWindow().Buffer().KeyHandler
+	if buf.KeyHandler != nil {
+		k = buf.KeyHandler
 	} else {
 		k = e.Keys
 	}
