@@ -137,6 +137,15 @@ func main() {
 
 	renderer := render.New(editor, tscreen)
 
+	// exitDone is closed exactly once when the editor signals quit. The event
+	// pump consults it so keystrokes arriving during/after teardown cannot be
+	// dispatched into a half-torn-down editor state.
+	exitDone := make(chan struct{})
+	go func() {
+		<-editor.ExitCh
+		close(exitDone)
+	}()
+
 	var pasteStarted bool
 	var pastedText string
 
@@ -172,6 +181,14 @@ func main() {
 					renderer.Render()
 				})
 				// renderer.RenderMetrics(metrics.Get())
+
+				// Stop pumping events once quit was requested; the next
+				// HandleInput would otherwise hit a nil active buffer.
+				select {
+				case <-exitDone:
+					return
+				default:
+				}
 			case *tcell.EventError:
 				fmt.Println("error:", ev)
 				return
@@ -193,7 +210,7 @@ func main() {
 		}
 	}()
 
-	<-editor.ExitCh
+	<-exitDone
 
 	activeBuf := editor.ActiveBuffer()
 	if activeBuf != nil && activeBuf.FilePath != "" && !strings.HasPrefix(activeBuf.FilePath, "[") {
