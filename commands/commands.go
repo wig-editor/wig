@@ -147,7 +147,7 @@ func CmdWorkspaceListPicker(ctx wig.Context) {
 		}
 
 		// Capture current workspace before switching
-		cache.CaptureWorkspace(ctx.Editor.ActiveWorkspace, ctx.Editor.GetActiveWorkspace())
+		cache.CaptureWorkspace(ctx.Editor.ActiveWorkspace, ctx.Editor.GetActiveWorkspace(), ctx.Editor)
 		cache.Save()
 
 		// Ensure target workspace has at least one window

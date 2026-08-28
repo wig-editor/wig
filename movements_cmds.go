@@ -662,7 +662,7 @@ func workspaceSwitch(ctx Context, num int) {
 	}
 
 	cache := LoadWorkspaceCache()
-	cache.CaptureWorkspace(ctx.Editor.ActiveWorkspace, ctx.Editor.GetActiveWorkspace())
+	cache.CaptureWorkspace(ctx.Editor.ActiveWorkspace, ctx.Editor.GetActiveWorkspace(), ctx.Editor)
 	cache.Save()
 
 	ws := ctx.Editor.GetWorkspace(num)

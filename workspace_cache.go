@@ -57,12 +57,36 @@ func (c *WorkspaceCache) Save() {
 // CaptureWorkspace records the file paths open in a workspace into the
 // cache. Only real file-backed buffers are stored; special buffers
 // like [Messages] or [git] are skipped. Duplicate paths are deduplicated.
-func (c *WorkspaceCache) CaptureWorkspace(num int, ws *Workspace) {
+//
+// Previously-cached files are preserved only when they still exist on
+// disk AND are still open in the editor (some buffer holds the path).
+// This keeps files that the user temporarily hid by opening another
+// file in the same window, while dropping files whose buffers were
+// killed. Files are fully cleared from a workspace only via Delete in
+// the picker, or when the computed list is empty (protected below).
+func (c *WorkspaceCache) CaptureWorkspace(num int, ws *Workspace, editor *Editor) {
 	if ws == nil {
 		return
 	}
 	entry := WorkspaceCacheEntry{}
 	seen := make(map[string]bool)
+
+	// Preserve previously cached files that are still open and on disk.
+	if prev, ok := c.Workspaces[num]; ok {
+		for _, fp := range prev.Files {
+			if _, err := os.Stat(fp); err != nil {
+				continue
+			}
+			if editor.BufferFindByFilePath(fp, false) == nil {
+				continue
+			}
+			if !seen[fp] {
+				seen[fp] = true
+				entry.Files = append(entry.Files, fp)
+			}
+		}
+	}
+
 	for _, win := range ws.Windows {
 		if win == nil {
 			continue
@@ -112,7 +136,7 @@ func (c *WorkspaceCache) CaptureAll(editor *Editor) {
 		if len(ws.Windows) == 0 {
 			continue
 		}
-		c.CaptureWorkspace(i, ws)
+		c.CaptureWorkspace(i, ws, editor)
 	}
 	c.ActiveWorkspace = editor.ActiveWorkspace
 }
@@ -155,7 +179,6 @@ func (c *WorkspaceCache) RestoreWorkspace(editor *Editor, num int) {
 		fp  string
 		win *Window
 	}
-	var restored []restoredWin
 	for _, fp := range entry.Files {
 		// Files can vanish from disk between capture and restore. Skip
 		// them instead of ending up with a nil-buffer window.
@@ -166,33 +189,13 @@ func (c *WorkspaceCache) RestoreWorkspace(editor *Editor, num int) {
 		if buf == nil {
 			continue
 		}
-		win := CreateWindow(nil)
+		win := editor.ActiveWindow()
 		ctx := editor.NewContext()
 		ctx.Buf = buf
 		win.VisitBuffer(ctx)
-		restored = append(restored, restoredWin{fp: fp, win: win})
 	}
 
-	if len(restored) == 0 {
-		// Every cached file was deleted from disk: still give the
-		// workspace's active window a valid buffer.
-		c.ensureWorkspaceBuffer(editor, num)
-		return
-	}
-
-	ws.Windows = make([]*Window, 0, len(restored))
-	for _, r := range restored {
-		ws.Windows = append(ws.Windows, r.win)
-	}
-	// Focus the window showing the previously active file; fall back to
-	// the first surviving window.
-	ws.ActiveWindow = restored[0].win
-	for _, r := range restored {
-		if r.fp == entry.ActiveFile {
-			ws.ActiveWindow = r.win
-			break
-		}
-	}
+	c.ensureWorkspaceBuffer(editor, num)
 }
 
 // ensureWorkspaceBuffer attaches a fresh empty buffer to the workspace's
