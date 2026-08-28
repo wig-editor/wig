@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"net/url"
@@ -216,10 +217,10 @@ func GetGitStatusItems() []wig.GitViewItem {
 	addSection(fmt.Sprintf("Unstage Changes (%d)", len(unstaged)), unstaged)
 	addSection(fmt.Sprintf("Untracked Files (%d)", len(untracked)), untracked)
 	addSection(fmt.Sprintf("Last Commit [%s] (%d)", headHash, len(lastCommitFiles)), lastCommitFiles)
-	addSection("------ Branches ------", branches)
+	addSection("Branches", branches)
 
 	// Stash (no trailing blank — last section)
-	items = append(items, wig.GitViewItem{Type: "header", Label: "------ Stash ------"})
+	items = append(items, wig.GitViewItem{Type: "header", Label: "Stash"})
 	items = append(items, wig.GitViewItem{Type: "separator"})
 	hasStashes := false
 	if len(stashes) > 0 && stashes[0] != "" {
@@ -499,8 +500,49 @@ func FormatCommitSummary(output string) string {
 
 // ── diff preview ─────────────────────────────────────────
 
+// gitIsBinaryData reports whether data looks like binary content, based on
+// the presence of a NUL byte within the first chunk of the file.
+func gitIsBinaryData(data []byte) bool {
+	n := len(data)
+	if n > 8000 {
+		n = 8000
+	}
+	return bytes.IndexByte(data[:n], 0) != -1
+}
+
+// gitFormatByteSize renders a byte count as a short human-readable size.
+func gitFormatByteSize(n int64) string {
+	const unit = 1024
+	if n < unit {
+		return fmt.Sprintf("%d B", n)
+	}
+	div, exp := int64(unit), 0
+	for nn := n / unit; nn >= unit; nn /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %ciB", float64(n)/float64(div), "KMGTPE"[exp])
+}
+
+// gitBinaryFileInfoLines builds a short info summary for a binary file,
+// used in place of dumping its (unreadable) content into the diff view.
+func gitBinaryFileInfoLines(path string, size int64) []string {
+	ext := strings.TrimPrefix(filepath.Ext(path), ".")
+	kind := "Binary file"
+	if ext != "" {
+		kind = fmt.Sprintf("Binary file (.%s)", ext)
+	}
+	return []string{
+		path,
+		"",
+		kind,
+		fmt.Sprintf("Size: %s", gitFormatByteSize(size)),
+	}
+}
+
 // GetGitDiffLines returns diff lines for a file item, suitable for
-// rendering with line-by-line styling in the UI widget.
+// rendering with line-by-line styling in the UI widget. Binary files are
+// summarized as file info instead of having their content displayed.
 func GetGitDiffLines(item wig.GitViewItem) []string {
 	var out string
 	switch item.Status {
@@ -511,9 +553,17 @@ func GetGitDiffLines(item wig.GitViewItem) []string {
 	case "last_commit":
 		out = gitRun("diff", "HEAD~1", "HEAD", "--", item.FilePath)
 	case "untracked":
+		info, statErr := os.Stat(item.FilePath)
 		data, err := os.ReadFile(item.FilePath)
 		if err != nil {
 			return []string{fmt.Sprintf("Cannot read file: %v", err)}
+		}
+		if gitIsBinaryData(data) {
+			size := int64(len(data))
+			if statErr == nil {
+				size = info.Size()
+			}
+			return gitBinaryFileInfoLines(item.FilePath, size)
 		}
 		result := []string{"--- /dev/null", "+++ " + item.FilePath}
 		for _, l := range strings.Split(string(data), "\n") {
@@ -526,6 +576,13 @@ func GetGitDiffLines(item wig.GitViewItem) []string {
 	out = strings.TrimSpace(out)
 	if out == "" {
 		return []string{"(no changes)"}
+	}
+	if strings.Contains(out, "Binary files") {
+		size := int64(0)
+		if info, err := os.Stat(item.FilePath); err == nil {
+			size = info.Size()
+		}
+		return gitBinaryFileInfoLines(item.FilePath, size)
 	}
 	return strings.Split(out, "\n")
 }
@@ -768,11 +825,7 @@ func populateGitStatusBuffer(buf *wig.Buffer) (map[int]gitStatusLine, int) {
 		kind := it.Type
 		switch it.Type {
 		case "header":
-			lineText = fmt.Sprintf("── %s ", it.Label)
-			pad := 50 - len([]rune(lineText))
-			if pad > 0 {
-				lineText += strings.Repeat("─", pad)
-			}
+			lineText = it.Label
 		case "separator", "blank":
 			lineText = ""
 		case "empty":
@@ -821,43 +874,24 @@ func populateGitStatusBuffer(buf *wig.Buffer) (map[int]gitStatusLine, int) {
 	return lineMap, firstSelectable
 }
 
-// CmdGitView opens or toggles the buffer-based git status panel.
+// CmdGitView opens the git status panel as a popup with dual panels:
+// left panel (40%) shows git status items, right panel (60%) shows
+// the diff of the currently selected item.
 func CmdGitView(ctx wig.Context) {
 	if !gitIsRepo() {
 		ctx.Editor.EchoMessage("Not a git repository")
 		return
 	}
 
-	gitBuf := ctx.Editor.BufferFindByFilePath("[git]", false)
-	if gitBuf != nil && ctx.Editor.ActiveBuffer() == gitBuf {
-		// Toggle off: close split or cycle buffer
-		if len(ctx.Editor.Windows()) > 1 {
-			wig.CmdWindowClose(ctx)
-		} else {
-			wig.CmdBufferCycle(ctx)
+	// Toggle off if already open
+	if len(ctx.Editor.UiComponents) > 0 {
+		if _, ok := ctx.Editor.UiComponents[len(ctx.Editor.UiComponents)-1].(*GitViewWidget); ok {
+			ctx.Editor.PopUi()
+			return
 		}
-		return
 	}
 
-	if gitBuf == nil {
-		gitBuf = wig.NewBuffer()
-		gitBuf.FilePath = "[git]"
-		ctx.Editor.Buffers = append(ctx.Editor.Buffers, gitBuf)
-	}
-
-	_, firstLine := populateGitStatusBuffer(gitBuf)
-	setupGitStatusKeyHandler(gitBuf)
-
-	useSplit := ctx.Editor.Config.GitStatusView != "full"
-
-	if useSplit && len(ctx.Editor.Windows()) == 1 {
-		wig.CmdWindowVSplit(ctx)
-		wig.CmdWindowNext(ctx)
-	}
-
-	ctx.Buf = gitBuf
-	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{Line: firstLine, Char: 0})
-	wig.CmdCursorCenter(ctx)
+	GitViewPopupInit(ctx)
 }
 
 func setupGitStatusKeyHandler(gitBuf *wig.Buffer) {
@@ -1137,10 +1171,9 @@ func gitCommitFinish(ctx wig.Context) {
 	wig.CmdKillBuffer(ctx)
 
 	gitBuf := ctx.Editor.BufferFindByFilePath("[git]", false)
-	if gitBuf == nil {
-		return
+	if gitBuf != nil {
+		populateGitStatusBuffer(gitBuf)
 	}
-	populateGitStatusBuffer(gitBuf)
 	wig.EditorInst.EchoMessage("commit done")
 }
 
