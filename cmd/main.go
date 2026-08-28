@@ -65,6 +65,7 @@ func main() {
 	wig.ApplyTheme(editor.Config.Theme)
 	gutterMgr := commands.NewGitGutterManager(editor)
 
+	wsCache := wig.LoadWorkspaceCache()
 	posCache := wig.LoadPositionCache()
 	args := os.Args
 	if len(args) > 1 {
@@ -210,6 +211,18 @@ func main() {
 		}
 	}()
 
+	// save open buffers once in a while
+	ticker := time.NewTicker(1 * time.Minute)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				wsCache.CaptureAll(editor)
+				wsCache.Save()
+			}
+		}
+	}()
+
 	<-exitDone
 
 	activeBuf := editor.ActiveBuffer()
@@ -224,7 +237,6 @@ func main() {
 	}
 
 	// Save workspace state (files per workspace) for session persistence
-	wsCache := wig.LoadWorkspaceCache()
 	wsCache.CaptureAll(editor)
 	wsCache.Save()
 

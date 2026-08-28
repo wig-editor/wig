@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
 // WorkspaceCacheEntry stores the file paths and active file for a single
@@ -26,15 +27,16 @@ type WorkspaceCache struct {
 // LoadWorkspaceCache reads the workspace cache from disk. If the file
 // does not exist or is corrupt, an empty cache is returned.
 func LoadWorkspaceCache() *WorkspaceCache {
+	var cache WorkspaceCache
+
 	home, _ := os.UserHomeDir()
-	p := filepath.Join(home, ".config", "wig", "workspaces.json")
+	p := filepath.Join(home, ".config", "wig", cache.getFileName())
 
 	data, err := os.ReadFile(p)
 	if err != nil {
 		return &WorkspaceCache{Workspaces: make(map[int]WorkspaceCacheEntry)}
 	}
 
-	var cache WorkspaceCache
 	if err := json.Unmarshal(data, &cache); err != nil {
 		return &WorkspaceCache{Workspaces: make(map[int]WorkspaceCacheEntry)}
 	}
@@ -49,9 +51,30 @@ func (c *WorkspaceCache) Save() {
 	home, _ := os.UserHomeDir()
 	dir := filepath.Join(home, ".config", "wig")
 	os.MkdirAll(dir, 0755)
-	p := filepath.Join(dir, "workspaces.json")
+	p := filepath.Join(dir, c.getFileName())
 	data, _ := json.MarshalIndent(c, "", "  ")
 	os.WriteFile(p, data, 0644)
+}
+
+func pathToFilename(p string) string {
+	var b strings.Builder
+
+	for _, r := range p {
+		switch {
+		case unicode.IsLetter(r), unicode.IsDigit(r):
+			b.WriteRune(r)
+		case r == '.', r == '-', r == '_':
+			b.WriteRune(r)
+		default:
+			b.WriteByte('_')
+		}
+	}
+
+	return strings.Trim(b.String(), "._")
+}
+
+func (c *WorkspaceCache) getFileName() string {
+	return pathToFilename(EditorInst.Projects.GetRoot()) + "workspaces.json"
 }
 
 // CaptureWorkspace records the file paths open in a workspace into the
@@ -185,6 +208,7 @@ func (c *WorkspaceCache) RestoreWorkspace(editor *Editor, num int) {
 		if _, err := os.Stat(fp); err != nil {
 			continue
 		}
+
 		buf, _ := editor.OpenFile(fp)
 		if buf == nil {
 			continue
