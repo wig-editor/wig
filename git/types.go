@@ -1,7 +1,7 @@
-package wig
+package git
 
-// GitViewItem represents a single line in the git status view panel.
-type GitViewItem struct {
+// StatusItem represents a single line in the git status view panel.
+type StatusItem struct {
 	Type     string // "header", "separator", "empty", "blank", "file", "branch", "stash"
 	Label    string
 	Status   string // "staged", "unstaged", "untracked", "last_commit", "branch", "active_branch", "stash"
