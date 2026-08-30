@@ -67,6 +67,16 @@ func DiffLines(item StatusItem) []string {
 		out = Run("diff", "HEAD~1", "HEAD", "--", item.FilePath)
 	case "untracked":
 		info, statErr := os.Stat(item.FilePath)
+		if statErr == nil && info.IsDir() {
+			entries, _ := os.ReadDir(item.FilePath)
+			return []string{
+				item.FilePath,
+				"",
+				"Directory",
+				fmt.Sprintf("Items: %d", len(entries)),
+			}
+		}
+
 		data, err := os.ReadFile(item.FilePath)
 		if err != nil {
 			return []string{fmt.Sprintf("Cannot read file: %v", err)}
