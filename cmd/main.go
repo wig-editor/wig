@@ -115,20 +115,20 @@ func main() {
 		wig.CmdNewBuffer(editor.NewContext())
 
 		// Try restoring last session's active workspace from cache
-		wsCache := wig.LoadWorkspaceCache()
-		if target := wsCache.ActiveWorkspace; target >= 0 && target < len(editor.Workspaces) {
-			if entry, ok := wsCache.Workspaces[target]; ok && len(entry.Files) > 0 {
-				ws := editor.GetWorkspace(target)
-				if len(ws.Windows) == 0 {
-					win := wig.CreateWindow(nil)
-					ws.Windows = []*wig.Window{win}
-					ws.Num = target
-					ws.ActiveWindow = win
-				}
-				editor.ActiveWorkspace = target
-				wsCache.RestoreWorkspace(editor, target)
-			}
-		}
+		// wsCache := wig.LoadWorkspaceCache()
+		// if target := wsCache.ActiveWorkspace; target >= 0 && target < len(editor.Workspaces) {
+			// if entry, ok := wsCache.Workspaces[target]; ok && len(entry.Files) > 0 {
+				// ws := editor.GetWorkspace(target)
+				// if len(ws.Windows) == 0 {
+					// win := wig.CreateWindow(nil)
+					// ws.Windows = []*wig.Window{win}
+					// ws.Num = target
+					// ws.ActiveWindow = win
+				// }
+				// editor.ActiveWorkspace = target
+				// wsCache.RestoreWorkspace(editor, target)
+			// }
+		// }
 	}
 
 	// Initial git gutter update for all open buffers
