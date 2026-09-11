@@ -14,6 +14,7 @@ import (
 	"github.com/firstrow/wig/autocomplete"
 	"github.com/firstrow/wig/commands"
 	"github.com/firstrow/wig/config"
+	"github.com/firstrow/wig/git"
 	"github.com/firstrow/wig/metrics"
 	"github.com/firstrow/wig/render"
 	"github.com/firstrow/wig/ui"
@@ -63,7 +64,7 @@ func main() {
 	editor.AutocompleteTrigger = autocomplete.Register(editor)
 	editor.Config = editorCfg
 	wig.ApplyTheme(editor.Config.Theme)
-	gutterMgr := commands.NewGitGutterManager(editor)
+	gutterMgr := git.NewGutterManager(editor)
 
 	wsCache := wig.LoadWorkspaceCache()
 	posCache := wig.LoadPositionCache()

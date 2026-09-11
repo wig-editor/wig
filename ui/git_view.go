@@ -1,18 +1,81 @@
-package commands
+package ui
 
 import (
 	"fmt"
 	"path/filepath"
 	"strings"
 
-	"github.com/firstrow/wig"
 	"github.com/gdamore/tcell/v2"
+
+	"github.com/firstrow/wig"
+	"github.com/firstrow/wig/git"
 )
+
+// DiffHighlighter provides syntax highlighting for git diff and commit
+// inspection buffers.
+type DiffHighlighter struct {
+	Buf *wig.Buffer
+}
+
+func (h *DiffHighlighter) Build()                          {}
+func (h *DiffHighlighter) TextChanged(wig.EventTextChange) {}
+
+func (h *DiffHighlighter) ForRange(startLine, endLine uint32) *wig.HighlighterCursor {
+	if h.Buf == nil {
+		return nil
+	}
+
+	nodes := wig.List[wig.HighlighterNode]{}
+
+	line := wig.CursorLineByNum(h.Buf, int(startLine))
+	for lineNum := startLine; line != nil && lineNum <= endLine; lineNum++ {
+		text := line.Value.String()
+		lineLen := uint32(len([]rune(text)))
+
+		if lineLen > 0 {
+			var nodeName string
+			switch {
+			case strings.HasPrefix(text, "diff --git"), strings.HasPrefix(text, "index "),
+				strings.HasPrefix(text, "commit "), strings.HasPrefix(text, "Author:"),
+				strings.HasPrefix(text, "Date:"):
+				nodeName = "ui.statusline"
+			case strings.HasPrefix(text, "---") || strings.HasPrefix(text, "+++"):
+				nodeName = "ui.linenr"
+			case strings.HasPrefix(text, "@@"):
+				nodeName = "ui.linenr.selected"
+			case strings.HasPrefix(text, "+"):
+				nodeName = "diff.plus"
+			case strings.HasPrefix(text, "-"):
+				nodeName = "diff.minus"
+			}
+
+			if nodeName != "" {
+				nodes.PushBack(wig.HighlighterNode{
+					NodeName:  nodeName,
+					StartLine: lineNum,
+					StartChar: 0,
+					EndLine:   lineNum,
+					EndChar:   lineLen,
+				})
+			}
+		}
+
+		line = line.Next()
+	}
+
+	if nodes.First() == nil {
+		return nil
+	}
+
+	return &wig.HighlighterCursor{Cursor: nodes.First()}
+}
+
+// ── git status popup widget ──────────────────────────────
 
 // gitViewEntry represents a single line in the left panel of the git view popup.
 type gitViewEntry struct {
 	kind     string // "header", "separator", "empty", "blank", "file", "branch", "stash"
-	item     wig.GitViewItem
+	item     git.StatusItem
 	filePath string
 	text     string
 }
@@ -29,7 +92,7 @@ type GitViewWidget struct {
 	diffLines    []string
 	diffScroll   int
 	diffTitle    string
-	pendingStash *wig.GitViewItem
+	pendingStash *git.StatusItem
 }
 
 func (w *GitViewWidget) Plane() wig.RenderPlane  { return wig.PlaneEditor }
@@ -89,7 +152,7 @@ func GitViewPopupInit(ctx wig.Context) *GitViewWidget {
 
 func (w *GitViewWidget) refresh() {
 	w.pendingStash = nil
-	items := GetGitStatusItems()
+	items := git.StatusItems()
 
 	w.entries = make([]gitViewEntry, 0, len(items))
 	for _, it := range items {
@@ -124,7 +187,6 @@ func (w *GitViewWidget) refresh() {
 		})
 	}
 
-	// Find first selectable entry
 	w.activeIdx = 0
 	for i, e := range w.entries {
 		if e.kind == "file" || e.kind == "branch" || e.kind == "stash" {
@@ -151,7 +213,7 @@ func (w *GitViewWidget) updateDiff() {
 
 	switch entry.kind {
 	case "file":
-		diffLines := GetGitDiffLines(entry.item)
+		diffLines := git.DiffLines(entry.item)
 		if len(diffLines) == 0 {
 			w.diffLines = []string{"(no diff)"}
 		} else {
@@ -166,7 +228,7 @@ func (w *GitViewWidget) updateDiff() {
 		}
 		w.diffTitle = entry.item.StashRef
 	case "stash":
-		diffOut := gitRun("stash", "show", "-p", entry.item.StashRef)
+		diffOut := git.Run("stash", "show", "-p", entry.item.StashRef)
 		if strings.TrimSpace(diffOut) == "" {
 			w.diffLines = []string{"(empty stash)"}
 		} else {
@@ -271,7 +333,7 @@ func (w *GitViewWidget) handleEnter(ctx wig.Context) {
 		ctx.Editor.ActiveWindow().VisitBuffer(ctx)
 	case "branch":
 		w.pendingStash = nil
-		err := GitSwitchBranch(entry.item)
+		err := git.SwitchBranch(entry.item)
 		branchName := entry.item.StashRef
 		if branchName == "" {
 			branchName = entry.item.FilePath
@@ -310,7 +372,7 @@ func (w *GitViewWidget) handleStage(ctx wig.Context) {
 		return
 	}
 	oldPath := entry.filePath
-	GitStageItem(entry.item)
+	git.StageItem(entry.item)
 	w.refresh()
 	for i, e := range w.entries {
 		if e.filePath == oldPath {
@@ -326,7 +388,7 @@ func (w *GitViewWidget) handleStage(ctx wig.Context) {
 func (w *GitViewWidget) handleDiffAction(ctx wig.Context) {
 	if w.pendingStash != nil {
 		stashRef := w.pendingStash.StashRef
-		GitStashAction(*w.pendingStash, "drop")
+		git.StashAction(*w.pendingStash, "drop")
 		w.pendingStash = nil
 		w.refresh()
 		w.updateDiff()
@@ -334,14 +396,13 @@ func (w *GitViewWidget) handleDiffAction(ctx wig.Context) {
 		ctx.Editor.Redraw()
 		return
 	}
-	// For files, the diff is already shown. Scroll down as a convenience.
 	w.diffScroll += 5
 	ctx.Editor.Redraw()
 }
 
 func (w *GitViewWidget) handleStash(ctx wig.Context) {
 	w.pendingStash = nil
-	GitStashUnstaged()
+	git.StashUnstaged()
 	w.refresh()
 	w.updateDiff()
 	ctx.Editor.EchoMessage("Stashed unstaged changes")
@@ -364,7 +425,7 @@ func (w *GitViewWidget) handleCommit(ctx wig.Context) {
 func (w *GitViewWidget) handlePush(ctx wig.Context) {
 	ctx.Editor.EchoMessage("running: git push origin HEAD")
 	ctx.Editor.Redraw()
-	gitRun("push", "origin", "HEAD")
+	git.Run("push", "origin", "HEAD")
 	ctx.Editor.EchoMessage("done")
 	ctx.Editor.Redraw()
 }
@@ -372,7 +433,7 @@ func (w *GitViewWidget) handlePush(ctx wig.Context) {
 func (w *GitViewWidget) handleStashPop(ctx wig.Context) {
 	if w.pendingStash != nil {
 		stashRef := w.pendingStash.StashRef
-		GitStashAction(*w.pendingStash, "pop")
+		git.StashAction(*w.pendingStash, "pop")
 		w.pendingStash = nil
 		w.refresh()
 		w.updateDiff()
@@ -407,12 +468,10 @@ func (w *GitViewWidget) Render(view wig.View) {
 	bgStyle := wig.Color("ui.background")
 	borderStyle := wig.Color("ui.window.border")
 
-	// Fill background
 	for row := 0; row < boxH; row++ {
 		view.SetContent(x, y+row, strings.Repeat(" ", boxW), bgStyle)
 	}
 
-	// Draw border
 	for col := 0; col < boxW; col++ {
 		view.SetContent(x+col, y, "─", borderStyle)
 		view.SetContent(x+col, y+boxH-1, "─", borderStyle)
@@ -426,10 +485,8 @@ func (w *GitViewWidget) Render(view wig.View) {
 	view.SetContent(x, y+boxH-1, "└", borderStyle)
 	view.SetContent(x+boxW-1, y+boxH-1, "┘", borderStyle)
 
-	// Title
 	view.SetContent(x+2, y, " Git Status ", borderStyle)
 
-	// Shortcuts hint on the right side of the top border
 	hint := " [j/k] Move  [Enter] Open  [s] Stage  [c] Commit  [p] Push  [z] Stash  [r] Refresh  [Esc] Close "
 	hintRunes := []rune(hint)
 	maxHint := boxW - 16
@@ -441,13 +498,11 @@ func (w *GitViewWidget) Render(view wig.View) {
 		view.SetContent(hintX, y, hint, borderStyle)
 	}
 
-	// Inner area
 	innerX := x + 1
 	innerY := y + 1
 	innerW := boxW - 2
 	innerH := boxH - 2
 
-	// 4:6 split
 	leftW := innerW * 4 / 10
 	if leftW < 20 {
 		leftW = 20
@@ -461,20 +516,16 @@ func (w *GitViewWidget) Render(view wig.View) {
 		}
 	}
 
-	// Separator
 	sepX := innerX + leftW
 	for row := 0; row < innerH; row++ {
 		view.SetContent(sepX, innerY+row, "│", borderStyle)
 	}
 
-	// Clamp scroll offsets
 	w.clampLeftScroll(innerH)
 	w.clampDiffScroll(innerH - 2)
 
-	// Render left panel
 	w.renderLeftPanel(view, innerX, innerY, leftW, innerH)
 
-	// Render right panel
 	rightX := sepX + 1
 	w.renderRightPanel(view, rightX, innerY, rightW, innerH)
 }
@@ -555,7 +606,6 @@ func (w *GitViewWidget) renderLeftPanel(view wig.View, x, y, width, height int) 
 			}
 		}
 
-		// Truncate or pad
 		runes := []rune(text)
 		if len(runes) > width {
 			runes = runes[:width]
@@ -580,7 +630,6 @@ func (w *GitViewWidget) renderRightPanel(view wig.View, x, y, width, height int)
 		w.diffLines = []string{"(no diff)"}
 	}
 
-	// Title bar
 	titleText := w.diffTitle
 	if titleText == "" {
 		titleText = "Diff"
@@ -593,13 +642,11 @@ func (w *GitViewWidget) renderRightPanel(view wig.View, x, y, width, height int)
 	titlePadded := string(titleRunes) + strings.Repeat(" ", width-len(titleRunes))
 	view.SetContent(x, y, titlePadded, titleStyle)
 
-	// Separator under title
 	sepStyle := wig.Color("ui.window.border")
 	if height > 1 {
 		view.SetContent(x, y+1, strings.Repeat("─", width), sepStyle)
 	}
 
-	// Diff body
 	bodyY := y + 2
 	bodyH := height - 2
 	if bodyH < 0 {
@@ -644,4 +691,54 @@ func gitViewDiffLineStyle(line string) tcell.Style {
 	default:
 		return wig.Color("default")
 	}
+}
+
+// ── commit message buffer ───────────────────────────────
+
+func exitModeOrClose(ctx wig.Context) {
+	if ctx.Buf.Mode() != wig.MODE_NORMAL {
+		wig.CmdNormalMode(ctx)
+		return
+	}
+
+	wig.CmdKillBuffer(ctx)
+}
+
+func GitShowCommitBuffer(ctx wig.Context) {
+	contents := git.Run("status", "-v")
+	diffBufName := "[git: edit commit message]"
+	dBuf := ctx.Editor.BufferFindByFilePath(diffBufName, true)
+	dBuf.ResetLines()
+
+	dBuf.Append("")
+	dBuf.Append("")
+	dBuf.Append("# Please enter your commit message and press ctrl+c for commit or Esc for exit.")
+	dBuf.Append("")
+	for l := range strings.SplitSeq(contents, "\n") {
+		dBuf.Append(fmt.Sprintf("# %s", l))
+	}
+	dBuf.Highlighter = &DiffHighlighter{Buf: dBuf}
+
+	dBuf.KeyHandler = wig.DefaultKeyHandler(wig.ModeKeyMap{
+		wig.MODE_NORMAL: wig.KeyMap{
+			"Esc":    exitModeOrClose,
+			"ctrl+c": gitCommitFinish,
+		},
+		wig.MODE_INSERT: wig.KeyMap{
+			"Esc":    exitModeOrClose,
+			"ctrl+c": gitCommitFinish,
+		},
+	})
+
+	ctx.Buf = dBuf
+	wig.CmdEnterInsertMode(ctx)
+	ctx.Editor.ActiveWindow().VisitBuffer(ctx, wig.Cursor{Line: 0, Char: 0})
+}
+
+func gitCommitFinish(ctx wig.Context) {
+	ctx.Buf.FilePath = "/tmp/commit_msg.txt"
+	ctx.Buf.Save()
+	git.Run("commit", "-F", "/tmp/commit_msg.txt", "--cleanup=strip")
+	wig.CmdKillBuffer(ctx)
+	wig.EditorInst.EchoMessage("commit done")
 }
